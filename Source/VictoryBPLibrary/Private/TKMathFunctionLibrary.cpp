@@ -408,8 +408,9 @@ FVector UTKMathFunctionLibrary::GetVelocityAtPoint(UPrimitiveComponent* Target, 
 
 		UWorld* TheWorld = Target->GetWorld();
 		if (DrawDebugInfo && TheWorld)
-		{
-			DrawDebugPoint(TheWorld, Point, 10, FColor(FLinearColor(1.0f, 0.8f, 0.0f, 1.0f)), false, -1.0f);
+		{ 
+			FColor DefaultColor(255,200,0);
+			DrawDebugPoint(TheWorld, Point, 10, DefaultColor);
 			DrawDebugString(TheWorld, Point, FString::SanitizeFloat(PointVelocity.Size()), NULL, FColor::White, 0.0f);
 		}
 

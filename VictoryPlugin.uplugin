@@ -11,20 +11,11 @@
 	"Category" : "Victory Plugin",
 	
 	"Modules" :
-	[		
-		{
-
-			"Name" : "VictoryEdEngine",
-			"Type" : "Editor",
-			"LoadingPhase" : "PreDefault"
-		
-		},
+	[	
 		{
 			"Name" : "VictoryBPLibrary",
 			"Type" : "Runtime",
 			"LoadingPhase" : "PreDefault"
-		},
-
-		
+		} 
 	]
 }

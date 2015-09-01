@@ -21,7 +21,9 @@ public class VictoryBPLibrary : ModuleRules
 				
 				"ImageWrapper",
 				
-				"PhysX", "APEX" 
+				"PhysX", "APEX",
+
+                "AIModule"
 			}
 		);  
 		//Private Paths

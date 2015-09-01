@@ -18,6 +18,9 @@
 #include "Runtime/UMG/Public/Blueprint/UserWidget.h"
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  
+//AI
+#include "AIController.h"		//MoveToWithFilter
+ 
 //Audio
 #include "Components/AudioComponent.h"
 #include "AudioDecompress.h"
@@ -168,6 +171,39 @@ UCLASS()
 class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_UCLASS_BODY()
+	
+	//~~~~~~~~~~
+	// 	AI
+	//~~~~~~~~~~
+	/** Move to Location with optional Query Filter! 
+	*
+	* 1. Create Custon Nav Area Classes. 
+	*
+	* 2. Use Nav Modifier Volumes to apply custom area class data within the level, then
+	*
+	* 3. Create Query Filters which alter/exclude those custom nav areas. 
+	*
+	* 4. Can then choose to use the filters per character or even per Move To using this node. 
+	*
+	*  <3 Rama
+	*
+	* @param FilterClass - Allows different types of units to path in different ways all the time, or path differently per Move To using this node!
+	* @param bProjectDestinationToNavigation - Whether to attempt to find a nearby point on the nav mesh below/above/close to the supplied point. Uses the Agent's Nav Extent for the projection
+	* @param bStopOnOverlap - Add pawn's radius to AcceptanceRadius
+	* @param bCanStrafe - Set focus related flag: bAllowStrafe
+	* @return Whether the Pawn's AI Controller is valid and goal can be pathed to
+	*/ 
+	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|AI Move To")
+	static EPathFollowingRequestResult::Type Victory_AI_MoveToWithFilter(
+		APawn* Pawn, 
+		const FVector& Dest, 
+		TSubclassOf<UNavigationQueryFilter> FilterClass = NULL,
+		float AcceptanceRadius = 0,  
+		bool bProjectDestinationToNavigation = false,
+		bool bStopOnOverlap = false,
+		bool bCanStrafe = false
+	);
+	 
 	
 	//~~~~~~~~~~
 	// 	Physics
@@ -680,11 +716,12 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary")
 		static bool Viewport__GetCenterOfViewport(const APlayerController* ThePC, float& PosX, float& PosY);
 
-	/** Convert Rotator to Vector */
+	
+	/** Convert Vector to Rotator*/
 	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary")
 		static FRotator Conversions__VectorToRotator(const FVector& TheVector);
-
-	/** Convert Vector to Rotator*/
+ 
+	/** Convert Rotator to Vector */
 	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary")
 		static FVector Conversions__RotatorToVector(const FRotator& TheRotator);
 
@@ -792,9 +829,9 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 	//~~~~~~~~~~~~~
 
-	/** Returns false if the operation could not occur. PawnVelocityCorrection is used only if the Mesh belongs to a Pawn/Character. */
+	/** Returns false if the operation could not occur. PawnVelocityCorrection is deprecated as of 4.9 due to internal improvements in the Engine. */
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
-	static bool AnimatedVertex__GetAnimatedVertexLocations(USkeletalMeshComponent* Mesh, TArray<FVector>& Locations, bool PerformPawnVelocityCorrection=true );
+	static bool AnimatedVertex__GetAnimatedVertexLocations(USkeletalMeshComponent* Mesh, TArray<FVector>& Locations);
 
 	/** Returns false if the operation could not occur. */
 	//UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
@@ -1297,17 +1334,17 @@ static bool Capture2D_Project(class ASceneCapture2D* Target, FVector Location, F
 UFUNCTION(Category = "VictoryBPLibrary|Texture", BlueprintCallable)
 static class UTextureRenderTarget2D* CreateTextureRenderTarget2D(int32 InSizeX = 256, int32 InSizeY = 256, FLinearColor ClearColor = FLinearColor::Transparent);
  
-/** Make sure to include the appropriate image extension in your file path! Recommended: .bmp, .jpg, .png. Contributed by Community Member Kris! */
-UFUNCTION(Category = "VictoryBPLibrary|SceneCapture", BlueprintCallable)
-static bool CaptureComponent2D_SaveImage(class USceneCaptureComponent2D* Target, const FString InImagePath);
+	/** Make sure to include the appropriate image extension in your file path! Recommended: .bmp, .jpg, .png. Contributed by Community Member Kris! */
+	UFUNCTION(Category = "VictoryBPLibrary|SceneCapture", BlueprintCallable)
+	static bool CaptureComponent2D_SaveImage(class USceneCaptureComponent2D* Target, const FString ImagePath, const FLinearColor ClearColour);
 
-/** Make sure to include the appropriate image extension in your file path! Recommended: .bmp, .jpg, .png. Contributed by Community Member Kris! */
-UFUNCTION(Category = "VictoryBPLibrary|SceneCapture", BlueprintCallable, Meta = (DefaultToSelf = "Target"))
-static bool Capture2D_SaveImage(class ASceneCapture2D* Target, const FString InImagePath);
+	/** Make sure to include the appropriate image extension in your file path! Recommended: .bmp, .jpg, .png. Contributed by Community Member Kris! */
+	UFUNCTION(Category = "VictoryBPLibrary|SceneCapture", BlueprintCallable, Meta = (DefaultToSelf = "Target"))
+	static bool Capture2D_SaveImage(class ASceneCapture2D* Target, const FString ImagePath, const FLinearColor ClearColour);
           
-/** Make sure your image path has a valid extension! Supported types can be seen in the BP node Victory_LoadTexture2D_FromFile. Contributed by Community Member Kris! */
-UFUNCTION(Category = "VictoryBPLibrary|Load Texture From File", BlueprintCallable)
-static UTexture2D*  LoadTexture2D_FromFileByExtension(const FString InImagePath, bool& IsValid, int32& OutWidth, int32& OutHeight);
+	/** Make sure your image path has a valid extension! Supported types can be seen in the BP node Victory_LoadTexture2D_FromFile. Contributed by Community Member Kris! */
+	UFUNCTION(Category = "VictoryBPLibrary|Load Texture From File", BlueprintCallable)
+	static UTexture2D*  LoadTexture2D_FromFileByExtension(const FString& ImagePath, bool& IsValid, int32& OutWidth, int32& OutHeight);
 	
 //~~~~~~~~~
 

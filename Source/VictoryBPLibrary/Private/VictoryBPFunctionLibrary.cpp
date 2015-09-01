@@ -8,9 +8,13 @@
 #include "Developer/ImageWrapper/Public/Interfaces/IImageWrapper.h"
 #include "Developer/ImageWrapper/Public/Interfaces/IImageWrapperModule.h"
 
+//Body Setup
+#include "PhysicsEngine/BodySetup.h"
+
+
 //~~~ PhysX ~~~
 #include "PhysXIncludes.h"
-#include "PhysicsPublic.h"		//For the ptou conversions
+#include "PhysXPublic.h"		//For the ptou conversions
 //~~~~~~~~~~~
  
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -224,6 +228,40 @@ UVictoryBPFunctionLibrary::UVictoryBPFunctionLibrary(const FObjectInitializer& O
 	
 }
  
+//~~~~~~~
+//		AI
+//~~~~~~~ 
+EPathFollowingRequestResult::Type UVictoryBPFunctionLibrary::Victory_AI_MoveToWithFilter(
+	APawn* Pawn, 
+	const FVector& Dest, 
+	TSubclassOf<UNavigationQueryFilter> FilterClass ,
+	float AcceptanceRadius , 
+	bool bProjectDestinationToNavigation ,
+	bool bStopOnOverlap ,
+	bool bCanStrafe 
+){
+	if(!Pawn) 
+	{
+		return EPathFollowingRequestResult::Failed;
+	}
+	
+	AAIController* AIControl = Cast<AAIController>(Pawn->GetController());
+	if(!AIControl) 
+	{
+		return EPathFollowingRequestResult::Failed;
+	} 
+	
+	return AIControl->MoveToLocation(
+		Dest, 
+		AcceptanceRadius,
+		bStopOnOverlap, 	//bStopOnOverlap
+		true,						//bUsePathfinding 
+		bProjectDestinationToNavigation, 
+		bCanStrafe,			//bCanStrafe
+		FilterClass			//<~~~
+	);
+}
+	
 //~~~~~~
 //Physics
 //~~~~~~ 
@@ -549,7 +587,8 @@ void UVictoryBPFunctionLibrary::VictoryISM_ConvertToVictoryISMActors(
 		  
 		//Create Victory ISM
 		FActorSpawnParameters SpawnInfo;
-		SpawnInfo.bNoCollisionFail 		= true; //always create!
+		//SpawnInfo.bNoCollisionFail 		= true; //always create!
+		SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		SpawnInfo.bDeferConstruction 	= false;
 		 
 		AVictoryISM* NewISM = World->SpawnActor<AVictoryISM>(
@@ -642,7 +681,7 @@ FVector2D UVictoryBPFunctionLibrary::Vector2DInterpTo_Constant(FVector2D Current
 
 float UVictoryBPFunctionLibrary::MapRangeClamped(float Value, float InRangeA, float InRangeB, float OutRangeA, float OutRangeB)
 { 
-	return FMath::GetMappedRangeValue(FVector2D(InRangeA,InRangeB),FVector2D(OutRangeA,OutRangeB),Value);
+	return FMath::GetMappedRangeValueClamped(FVector2D(InRangeA,InRangeB),FVector2D(OutRangeA,OutRangeB),Value);
 }
 
 FVictoryInput UVictoryBPFunctionLibrary::VictoryGetVictoryInput(const FKeyEvent& KeyEvent)
@@ -1143,7 +1182,7 @@ void UVictoryBPFunctionLibrary::VictorySetCustomConfigVar_Color(FString SectionN
 	GConfig->SetColor(
 		*SectionName,
 		*VariableName,
-		FColor(Value),
+		Value.ToFColor(true),
 		GGameIni
 	);
 }
@@ -1285,7 +1324,11 @@ AActor* UVictoryBPFunctionLibrary::SpawnActorIntoLevel(UObject* WorldContextObje
 	//~~~~~~~~~~~
 	
 	FActorSpawnParameters SpawnParameters;
-	SpawnParameters.bNoCollisionFail 		= SpawnEvenIfColliding;
+	if (SpawnEvenIfColliding)
+	{
+		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	}
+	
 	SpawnParameters.bDeferConstruction = false;
 	 
 	 
@@ -1435,27 +1478,26 @@ bool UVictoryBPFunctionLibrary::GetStaticMeshVertexLocations(UStaticMeshComponen
 		return false;
 	}  
 	
-	//Get the Px Mesh!
-	PxTriangleMesh* TriMesh = BodySetup->TriMesh;
-	 
-	if(!TriMesh) 
+	for(PxTriangleMesh* EachTriMesh : BodySetup->TriMeshes)
 	{
-		return false;
+		if (!EachTriMesh)
+		{
+			return false;
+		}
+		//~~~~~~~~~~~~~~~~
+
+		//Number of vertices
+		PxU32 VertexCount = EachTriMesh->getNbVertices();
+
+		//Vertex array
+		const PxVec3* Vertices = EachTriMesh->getVertices();
+
+		//For each vertex, transform the position to match the component Transform 
+		for (PxU32 v = 0; v < VertexCount; v++)
+		{
+			VertexPositions.Add(RV_Transform.TransformPosition(P2UVector(Vertices[v])));
+		}
 	}
-	//~~~~~~~~~~~~~~~~
-	
-	//Number of vertices
-	PxU32 VertexCount 			= TriMesh->getNbVertices();
-	
-	//Vertex array
-	const PxVec3* Vertices 	= TriMesh->getVertices();
-	
-	//For each vertex, transform the position to match the component Transform 
-	for(PxU32 v = 0; v < VertexCount; v++)
-	{ 
-		VertexPositions.Add(RV_Transform.TransformPosition(P2UVector(Vertices[v])));
-	}
-	
 	return true;
 	
 	/*
@@ -1533,7 +1575,7 @@ void UVictoryBPFunctionLibrary::DrawCircle(
 			World, 
 			Vertex1, 
 			Vertex2,
-			LineColor,  
+			LineColor.ToFColor(true),  
 			PersistentLines, 
 			Duration,
 			0, 				//depth  
@@ -1967,7 +2009,7 @@ AStaticMeshActor* UVictoryBPFunctionLibrary::Clone__StaticMeshActor(UObject* Wor
 	UClass* SpawnClass = ToClone->GetClass();
 	
 	FActorSpawnParameters SpawnInfo;
-	SpawnInfo.bNoCollisionFail 		= true;
+	SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnInfo.Owner 				= ToClone;
 	SpawnInfo.Instigator				= NULL;
 	SpawnInfo.bDeferConstruction 	= false;
@@ -2115,7 +2157,7 @@ void UVictoryBPFunctionLibrary::Draw__Thick3DLineFromCharacterSocket(AActor* The
 		TheWorld, 
 		SocketLocation, 
 		EndPoint, 
-		FColor(LineColor), 
+		LineColor.ToFColor(true), 
 		false, 
 		Duration, 
 		0, 
@@ -2145,7 +2187,7 @@ void UVictoryBPFunctionLibrary::Draw__Thick3DLineFromSocket(USkeletalMeshCompone
 		TheWorld, 
 		SocketLocation, 
 		EndPoint, 
-		FColor(LineColor), 
+		LineColor.ToFColor(true),
 		false, 
 		Duration, 
 		0, 
@@ -2163,7 +2205,7 @@ void UVictoryBPFunctionLibrary::Draw__Thick3DLineBetweenActors(AActor * StartAct
 		StartActor->GetWorld(), 
 		StartActor->GetActorLocation(), 
 		EndActor->GetActorLocation(), 
-		FColor(LineColor), 
+		LineColor.ToFColor(true),
 		false, 
 		Duration, 
 		0, 
@@ -2493,7 +2535,7 @@ bool UVictoryBPFunctionLibrary::TraceData__GetTraceDataFromCharacterSocket(
 			TheWorld, 
 			TraceStart, 
 			TraceEnd, 
-			FColor(TraceDataColor), 
+			TraceDataColor.ToFColor(true),
 			false, 
 			0.0333, 
 			0, 
@@ -2541,7 +2583,7 @@ bool UVictoryBPFunctionLibrary::TraceData__GetTraceDataFromSkeletalMeshSocket(
 			TheWorld, 
 			TraceStart, 
 			TraceEnd, 
-			FColor(TraceDataColor), 
+			TraceDataColor.ToFColor(true),
 			false, 
 			0.0333, 
 			0, 
@@ -3038,13 +3080,12 @@ bool UVictoryBPFunctionLibrary::LensFlare__GetLensFlareOffsets(
 
 bool UVictoryBPFunctionLibrary::AnimatedVertex__GetAnimatedVertexLocations(
 	USkeletalMeshComponent* Mesh, 
-	TArray<FVector>& Locations,
-	bool PerformPawnVelocityCorrection
+	TArray<FVector>& Locations
 ){
 	if(!Mesh) return false;
 	if(!Mesh->SkeletalMesh) return false;
 	//~~~~~~~~~
-	
+	 
 	//~~~~~~~~~~~~~
 	Locations.Empty(); 
 	//~~~~~~~~~~~~~
@@ -3054,62 +3095,11 @@ bool UVictoryBPFunctionLibrary::AnimatedVertex__GetAnimatedVertexLocations(
 	FTransform ToWorld = Mesh->GetComponentTransform();
 	FVector WorldLocation = ToWorld.GetLocation();
 	
-	//Pawn Velocity Correction
-	UPawnMovementComponent* MovementComp = nullptr;
-	if(PerformPawnVelocityCorrection)
-	{
-		APawn* Pawn = Cast<APawn>(Mesh->GetOwner());
-		MovementComp = (Pawn) ? Pawn->GetMovementComponent() : NULL;
-	}
-	bool DoVelocityCorrection = PerformPawnVelocityCorrection && MovementComp;
-	//Pawn Velocity Correction
-	 
 	for(FVector& Each : Locations)
 	{
 		Each = WorldLocation + ToWorld.TransformVector(Each);
-		if(DoVelocityCorrection)
-		{
-			Each += MovementComp->Velocity * FApp::GetDeltaTime();
-		} 
 	} 
 	
-	
-	/*
-	//	Get the Verticies For Each Bone, Most Influenced by That Bone!
-	//					Vertices are in Bone space.
-	TArray<FBoneVertInfo> BoneVertexInfos;
-	FSkeletalMeshTools::CalcBoneVertInfos(Mesh->SkeletalMesh,BoneVertexInfos,true); //true = only dominant influence
-	
-	//~~~~~~~~~~~~~~~~~~~~~
-	int32 VertItr = 0;
-	FBoneVertInfo* EachBoneVertInfo;
-	FVector BoneWorldPos;
-	int32 NumOfVerticies;
-	FTransform RV_Transform;
-	FVector RV_Vect;
-	for(int32 Itr=0; Itr < BoneVertexInfos.Num() ; Itr++)
-	{
-		EachBoneVertInfo = &BoneVertexInfos[Itr];
-		//~~~~~~~~~~~~~~~~~~~~~~~~
-		
-		//Bone Transform To World Space, and Location
-		RV_Transform = Mesh->GetBoneTransform(Itr);
-		BoneWorldPos = RV_Transform.GetLocation();
-		
-		//How many verts is this bone influencing?
-		NumOfVerticies = EachBoneVertInfo->Positions.Num();
-		for(VertItr=0; VertItr < NumOfVerticies ; VertItr++)
-		{
-			//Animated Vertex Location!
-			Locations.Add(  BoneWorldPos + RV_Transform.TransformVector(EachBoneVertInfo->Positions[VertItr])  );
-		}
-	}
-	
-	//~~~ Cleanup ~~~
-	BoneVertexInfos.Empty();
-	*/
-	
-
 	return true;
 }
 	
@@ -3862,8 +3852,8 @@ bool UVictoryBPFunctionLibrary::Victory_SavePixels(const FString& FullFilePath,i
 	TArray<FColor> ColorArray;
 	for(const FLinearColor& Each : ImagePixels)
 	{
-		ColorArray.Add(Each);
-	}
+		ColorArray.Add(Each.ToFColor(true));
+	} 
 	 
 	if(ColorArray.Num() != Width * Height) 
 	{
@@ -3936,7 +3926,7 @@ class UAudioComponent* UVictoryBPFunctionLibrary::PlaySoundAttachedFromFile(cons
 	if (!sw)
 		return NULL;
 
-	return UGameplayStatics::PlaySoundAttached(sw, AttachToComponent, AttachPointName, Location, LocationType, bStopWhenAttachedToDestroyed, VolumeMultiplier, PitchMultiplier, StartTime, AttenuationSettings);
+	return UGameplayStatics::SpawnSoundAttached(sw, AttachToComponent, AttachPointName, Location, LocationType, bStopWhenAttachedToDestroyed, VolumeMultiplier, PitchMultiplier, StartTime, AttenuationSettings);
 }
 
 void UVictoryBPFunctionLibrary::PlaySoundAtLocationFromFile(UObject* WorldContextObject, const FString& FilePath, FVector Location, float VolumeMultiplier, float PitchMultiplier, float StartTime, class USoundAttenuation* AttenuationSettings)
@@ -4192,97 +4182,112 @@ static IImageWrapperPtr GetImageWrapperByExtention(const FString InImagePath)
     return nullptr;
 }
 
-
-bool UVictoryBPFunctionLibrary::CaptureComponent2D_SaveImage(class USceneCaptureComponent2D* Target, const FString InImagePath)
+bool UVictoryBPFunctionLibrary::CaptureComponent2D_SaveImage(class USceneCaptureComponent2D* Target, const FString ImagePath, const FLinearColor ClearColour)
 {
-    // Bad scene capture component! No render target! Stay! Stay! Ok, feed!... wait, where was I?
-    if ((Target == nullptr) || (Target->TextureTarget == nullptr))
-    {
-        return false;
-    }
-    
-    FRenderTarget* RenderTarget = Target->TextureTarget->GameThread_GetRenderTargetResource();
-    if (RenderTarget == nullptr)
-    {
-        return false;
-    }
- 
-    const int32 Width = Target->TextureTarget->SizeX;
-    const int32 Height = Target->TextureTarget->SizeY;
-      
-    const EPixelFormat PixelFormat = Target->TextureTarget->GetFormat();
-    const int32 ImageBytes = CalculateImageBytes(Width, Height, 0, PixelFormat);
-									//build.cs "RenderCore"
-    TArray<FColor> RawPixels;
-    RawPixels.AddUninitialized(ImageBytes);
+	// Bad scene capture component! No render target! Stay! Stay! Ok, feed!... wait, where was I?
+	if ((Target == nullptr) || (Target->TextureTarget == nullptr))
+	{
+		return false;
+	}
+	
+	FRenderTarget* RenderTarget = Target->TextureTarget->GameThread_GetRenderTargetResource();
+	if (RenderTarget == nullptr)
+	{
+		return false;
+	}
 
-    if (!RenderTarget->ReadPixels(RawPixels))
-    {
-        return false;
-    }
+	TArray<FColor> RawPixels;
+	
+	// Format not supported - use PF_B8G8R8A8.
+	if (Target->TextureTarget->GetFormat() != PF_B8G8R8A8)
+	{
+		// TRACEWARN("Format not supported - use PF_B8G8R8A8.");
+		return false;
+	}
 
-    for (auto& Pixel : RawPixels)
-    {
-        Pixel.A = 255; // Thank Rama (again) for figuring this out.
-    }
-    
-    IImageWrapperPtr ImageWrapper = GetImageWrapperByExtention(InImagePath);
+	if (!RenderTarget->ReadPixels(RawPixels))
+	{
+		return false;
+	}
 
-    if (ImageWrapper.IsValid() &&  ImageWrapper->SetRaw(&RawPixels[0], ImageBytes, Width, Height,  ERGBFormat::BGRA, 8))
-    {
-        FFileHelper::SaveArrayToFile(ImageWrapper->GetCompressed(), *InImagePath);
-        return true;
-    }
-    
-    return false;
+	// Convert to FColor.
+	FColor ClearFColour = ClearColour.ToFColor(false); // FIXME - want sRGB or not?
+
+	for (auto& Pixel : RawPixels)
+	{
+		// Switch Red/Blue changes.
+		const uint8 PR = Pixel.R;
+		const uint8 PB = Pixel.B;
+		Pixel.R = PB;
+		Pixel.B = PR;
+
+		// Set alpha based on RGB values of ClearColour.
+		Pixel.A = ((Pixel.R == ClearFColour.R) && (Pixel.R == ClearFColour.R) && (Pixel.R == ClearFColour.R)) ? 0 : 255;
+	}
+	
+	IImageWrapperPtr ImageWrapper = GetImageWrapperByExtention(ImagePath);
+
+	const int32 Width = Target->TextureTarget->SizeX;
+	const int32 Height = Target->TextureTarget->SizeY;
+	
+	if (ImageWrapper.IsValid() && ImageWrapper->SetRaw(&RawPixels[0], RawPixels.Num() * sizeof(FColor), Width, Height, ERGBFormat::RGBA, 8))
+	{
+		FFileHelper::SaveArrayToFile(ImageWrapper->GetCompressed(), *ImagePath);
+		return true;
+	}
+	
+	return false;
 }
 
-bool UVictoryBPFunctionLibrary::Capture2D_SaveImage(class ASceneCapture2D* Target, const FString InImagePath)
+bool UVictoryBPFunctionLibrary::Capture2D_SaveImage(class ASceneCapture2D* Target, const FString ImagePath, const FLinearColor ClearColour)
 {
-    return (Target) ? CaptureComponent2D_SaveImage(Target->GetCaptureComponent2D(), InImagePath) : false;
-}
-  
-UTexture2D* UVictoryBPFunctionLibrary::LoadTexture2D_FromFileByExtension(const FString InImagePath,  bool& IsValid, int32& OutWidth, int32& OutHeight)
-{
-    UTexture2D* Texture = nullptr;
-    IsValid = false;
-
-    TArray<uint8> CompressedData;
-    if (!FFileHelper::LoadFileToArray(CompressedData, *InImagePath))
-    {
-        return nullptr;
-    }
-    
-    IImageWrapperPtr ImageWrapper = GetImageWrapperByExtention(InImagePath);
-
-    if (ImageWrapper.IsValid() && ImageWrapper->SetCompressed(CompressedData.GetData(), CompressedData.Num()))
-    { 
-        const TArray<uint8>* UncompressedBGRA = nullptr;
-        
-        if (ImageWrapper->GetRaw(ERGBFormat::BGRA, 8, UncompressedBGRA))
-        {
-            Texture = UTexture2D::CreateTransient(ImageWrapper->GetWidth(), ImageWrapper->GetHeight(), PF_B8G8R8A8);
-            
-            if (Texture != nullptr)
-            {
-                IsValid = true;
-                
-                OutWidth = ImageWrapper->GetWidth();
-                OutHeight = ImageWrapper->GetHeight();
-
-                void* TextureData = Texture->PlatformData->Mips[0].BulkData.Lock(LOCK_READ_WRITE);
-                FMemory::Memcpy(TextureData, UncompressedBGRA->GetData(), UncompressedBGRA->Num());
-                Texture->PlatformData->Mips[0].BulkData.Unlock();
-                Texture->UpdateResource();
-            }
-        }
-    }
-
-    return Texture;
+	return (Target) ? CaptureComponent2D_SaveImage(Target->GetCaptureComponent2D(), ImagePath, ClearColour) : false;
 }
 
+UTexture2D* UVictoryBPFunctionLibrary::LoadTexture2D_FromFileByExtension(const FString& ImagePath, bool& IsValid, int32& OutWidth, int32& OutHeight)
+{
+	UTexture2D* Texture = nullptr;
+	IsValid = false;
 
+	// To avoid log spam, make sure it exists before doing anything else.
+	if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*ImagePath))
+	{
+		return nullptr;
+	}
 
+	TArray<uint8> CompressedData;
+	if (!FFileHelper::LoadFileToArray(CompressedData, *ImagePath))
+	{
+		return nullptr;
+	}
+	
+	IImageWrapperPtr ImageWrapper = GetImageWrapperByExtention(ImagePath);
+
+	if (ImageWrapper.IsValid() && ImageWrapper->SetCompressed(CompressedData.GetData(), CompressedData.Num()))
+	{ 
+		const TArray<uint8>* UncompressedRGBA = nullptr;
+		
+		if (ImageWrapper->GetRaw(ERGBFormat::RGBA, 8, UncompressedRGBA))
+		{
+			Texture = UTexture2D::CreateTransient(ImageWrapper->GetWidth(), ImageWrapper->GetHeight(), PF_R8G8B8A8);
+			
+			if (Texture != nullptr)
+			{
+				IsValid = true;
+				
+				OutWidth = ImageWrapper->GetWidth();
+				OutHeight = ImageWrapper->GetHeight();
+
+				void* TextureData = Texture->PlatformData->Mips[0].BulkData.Lock(LOCK_READ_WRITE);
+				FMemory::Memcpy(TextureData, UncompressedRGBA->GetData(), UncompressedRGBA->Num());
+				Texture->PlatformData->Mips[0].BulkData.Unlock();
+				Texture->UpdateResource();
+			}
+		}
+	}
+
+	return Texture;
+}
 
 //~~~~~~~~~ END OF CONTRIBUTED BY KRIS ~~~~~~~~~~~
  
