@@ -1,4 +1,7 @@
 # VictoryPlugin
-Rama's Victory Editor & Blueprint Library
+Rama's Victory Blueprint Library
 
-See https://forums.unrealengine.com/showthread.php?3851-(39)-Rama-s-Extra-Blueprint-Nodes-for-You-as-a-Plugin-No-C-Required!
+100+ Extra Blueprint Nodes For you!
+
+UE4 Forum Link ~ Victory BP Library Thread
+https://forums.unrealengine.com/showthread.php?3851-(39)-Rama-s-Extra-Blueprint-Nodes-for-You-as-a-Plugin-No-C-Required!
