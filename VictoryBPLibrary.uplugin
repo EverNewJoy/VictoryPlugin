@@ -10,10 +10,10 @@
 	"DocsURL": "http://www.ue4code.com",
 	"MarketplaceURL": "http://www.ue4code.com",
 	"SupportURL": "http://www.ue4code.com",
-	"EnabledByDefault": true,
+	"EnabledByDefault": true, 
 	"CanContainContent": false,
 	"IsBetaVersion": false,
-	"Installed": false,
+	"Installed": true,	
 	"Modules": [
 		{
 			"Name": "VictoryBPLibrary",

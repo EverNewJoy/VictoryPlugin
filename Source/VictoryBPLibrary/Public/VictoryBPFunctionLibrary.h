@@ -618,8 +618,25 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	 
 	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|AI",meta=(WorldContext="WorldContextObject"))
 		static AActor* GetClosestActorOfClassInRadiusOfActor(UObject* WorldContextObject, TSubclassOf<AActor> ActorClass, AActor* ActorCenter, float Radius, bool& IsValid);
-	 
+	  
+	/**
+	* Generates a box that is guaranteed to contain all of the supplied points.
+	*
+	* @param Points  The world space points that the box will encompass.
+	*/
+	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary")	
+	static void GetBoxContainingWorldPoints(const TArray<FVector>& Points, FVector& Center, FVector& Extent)
+	{ 
+		FBox Box(0);
 		
+		for(const FVector& Each : Points)
+		{
+			Box += Each;
+		} 
+		Center = Box.GetCenter();
+		Extent = Box.GetExtent();
+	}
+	 
 	/** Implementation of a Selection Marquee / Selection Box as a BP Node. AnchorPoint is the first clicked point, which user then drags from to make the box. Class filter is optional way to narrow the scope of actors that can be selected by the selection box! -Rama*/
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
 		static void Selection_SelectionBox(UObject* WorldContextObject, TArray<AActor*>& SelectedActors, FVector2D AnchorPoint, FVector2D DraggedPoint, TSubclassOf<AActor> ClassFilter);

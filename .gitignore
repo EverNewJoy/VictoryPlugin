@@ -4,6 +4,7 @@ Intermediate/
 Saved/
 Rama/
 Build/
+*.pdb
 *.sdf
 *.opensdf
 *.sln
