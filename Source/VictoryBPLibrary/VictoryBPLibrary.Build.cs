@@ -1,14 +1,43 @@
-// Copyright 1998-2013 Epic Games, Inc. All Rights Reserved.
+// Some copyright should be here...
 
 using UnrealBuildTool;
 
 public class VictoryBPLibrary : ModuleRules
 {
 	public VictoryBPLibrary(TargetInfo Target)
-	{ 
-        PublicDependencyModuleNames.AddRange(
-			new string[] { 
-				"Core", 
+	{
+		
+		PublicIncludePaths.AddRange(
+			new string[] {
+				"VictoryBPLibrary/Public"
+				
+				// ... add public include paths required here ...
+			}
+			);
+				
+		
+		PrivateIncludePaths.AddRange(
+			new string[] {
+				"VictoryBPLibrary/Private",
+				
+				// ... add other private include paths required here ...
+			}
+			);
+			
+		
+		PublicDependencyModuleNames.AddRange(
+			new string[]
+			{
+				"Core",
+				
+				// ... add other public dependencies that you statically link with here ...
+			}
+			);
+			
+		
+		PrivateDependencyModuleNames.AddRange(
+			new string[]
+			{
 				"CoreUObject", 
 				"Engine", 
 				"InputCore",
@@ -23,13 +52,16 @@ public class VictoryBPLibrary : ModuleRules
 				
 				"PhysX", "APEX",
 
-                "AIModule"
+                "AIModule"	
 			}
-		);  
-		//Private Paths
-        PrivateIncludePaths.AddRange(new string[] { 
-			"VictoryBPLibrary/Public",
-			"VictoryBPLibrary/Private"
-		});
+			);
+		
+		
+		DynamicallyLoadedModuleNames.AddRange(
+			new string[]
+			{
+				// ... add any modules that your module loads dynamically here ...
+			}
+			);
 	}
 }

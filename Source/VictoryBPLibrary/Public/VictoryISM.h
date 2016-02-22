@@ -11,16 +11,17 @@
 UCLASS()
 class AVictoryISM	: public AActor
 {
-	GENERATED_UCLASS_BODY()
-	
-	UPROPERTY(VisibleDefaultsOnly, Category="ISM")
+	GENERATED_BODY()
+public:
+	 
+	AVictoryISM(const FObjectInitializer& ObjectInitializer);
+	  
+	UPROPERTY(Category = "Joy ISM", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UInstancedStaticMeshComponent* Mesh; 
 	
 //~~~~~~~~~~~~~
 //	  ISM
 //~~~~~~~~~~~~~
-public:		
-
 public:
 	virtual void BeginPlay() override;
 	

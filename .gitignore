@@ -1,5 +1,15 @@
 Binaries/
+DerivedDataCache/
 Intermediate/
+Saved/
+Rama/
+Build/
+*.pdb
+*.sdf
+*.opensdf
+*.sln
+*.suo
+*.opendb
 
 # Windows image file caches
 Thumbs.db
