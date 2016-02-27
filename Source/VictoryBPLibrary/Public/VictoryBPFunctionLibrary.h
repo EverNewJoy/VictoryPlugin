@@ -646,10 +646,18 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
 		static bool PlayerController_GetControllerID(APlayerController* ThePC, int32& ControllerID);
 
-	/** Get the Unique PlayerID from the PlayerState for a supplied Player Controller <3 Rama. Returns false if operation could not occur. */
-	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
-		static bool PlayerState_GetPlayerID(APlayerController* ThePC, int32& PlayerID);
+	/** Get the Unique PlayerID from the PlayerState for a supplied Player Controller. Returns false if operation could not occur. Epic accepted my pull request for this a while back so now you can just GetPlayerState and directly access <3 Rama*/
+	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|Networking")
+	static bool PlayerState_GetPlayerID(APlayerController* ThePC, int32& PlayerID);
 
+	/** Returns whether this game instance is single player.  <3 Rama*/
+	UFUNCTION(BlueprintPure, Category="VictoryBPLibrary|Networking", meta=(Keywords="Standalone multiplayer", WorldContext="WorldContextObject"))
+	static bool IsSinglePlayer(UObject* WorldContextObject)
+	{
+		UWorld* World = GEngine->GetWorldFromContextObject( WorldContextObject );
+		return World ? (World->GetNetMode() == NM_Standalone) : false;
+	}
+	 
 
 	/** Launches the specified URL in the OS default web browser :) <3 Rama */
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
