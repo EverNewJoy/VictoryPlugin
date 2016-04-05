@@ -646,10 +646,18 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
 		static bool PlayerController_GetControllerID(APlayerController* ThePC, int32& ControllerID);
 
-	/** Get the Unique PlayerID from the PlayerState for a supplied Player Controller <3 Rama. Returns false if operation could not occur. */
-	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
-		static bool PlayerState_GetPlayerID(APlayerController* ThePC, int32& PlayerID);
+	/** Get the Unique PlayerID from the PlayerState for a supplied Player Controller. Returns false if operation could not occur. Epic accepted my pull request for this a while back so now you can just GetPlayerState and directly access <3 Rama*/
+	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|Networking")
+	static bool PlayerState_GetPlayerID(APlayerController* ThePC, int32& PlayerID);
 
+	/** Returns whether this game instance is single player.  <3 Rama*/
+	UFUNCTION(BlueprintPure, Category="VictoryBPLibrary|Networking", meta=(Keywords="Standalone multiplayer", WorldContext="WorldContextObject"))
+	static bool IsSinglePlayer(UObject* WorldContextObject)
+	{
+		UWorld* World = GEngine->GetWorldFromContextObject( WorldContextObject );
+		return World ? (World->GetNetMode() == NM_Standalone) : false;
+	}
+	 
 
 	/** Launches the specified URL in the OS default web browser :) <3 Rama */
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
@@ -1279,6 +1287,9 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	static class UAudioComponent* PlaySoundAttachedFromFile(const FString& FilePath, class USceneComponent* AttachToComponent, FName AttachPointName = NAME_None, FVector Location = FVector(ForceInit), EAttachLocation::Type LocationType = EAttachLocation::SnapToTarget, bool bStopWhenAttachedToDestroyed = false, float VolumeMultiplier = 1.f, float PitchMultiplier = 1.f, float StartTime = 0.f, class USoundAttenuation* AttenuationSettings = NULL);
 	 
 	/** Contributed by UE4 forum member n00854180t! Plays a .ogg sound at the given location. This is a fire and forget sound and does not travel with any actor. Replication is also not handled at this point.
+	*
+	* NOT SUPPORTED ON PS4. 
+	*
 	* @param FilePath - Path to sound file to play
 	* @param Location - World position to play sound at
 	* @param World - The World in which the sound is to be played
@@ -1289,19 +1300,23 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject", VolumeMultiplier = "1.0", PitchMultiplier = "1.0", AdvancedDisplay = "3", UnsafeDuringActorConstruction = "true"))
 	static void PlaySoundAtLocationFromFile(UObject* WorldContextObject, const FString& FilePath, FVector Location, float VolumeMultiplier = 1.f, float PitchMultiplier = 1.f, float StartTime = 0.f, class USoundAttenuation* AttenuationSettings = NULL);
 	
-	/** Contributed by UE4 forum member n00854180t! Creates a USoundWave* from file path.
+	/** Contributed by UE4 forum member n00854180t! Creates a USoundWave* from file path. 
 	* Read .ogg header file and refresh USoundWave metadata.
+	*
+	* NOT SUPPORTED ON PS4. 
+	*
 	* @param FilePath		path to file to create sound wave from
 	*/
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
 	static class USoundWave* GetSoundWaveFromFile(const FString& FilePath);
 
+#if !PLATFORM_PS4
 private:
 	// Thanks to @keru for the base code for loading an Ogg into a USoundWave: 
 	// https://forums.unrealengine.com/showthread.php?7936-Custom-Music-Player&p=97659&viewfull=1#post97659
 
 	     /**
-        * Read .ogg header file and refresh USoundWave metadata.
+        * Read .ogg header file and refresh USoundWave metadata. NOT SUPPORTED BY PS4
         * @param sw             wave to put metadata
         * @param rawFile        pointer to src file in memory
         * @return 0     if everything is ok
@@ -1312,13 +1327,14 @@ private:
 
 
         /**
-        * Tries to find out FSoundSource object associated to the USoundWave.
+        * Tries to find out FSoundSource object associated to the USoundWave. NOT SUPPORTED BY PS4
         * @param sw     wave, search key
         * @return 0 if wave found and correctly set
         *        -1 if error: sound device not set
         *        -2 if error: sound wave not found
         */
 		static int32 findSource(class USoundWave* sw, class FSoundSource* out_audioSource);
+#endif //PLATFORM_PS4
 
 
 

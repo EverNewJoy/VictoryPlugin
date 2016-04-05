@@ -7,8 +7,8 @@
  
 #include "StaticMeshResources.h"
 
-#include "Developer/ImageWrapper/Public/Interfaces/IImageWrapper.h"
-#include "Developer/ImageWrapper/Public/Interfaces/IImageWrapperModule.h"
+#include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapper.h"
+#include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapperModule.h"
 
 //Body Setup
 #include "PhysicsEngine/BodySetup.h"
@@ -4421,6 +4421,11 @@ void UVictoryBPFunctionLibrary::PlaySoundAtLocationFromFile(UObject* WorldContex
 
 class USoundWave* UVictoryBPFunctionLibrary::GetSoundWaveFromFile(const FString& FilePath)
 {
+	#if PLATFORM_PS4
+	UE_LOG(LogTemp, Error, TEXT("UVictoryBPFunctionLibrary::GetSoundWaveFromFile ~ vorbis-method not supported on PS4. See UVictoryBPFunctionLibrary::fillSoundWaveInfo"));
+	return nullptr;
+	#endif
+	 
 	USoundWave* sw = NewObject<USoundWave>(USoundWave::StaticClass());
 
 	if (!sw)
@@ -4451,10 +4456,11 @@ class USoundWave* UVictoryBPFunctionLibrary::GetSoundWaveFromFile(const FString&
 	return sw;
 }
 
+#if !PLATFORM_PS4
 int32 UVictoryBPFunctionLibrary::fillSoundWaveInfo(class USoundWave* sw, TArray<uint8>* rawFile)
 {
-    FSoundQualityInfo info;
-    FVorbisAudioInfo vorbis_obj = FVorbisAudioInfo();
+    FSoundQualityInfo info; 
+    FVorbisAudioInfo vorbis_obj;
     if (!vorbis_obj.ReadCompressedInfo(rawFile->GetData(), rawFile->Num(), &info))
     {
         //Debug("Can't load header");
@@ -4511,8 +4517,8 @@ int32 UVictoryBPFunctionLibrary::findSource(class USoundWave* sw, class FSoundSo
 	out_audioSource = audioSource;
 	return -2;
 }
-
-
+#endif //PLATFORM_PS4
+ 
 //~~~ Kris ~~~
  
 bool UVictoryBPFunctionLibrary::Array_IsValidIndex(const TArray<int32>& TargetArray, int32 Index)
