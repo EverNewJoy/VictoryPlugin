@@ -902,9 +902,12 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	/** Get Player Character's Player Controller. Requires: The Passed in Actor must be a character and it must be a player controlled character. IsValid will tell you if the return value is valid, make sure to do a Branch to confirm this! */
 	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary")
 		static APlayerController* Accessor__GetPlayerController(AActor* TheCharacter, bool&IsValid);
-	
-	//UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
-	static void VictorySimulateKeyPress(APlayerController* ThePC, FKey Key, EInputEvent EventType);
+
+	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
+		static void VictorySimulateMouseWheel(const float& Delta);
+
+	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
+		static void VictorySimulateKeyPress(APlayerController* ThePC, FKey Key, EInputEvent EventType);
 	 
 	/** SET the Mouse Position! Returns false if the operation could not occur */
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")

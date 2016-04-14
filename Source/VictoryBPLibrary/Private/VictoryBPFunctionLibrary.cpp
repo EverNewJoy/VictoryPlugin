@@ -3109,88 +3109,73 @@ AActor* UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestSocket(
 	//Actor
 	return HitActor;
 }
-	
+
+void UVictoryBPFunctionLibrary::VictorySimulateMouseWheel(const float& Delta)
+{
+	FSlateApplication::Get().OnMouseWheel(int32(Delta));
+}
+
 void UVictoryBPFunctionLibrary::VictorySimulateKeyPress(APlayerController* ThePC, FKey Key, EInputEvent EventType)
 {
 	if (!ThePC) return;
-	//~~~~~~~~~~~~
-	 
-	//Player Input / Key Bindings
 	ThePC->InputKey(Key, EventType, 1, false); //amount depressed, bGamepad
-	   
-	//! THIS ENDS UP FIRING TWICE SOME REASON
-	/*
-	//Viewport Client
-	if (ULocalPlayer* LocalPlayer = Cast<ULocalPlayer>(ThePC->Player))
+	//! This will fire twice if the event is not handled, for umg widgets place an invisible button in background.
+    
+	if (Key == EKeys::LeftMouseButton || Key == EKeys::MiddleMouseButton || Key == EKeys::RightMouseButton || Key == EKeys::ThumbMouseButton || Key == EKeys::ThumbMouseButton2)
 	{
-		LocalPlayer->ViewportClient->InputKey(
-			LocalPlayer->ViewportClient->Viewport,
-			LocalPlayer->GetControllerId(),
-			Key,
-			EventType,
-			1,//float AmountDepressed = 1.f,
-			false//bool bGamepad=false
-		);
-	}
-	*/
-	//! 
-	
-	//~~~ Slate ~~~
-	
-	FVector2D MousePos;
-	ThePC->GetMousePosition(MousePos.X,MousePos.Y);
-	
-	TSet<FKey> MouseKeySet;
-	MouseKeySet.Add(Key);
-	
-	/*
-		Not working
-	*/
-	FPointerEvent PointerEvent(
-		0,//uint32 InPointerIndex,
-		MousePos,
-		MousePos,
-		FVector2D::ZeroVector, //Delta
-		MouseKeySet,
-		FModifierKeysState()//const FModifierKeysState& InModifierKeys
-	);
-	
-	FKeyEvent KeyEvent(	
-		Key,	//FKey
-		FModifierKeysState(), //const FModifierKeysState& InModifierKeys, 
-		0,//const uint32 InUserIndex,
-		false, //const bool bInIsRepeat,
-		0, //const uint32 InCharacterCode,
-		0 //const uint32 InKeyCode
-	);
-	//not setting other vars properly 
-	 
-	/*
-			private:
-		// Name of the key that was pressed.
-		FKey Key;
+		EMouseButtons::Type Button = EMouseButtons::Invalid;
+		if (Key == EKeys::LeftMouseButton)
+		{
+			Button = EMouseButtons::Left;
+		}
+		else if (Key == EKeys::MiddleMouseButton)
+		{
+			Button = EMouseButtons::Middle;
+		}
+		else if (Key == EKeys::RightMouseButton)
+		{
+			Button = EMouseButtons::Right;
+		}
+		else if (Key == EKeys::ThumbMouseButton)
+		{
+			Button = EMouseButtons::Thumb01;
+		}
+		else if (Key == EKeys::ThumbMouseButton2)
+		{
+			Button = EMouseButtons::Thumb02;
+		}
 
-		// The character code of the key that was pressed.  Only applicable to typed character keys, 0 otherwise.
-		uint32 CharacterCode;
 
-		// Original key code received from hardware before any conversion/mapping
-		uint32 KeyCode;
-	*/
- 		
-	if(EventType == IE_Pressed)
-	{
-		//FSlateApplication::Get().ProcessMouseButtonDownEvent(nullptr,PointerEvent);
-		FSlateApplication::Get().ProcessKeyDownEvent(KeyEvent);
+		if (EventType == IE_Pressed)
+		{
+			FSlateApplication::Get().OnMouseDown(nullptr, Button);
+		}
+		else if (EventType == IE_Released)
+		{
+			FSlateApplication::Get().OnMouseUp(Button);
+		}
+		else if (EventType == IE_DoubleClick)
+		{
+			FSlateApplication::Get().OnMouseDoubleClick(nullptr, Button);
+		}
 	}
-	else if(EventType == IE_Released)
+	else
 	{
-		//FSlateApplication::Get().ProcessMouseButtonUpEvent(PointerEvent);
-		FSlateApplication::Get().ProcessKeyUpEvent(KeyEvent);
+		const uint32 *KeyCode = 0;
+		const uint32 *CharacterCode = 0;
+		FInputKeyManager::Get().GetCodesFromKey(Key, KeyCode, CharacterCode);
+		uint32 KeyCodeVal = (KeyCode != NULL) ? *KeyCode : -1;
+		uint32 CharacterCodeVal = (CharacterCode != NULL) ? *CharacterCode : -1;
+
+		if (EventType == IE_Pressed)
+		{
+			FSlateApplication::Get().OnKeyDown(KeyCodeVal, CharacterCodeVal, false);
+		}
+		else if (EventType == IE_Released)
+		{
+			FSlateApplication::Get().OnKeyUp(KeyCodeVal, CharacterCodeVal, false);
+		}
 	}
-	else if(EventType == IE_DoubleClick)
-	{
-		//FSlateApplication::Get().ProcessMouseButtonDoubleClickEvent(nullptr,PointerEvent);
-	} 
 }
 
 //Most HUD stuff is in floats so I do the conversion internally
