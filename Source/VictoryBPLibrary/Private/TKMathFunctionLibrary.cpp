@@ -7,11 +7,6 @@
  
 #include "StaticMeshResources.h"
 
-//~~~ PhysX ~~~
-#include "PhysXIncludes.h"
-#include "PhysicsPublic.h"
-//~~~~~~~~~~~
- 
 //UTKMathFunctionLibrary
  
 float UTKMathFunctionLibrary::GetConsoleVariableFloat(FString VariableName)

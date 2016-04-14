@@ -1,6 +1,7 @@
 /*
 	By Rama
 */
+    
 #include "VictoryBPLibraryPrivatePCH.h"
  
 #include "VictoryBPFunctionLibrary.h"
@@ -14,6 +15,15 @@
 #include "PhysicsEngine/BodySetup.h"
 
 
+//Apex issues, can add iOS here  <3 Rama
+#if PLATFORM_ANDROID || PLATFORM_HTML5_BROWSER
+#ifdef WITH_APEX
+#undef WITH_APEX
+#endif
+#define WITH_APEX 0
+#endif //APEX EXCLUSIONS
+
+ 
 //~~~ PhysX ~~~
 #include "PhysXIncludes.h"
 #include "PhysXPublic.h"		//For the ptou conversions
@@ -31,9 +41,6 @@
 #include <chrono>
 #include <random>
  
-
-
-
 /*
 	~~~ Rama File Operations CopyRight ~~~ 
 	
@@ -438,7 +445,8 @@ bool UVictoryBPFunctionLibrary::VictoryDestructible_DestroyChunk(UDestructibleCo
 	}
 	return true;
 	#endif //WITH_APEX
-	
+	 
+	UE_LOG(LogTemp,Error,TEXT("UVictoryBPFunctionLibrary::VictoryDestructible_DestroyChunk ~ Current Platform does not support APEX"));
 	return false;
 }
 
@@ -2638,7 +2646,9 @@ void UVictoryBPFunctionLibrary::Rendering__UnFreezeGameRendering()
 }
 	
 bool UVictoryBPFunctionLibrary::ClientWindow__GameWindowIsForeGroundInOS()
-{
+{   
+	return FPlatformProcess::IsThisApplicationForeground();
+	/*
 	//Iterate Over Actors
 	UWorld* TheWorld = NULL;
 	for ( TObjectIterator<AActor> Itr; Itr; ++Itr )
@@ -2667,6 +2677,7 @@ bool UVictoryBPFunctionLibrary::ClientWindow__GameWindowIsForeGroundInOS()
 	//~~~~~~~~~~~~~~~~~~~~
 	
     return VictoryViewport->IsForegroundWindow();
+	*/
 }
 bool UVictoryBPFunctionLibrary::FileIO__SaveStringTextToFile(
 	FString SaveDirectory, 

@@ -334,7 +334,20 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	static float VictoryGetSoundVolume(USoundClass* SoundClassObject);
 
 	//~~~~~~~~~~~~~~~~~~~~
-
+ 
+	/** The number of seconds that this actor has been in play, relative to Get Game Time In Seconds. */
+	UFUNCTION(BlueprintPure,  Category = "VictoryBPLibrary")
+	static float GetTimeInPlay(AActor* Actor) 
+	{
+		if(!Actor) return -1;
+		
+		UWorld* World = Actor->GetWorld();
+		 
+		//Use FApp Current Time as a back up
+		float CurrentTime = (World) ? World->GetTimeSeconds() : FApp::GetCurrentTime();
+		return CurrentTime - Actor->CreationTime;
+	}
+	
 	/** 
 	* Creates a plane centered on a world space point with a facing direction of Normal. 
 	* 
@@ -420,6 +433,50 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	//UFUNCTION(BlueprintPure, Category="Math|Interpolation", meta=(Keywords="position"))
 	UFUNCTION(BlueprintPure, Category="VictoryBPLibrary|Math", meta=(Keywords="position"))
 	static FVector2D Vector2DInterpTo_Constant(FVector2D Current, FVector2D Target, float DeltaTime, float InterpSpeed);
+	
+	//~~~ Text To Number ~~~
+	
+	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary")
+	static bool Text_IsNumeric(const FText& Text)
+	{
+		return Text.IsNumeric();
+	}
+	  
+	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary", meta=(AdvancedDisplay = "1"))
+	static float Text_ToFloat(const FText& Text, bool UseDotForThousands=false)
+	{  
+		//because commas lead to string number being truncated, FText 10,000 becomes 10 for FString
+		FString StrFloat = Text.ToString();
+		TextNumFormat(StrFloat,UseDotForThousands);
+		return FCString::Atof(*StrFloat); 
+	}  
+	
+	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary", meta=(AdvancedDisplay = "1"))
+	static int32 Text_ToInt(const FText& Text, bool UseDotForThousands=false)
+	{   
+		//because commas lead to string number being truncated, FText 10,000 becomes 10 for FString
+		FString StrInt = Text.ToString();
+		TextNumFormat(StrInt,UseDotForThousands);
+		return FCString::Atoi(*StrInt);
+	}
+	  
+	static void TextNumFormat(FString& StrNum, bool UseDotForThousands)
+	{
+		//10.000.000,997
+		if(UseDotForThousands)
+		{
+			StrNum.ReplaceInline(TEXT("."),TEXT(""));	//no dots as they truncate
+			StrNum.ReplaceInline(TEXT(","),TEXT("."));	//commas become decimal
+		}
+		
+		//10,000,000.997
+		else
+		{
+			StrNum.ReplaceInline(TEXT(","),TEXT(""));  //decimal can stay, commas would truncate so remove
+		}
+	}
+	 
+	//~~~ End of Text To Number ~~~
 	
 	/** Returns Value mapped from one range into another where the value is clamped to the output range.  (e.g. 0.5 normalized from the range 0->1 to 0->50 would result in 25) */
 	UFUNCTION(BlueprintPure, Category="VictoryBPLibrary|Math", meta=(Keywords = "get mapped value clamped"))
@@ -651,8 +708,8 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	static bool PlayerState_GetPlayerID(APlayerController* ThePC, int32& PlayerID);
 
 	/** Returns whether this game instance is single player.  <3 Rama*/
-	UFUNCTION(BlueprintPure, Category="VictoryBPLibrary|Networking", meta=(Keywords="Standalone multiplayer", WorldContext="WorldContextObject"))
-	static bool IsSinglePlayer(UObject* WorldContextObject)
+	UFUNCTION(BlueprintPure, Category="VictoryBPLibrary|Networking", meta=(Keywords="SinglePlayer multiplayer", WorldContext="WorldContextObject"))
+	static bool IsStandAlone(UObject* WorldContextObject)
 	{
 		UWorld* World = GEngine->GetWorldFromContextObject( WorldContextObject );
 		return World ? (World->GetNetMode() == NM_Standalone) : false;
@@ -913,8 +970,8 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		static void Visibility__GetNotRenderedActors(UObject* WorldContextObject, TArray<AActor*>& CurrentlyNotRenderedActors, float MinRecentTime = 0.01);
 
 	/** Is the Current Game Window the Foreground window in the OS, or in the Editor? This will be accurate in standalone running of the game as well as in the editor PIE */
-	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
-		static bool ClientWindow__GameWindowIsForeGroundInOS();
+	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary")
+	static bool ClientWindow__GameWindowIsForeGroundInOS();
 
 	/** Freeze Game Render, Does Not Stop Game Logic, Just Rendering. This is not like Pausing. Mainly useful for freezing render when window is not in the foreground */
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")

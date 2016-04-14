@@ -50,13 +50,24 @@ public class VictoryBPLibrary : ModuleRules
 				
 				"ImageWrapper",
 				
-				"PhysX", "APEX",
-
+				"PhysX", 
+  
                 "AIModule"	
 			}
 			);
 		
-		
+		//APEX EXCLUSIONS
+		if (Target.Platform != UnrealTargetPlatform.Android && Target.Platform != UnrealTargetPlatform.HTML5)
+		{
+			PrivateDependencyModuleNames.AddRange(
+			new string[]
+			{
+				"APEX"
+			}
+			);
+		}
+	
+		 
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
