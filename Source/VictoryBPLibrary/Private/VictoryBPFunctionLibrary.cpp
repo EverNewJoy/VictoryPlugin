@@ -8,6 +8,11 @@
  
 #include "StaticMeshResources.h"
 
+//For PIE error messages
+#include "MessageLog.h"
+#define LOCTEXT_NAMESPACE "Fun BP Lib"
+
+
 #include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapper.h"
 #include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapperModule.h"
 
@@ -16,7 +21,7 @@
 
 
 //Apex issues, can add iOS here  <3 Rama
-#if PLATFORM_ANDROID || PLATFORM_HTML5_BROWSER
+#if PLATFORM_ANDROID || PLATFORM_HTML5_BROWSER || PLATFORM_IOS
 #ifdef WITH_APEX
 #undef WITH_APEX
 #endif
@@ -368,6 +373,10 @@ EPathFollowingRequestResult::Type UVictoryBPFunctionLibrary::Victory_AI_MoveToWi
 	);
 }
 	
+//~~~~~~
+//Core
+//~~~~~~ 
+ 
 //~~~~~~
 //Physics
 //~~~~~~ 
@@ -4222,8 +4231,14 @@ bool UVictoryBPFunctionLibrary::Victory_Get_Pixel(const TArray<FLinearColor>& Pi
 }
 
 
-bool UVictoryBPFunctionLibrary::Victory_SavePixels(const FString& FullFilePath,int32 Width, int32 Height, const TArray<FLinearColor>& ImagePixels, FString& ErrorString)
-{
+bool UVictoryBPFunctionLibrary::Victory_SavePixels(
+	const FString& FullFilePath
+	, int32 Width, int32 Height 
+	, const TArray<FLinearColor>& ImagePixels
+	, bool SaveAsBMP
+	, bool sRGB
+	, FString& ErrorString
+){
 	if(FullFilePath.Len() < 1) 
 	{
 		ErrorString = "No file path";
@@ -4244,10 +4259,10 @@ bool UVictoryBPFunctionLibrary::Victory_SavePixels(const FString& FullFilePath,i
 	//Create FColor version
 	TArray<FColor> ColorArray;
 	for(const FLinearColor& Each : ImagePixels)
-	{
-		ColorArray.Add(Each.ToFColor(true));
+	{  
+		ColorArray.Add(Each.ToFColor(sRGB));  
 	} 
-	 
+	  
 	if(ColorArray.Num() != Width * Height) 
 	{
 		ErrorString = "Error ~ height x width is not equal to the total pixel array length!";
@@ -4255,20 +4270,38 @@ bool UVictoryBPFunctionLibrary::Victory_SavePixels(const FString& FullFilePath,i
 	}
 	  
 	//Remove any supplied file extension and/or add accurate one
-	FString FinalFilename = FPaths::GetBaseFilename(FullFilePath, false) + ".png";  //false = dont remove path
-
+	FString FinalFilename = FPaths::GetBaseFilename(FullFilePath, false); //false = dont remove path
+	FinalFilename += (SaveAsBMP) ? ".bmp" : ".png";  
+   
 	//~~~
 	
-	TArray<uint8> CompressedPNG;
-	FImageUtils::CompressImageArray( 
-		Width, 
-		Height, 
-		ColorArray, 
-		CompressedPNG
-	);
-	    
-	ErrorString = "Success! or if returning false, the saving of file to disk did not succeed for File IO reasons";
-	return FFileHelper::SaveArrayToFile(CompressedPNG, *FinalFilename);
+	if(SaveAsBMP)
+	{ 
+		ErrorString = "Success! or if returning false, the saving of file to disk did not succeed for File IO reasons";
+		return FFileHelper::CreateBitmap( 
+			*FinalFilename, 
+			Width, 
+			Height,  
+			ColorArray.GetData(), //const struct FColor* Data, 
+			nullptr,//struct FIntRect* SubRectangle = NULL, 
+			&IFileManager::Get(), 
+			nullptr, //out filename info only 
+			true //bool bInWriteAlpha 
+		);
+	}
+	else
+	{
+		TArray<uint8> CompressedPNG;
+		FImageUtils::CompressImageArray( 
+			Width, 
+			Height, 
+			ColorArray, 
+			CompressedPNG
+		);
+			
+		ErrorString = "Success! or if returning false, the saving of file to disk did not succeed for File IO reasons";
+		return FFileHelper::SaveArrayToFile(CompressedPNG, *FinalFilename);
+	} 
 	 
 	/*
 	//Crashed for JPG, worked great for PNG
@@ -4420,8 +4453,7 @@ class USoundWave* UVictoryBPFunctionLibrary::GetSoundWaveFromFile(const FString&
 	#if PLATFORM_PS4
 	UE_LOG(LogTemp, Error, TEXT("UVictoryBPFunctionLibrary::GetSoundWaveFromFile ~ vorbis-method not supported on PS4. See UVictoryBPFunctionLibrary::fillSoundWaveInfo"));
 	return nullptr;
-	#endif
-	 
+	#else
 	USoundWave* sw = NewObject<USoundWave>(USoundWave::StaticClass());
 
 	if (!sw)
@@ -4450,6 +4482,7 @@ class USoundWave* UVictoryBPFunctionLibrary::GetSoundWaveFromFile(const FString&
 		return NULL;
 
 	return sw;
+	#endif 
 }
 
 #if !PLATFORM_PS4
@@ -4618,20 +4651,6 @@ bool UVictoryBPFunctionLibrary::Capture2D_Project(class ASceneCapture2D* Target,
     return (Target) ? CaptureComponent2D_Project(Target->GetCaptureComponent2D(), Location, OutPixelLocation) : false;
 }
  
-UTextureRenderTarget2D* UVictoryBPFunctionLibrary::CreateTextureRenderTarget2D(int32 InSizeX, int32 InSizeY, FLinearColor ClearColor)
-{ 
-    UTextureRenderTarget2D* RenderTarget = NewObject<UTextureRenderTarget2D>();
-    
-    if (RenderTarget)
-    {
-        RenderTarget->AddToRoot();
-        RenderTarget->ClearColor = ClearColor;
-        RenderTarget->InitAutoFormat((InSizeX == 0) ? 256 : InSizeX, (InSizeY == 0) ? 256 : InSizeY);
-    }
-    
-    return RenderTarget;
-}
-
 static IImageWrapperPtr GetImageWrapperByExtention(const FString InImagePath)
 {
     IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
@@ -4816,3 +4835,7 @@ static void TESTINGInternalDrawDebugCircle(const UWorld* InWorld, const FMatrix&
 	//this is how you can make cpp only internal functions!
 	
 }
+
+
+
+#undef LOCTEXT_NAMESPACE

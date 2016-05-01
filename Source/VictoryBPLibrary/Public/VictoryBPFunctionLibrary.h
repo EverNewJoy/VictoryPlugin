@@ -225,6 +225,43 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	 
 	
 	//~~~~~~~~~~
+	// 	Core
+	//~~~~~~~~~~
+
+	/** Dynamically change how frequently in seconds a component will tick! Can be altered at any point during game-time! ♥ Rama */
+	UFUNCTION(BlueprintCallable,Category="VictoryBPLibrary|Core")
+	static void SetComponentTickRate(UActorComponent* Component, float Seconds)
+	{   
+		if(!Component) return;
+		Component->PrimaryComponentTick.TickInterval = Seconds;
+	}
+	
+	/**
+	* Create a new Texture Render Target 2D, ideal for use with Scene Capture Components created during runtime that need their own unique Render Targets
+	* @param 	Width Texture Width
+	* @param 	Height Texture Height
+	* @param	bHDR Whether to support storing HDR values, which requires more memory.
+	* @param	ClearColor The color the texture is cleared to
+	* @param 	Gamma Will override FTextureRenderTarget2DResource::GetDisplayGamma if > 0.
+	* @return	A new Texture Render Target 2D!
+	*
+	*/ 
+	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
+	static UTextureRenderTarget2D* CreateTextureRenderTarget2D(int32 Width=256, int32 Height=256, bool bHDR=false, FLinearColor ClearColor = FLinearColor::White, float Gamma = 1)
+	{   
+		UTextureRenderTarget2D* NewRenderTarget2D = NewObject<UTextureRenderTarget2D>();
+		if(!NewRenderTarget2D)
+		{
+			return nullptr;
+		} 
+		NewRenderTarget2D->bHDR = bHDR;
+		NewRenderTarget2D->ClearColor = FLinearColor::White;
+		NewRenderTarget2D->TargetGamma = Gamma; 
+		NewRenderTarget2D->InitAutoFormat(Width, Height); //auto init from value bHDR
+		return NewRenderTarget2D; 
+	}
+	
+	//~~~~~~~~~~
 	// 	Physics
 	//~~~~~~~~~~
 	
@@ -1321,13 +1358,13 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	
 	/** Save an array of pixels to disk as a PNG! It is very important that you supply the curret width and height of the image! Returns false if Width * Height != Array length or file could not be saved to the location specified. I return an ErrorString to clarify what the exact issue was. -Rama */
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|Load Texture From File",meta=(Keywords="create image png jpg jpeg bmp bitmap ico icon exr icns"))
-	static bool Victory_SavePixels(const FString& FullFilePath,int32 Width, int32 Height, const TArray<FLinearColor>& ImagePixels, FString& ErrorString);
-	
-	/** This will modify the original T2D to remove sRGB and change compressiont o VectorDisplacementMap to ensure accurate pixel reading. -Rama*/
+	static bool Victory_SavePixels(const FString& FullFilePath,int32 Width, int32 Height, const TArray<FLinearColor>& ImagePixels, bool SaveAsBMP, bool sRGB, FString& ErrorString);
+	 
+	/** This will modify the original T2D to remove sRGB and change compression to VectorDisplacementMap to ensure accurate pixel reading. -Rama*/
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|Load Texture From File",meta=(Keywords="create image png jpg jpeg bmp bitmap ico icon exr icns"))
 	static bool Victory_GetPixelFromT2D(UTexture2D* T2D, int32 X, int32 Y, FLinearColor& PixelColor);
 	
-	/** This will modify the original T2D to remove sRGB and change compressiont o VectorDisplacementMap to ensure accurate pixel reading. -Rama*/
+	/** This will modify the original T2D to remove sRGB and change compression to VectorDisplacementMap to ensure accurate pixel reading. -Rama*/
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|Load Texture From File",meta=(Keywords="create image png jpg jpeg bmp bitmap ico icon exr icns"))
 	static bool Victory_GetPixelsArrayFromT2D(UTexture2D* T2D, int32& TextureWidth, int32& TextureHeight,TArray<FLinearColor>& PixelArray);
 	
@@ -1556,11 +1593,7 @@ static bool CaptureComponent2D_Project(class USceneCaptureComponent2D* Target, F
 /** Contributed by Community Member Kris! */
 UFUNCTION(Category = "VictoryBPLibrary|SceneCapture", BlueprintPure, Meta = (DefaultToSelf = "Target"))
 static bool Capture2D_Project(class ASceneCapture2D* Target, FVector Location, FVector2D& OutPixelLocation);
-    
-/** Contributed by Community Member Kris! */
-UFUNCTION(Category = "VictoryBPLibrary|Texture", BlueprintCallable)
-static class UTextureRenderTarget2D* CreateTextureRenderTarget2D(int32 InSizeX = 256, int32 InSizeY = 256, FLinearColor ClearColor = FLinearColor::Transparent);
- 
+     
 	/** Make sure to include the appropriate image extension in your file path! Recommended: .bmp, .jpg, .png. Contributed by Community Member Kris! */
 	UFUNCTION(Category = "VictoryBPLibrary|SceneCapture", BlueprintCallable)
 	static bool CaptureComponent2D_SaveImage(class USceneCaptureComponent2D* Target, const FString ImagePath, const FLinearColor ClearColour);

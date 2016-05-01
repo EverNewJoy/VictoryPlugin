@@ -57,7 +57,7 @@ public class VictoryBPLibrary : ModuleRules
 			);
 		
 		//APEX EXCLUSIONS
-		if (Target.Platform != UnrealTargetPlatform.Android && Target.Platform != UnrealTargetPlatform.HTML5)
+		if (Target.Platform != UnrealTargetPlatform.Android && Target.Platform != UnrealTargetPlatform.HTML5 && Target.Platform != UnrealTargetPlatform.IOS)
 		{
 			PrivateDependencyModuleNames.AddRange(
 			new string[]
