@@ -8,6 +8,8 @@
  
 #include "StaticMeshResources.h"
 
+#include "HeadMountedDisplay.h"
+   
 //For PIE error messages
 #include "MessageLog.h"
 #define LOCTEXT_NAMESPACE "Fun BP Lib"
@@ -46,6 +48,8 @@
 #include <chrono>
 #include <random>
  
+#include <string>
+   
 /*
 	~~~ Rama File Operations CopyRight ~~~ 
 	
@@ -1241,6 +1245,17 @@ void UVictoryBPFunctionLibrary::VictoryIntMinusEquals(UPARAM(ref) int32& Int, in
 	IntOut = Int; 
 }
 
+void UVictoryBPFunctionLibrary::VictoryFloatPlusEquals(UPARAM(ref) float& Float, float Add, float& FloatOut)
+{
+	Float += Add;
+	FloatOut = Float;
+}
+void UVictoryBPFunctionLibrary::VictoryFloatMinusEquals(UPARAM(ref) float& Float, float Sub, float& FloatOut)
+{
+	Float -= Sub;
+	FloatOut = Float; 
+}
+
 void UVictoryBPFunctionLibrary::VictorySortIntArray(UPARAM(ref) TArray<int32>& IntArray, TArray<int32>& IntArrayRef)
 {
 	IntArray.Sort();
@@ -1510,11 +1525,30 @@ void UVictoryBPFunctionLibrary::VictorySetCustomConfigVar_String(FString Section
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-
-
-
-
+EVictoryHMDDevice UVictoryBPFunctionLibrary::GetHeadMountedDisplayDeviceType()
+{
+	if(!GEngine) return EVictoryHMDDevice::None;
+	 
+	if (GEngine->HMDDevice.IsValid())
+	{  
+		//Actively connected?
+		if(!GEngine->HMDDevice->IsHMDConnected()) 
+		{  
+			return EVictoryHMDDevice::None;
+		} 
+		
+		switch (GEngine->HMDDevice->GetHMDDeviceType()) 
+		{       
+			case EHMDDeviceType::DT_OculusRift 				: return EVictoryHMDDevice::OculusRift;
+			case EHMDDeviceType::DT_Morpheus 				: return EVictoryHMDDevice::Morpheus;
+			case EHMDDeviceType::DT_SteamVR 				: return EVictoryHMDDevice::SteamVR;
+			case EHMDDeviceType::DT_ES2GenericStereoMesh 	: return EVictoryHMDDevice::ES2GenericStereoMesh;
+			case EHMDDeviceType::DT_GearVR 					: return EVictoryHMDDevice::GearVR;
+		}
+	}
+	  
+	return EVictoryHMDDevice::None;
+}
 
 
 
@@ -2229,6 +2263,21 @@ int32 UVictoryBPFunctionLibrary::Conversion__FloatToRoundedInteger(float IN_Floa
 }
 
 
+bool UVictoryBPFunctionLibrary::IsAlphaNumeric(const FString& String)
+{
+	std::string str = (TCHAR_TO_UTF8(*String));
+	    
+	for ( std::string::iterator it=str.begin(); it!=str.end(); ++it)
+	{
+		if(!isalnum(*it))
+		{   
+			return false;
+		}
+	}
+	
+	return true;
+}
+
 void UVictoryBPFunctionLibrary::Victory_GetStringFromOSClipboard(FString& FromClipboard)
 {  
 	FPlatformMisc::ClipboardPaste(FromClipboard);
@@ -2356,29 +2405,29 @@ AStaticMeshActor* UVictoryBPFunctionLibrary::Clone__StaticMeshActor(UObject* Wor
 	NewSMA->SetActorTransform(ToClone->GetTransform());
 	
 	//Mobility
-	NewSMA->StaticMeshComponent->SetMobility(EComponentMobility::Movable	);
+	NewSMA->GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable	);
 	
 	//copy static mesh
-	NewSMA->StaticMeshComponent->SetStaticMesh(ToClone->StaticMeshComponent->StaticMesh);
+	NewSMA->GetStaticMeshComponent()->SetStaticMesh(ToClone->GetStaticMeshComponent()->StaticMesh);
 	
 	//~~~
 	
 	//copy materials
 	TArray<UMaterialInterface*> Mats;
-	ToClone->StaticMeshComponent->GetUsedMaterials(Mats);
+	ToClone->GetStaticMeshComponent()->GetUsedMaterials(Mats);
 	
 	const int32 Total = Mats.Num();
 	for(int32 v = 0; v < Total; v++ )
 	{
-		NewSMA->StaticMeshComponent->SetMaterial(v,Mats[v]);
+		NewSMA->GetStaticMeshComponent()->SetMaterial(v,Mats[v]);
 	}
 	
 	//~~~
 	
 	//copy physics state
-	if(ToClone->StaticMeshComponent->IsSimulatingPhysics())
+	if(ToClone->GetStaticMeshComponent()->IsSimulatingPhysics())
 	{
-		NewSMA->StaticMeshComponent->SetSimulatePhysics(true);
+		NewSMA->GetStaticMeshComponent()->SetSimulatePhysics(true);
 	}
 	
 	//~~~
@@ -2450,6 +2499,46 @@ bool UVictoryBPFunctionLibrary::WorldType__InGameInstanceWorld(UObject* WorldCon
     return (World->WorldType == EWorldType::Game );
 }
 	
+
+
+bool UVictoryBPFunctionLibrary::DoesMaterialHaveParameter(UMaterialInterface* Mat, FName Parameter)
+{    
+	if(!Mat || Parameter == NAME_None) 
+	{
+		return false;
+	}
+	
+	//Lesson, always use the parent of a Material Instance Dynamic, 
+	//	for some reason the dynamic version finds parameters that aren't actually valid.
+	//		-Rama
+	UMaterialInterface* Parent = Mat;
+	UMaterialInstance* MatInst = Cast<UMaterialInstance>(Mat);
+	if(MatInst)
+	{
+		Parent = MatInst->Parent;
+	}
+	
+	if(!Parent) 
+	{
+		return false;
+	} 
+	
+	float ScalarValue;
+	if(Parent->GetScalarParameterValue(Parameter,ScalarValue))
+	{
+		return true;
+	}
+  
+	FLinearColor VectValue;
+	if(Parent->GetVectorParameterValue(Parameter,VectValue))
+	{
+		return true;
+	}
+ 
+	UTexture* T2DValue; 
+	return Parent->GetTextureParameterValue(Parameter,T2DValue);
+}
+
 FString UVictoryBPFunctionLibrary::Accessor__GetNameAsString(const UObject* TheObject)
 {
 	if (!TheObject) return "";
@@ -3118,12 +3207,11 @@ AActor* UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestSocket(
 	//Actor
 	return HitActor;
 }
-
+	
 void UVictoryBPFunctionLibrary::VictorySimulateMouseWheel(const float& Delta)
 {
 	FSlateApplication::Get().OnMouseWheel(int32(Delta));
 }
-
 void UVictoryBPFunctionLibrary::VictorySimulateKeyPress(APlayerController* ThePC, FKey Key, EInputEvent EventType)
 {
 	if (!ThePC) return;
@@ -3185,6 +3273,29 @@ void UVictoryBPFunctionLibrary::VictorySimulateKeyPress(APlayerController* ThePC
 			FSlateApplication::Get().OnKeyUp(KeyCodeVal, CharacterCodeVal, false);
 		}
 	}
+}
+
+bool UVictoryBPFunctionLibrary::Viewport__EnableWorldRendering(const APlayerController* ThePC, bool RenderTheWorld)
+{ 
+	if (!ThePC) return false;
+	//~~~~~~~~~~~~~
+	
+	//Get Player
+	ULocalPlayer * VictoryPlayer = Cast<ULocalPlayer>(ThePC->Player); 
+											//PlayerController::Player is UPlayer
+           
+	if (!VictoryPlayer) return false;
+	//~~~~~~~~~~~~~~~~~~~~
+	
+	//get view port ptr
+	UGameViewportClient * VictoryViewportClient = 
+		Cast < UGameViewportClient > (VictoryPlayer->ViewportClient);
+		
+	if (!VictoryViewportClient) return false;
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	    
+	VictoryViewportClient->bDisableWorldRendering = !RenderTheWorld;
+	return true;
 }
 
 //Most HUD stuff is in floats so I do the conversion internally
@@ -3695,11 +3806,11 @@ bool UVictoryBPFunctionLibrary::AnimatedVertex__DrawCharacterAnimatedVertexLocat
 float UVictoryBPFunctionLibrary::DistanceToSurface__DistaceOfPointToMeshSurface(AStaticMeshActor* TheSMA, const FVector& TestPoint, FVector& ClosestSurfacePoint)
 {
 	if(!TheSMA) return -1;
-	if(!TheSMA->StaticMeshComponent) return -1;
+	if(!TheSMA->GetStaticMeshComponent()) return -1;
 	//~~~~~~~~~~
 	
 	//Dist of pt to Surface, retrieve closest Surface Point to Actor
-	return TheSMA->StaticMeshComponent->GetDistanceToCollision(TestPoint, ClosestSurfacePoint);
+	return TheSMA->GetStaticMeshComponent()->GetDistanceToCollision(TestPoint, ClosestSurfacePoint);
 }
 
 bool UVictoryBPFunctionLibrary::Mobility__SetSceneCompMobility(

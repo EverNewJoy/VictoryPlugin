@@ -65,6 +65,17 @@ enum class EJoyImageFormats : uint8
 	ICNS		UMETA(DisplayName="ICNS        ")
 };
 
+UENUM(BlueprintType)
+enum class EVictoryHMDDevice : uint8
+{
+	None					UMETA(DisplayName="None"),
+	OculusRift				UMETA(DisplayName="Oculus Rift"),
+	Morpheus				UMETA(DisplayName="Morpheus"),
+	ES2GenericStereoMesh	UMETA(DisplayName="ES2 Generic Stereo Mesh"),
+	SteamVR					UMETA(DisplayName="Vive (Steam VR)"),
+	GearVR					UMETA(DisplayName="Gear VR")
+};
+
 USTRUCT(BlueprintType)
 struct FVictoryInput
 {
@@ -135,9 +146,9 @@ struct FVictoryInputAxis
 	
 	FVictoryInputAxis(){}
 	FVictoryInputAxis(const FString InAxisName, FKey InKey, float InScale)
-		: Key(InKey)
+		: AxisName(InAxisName)
 		, KeyAsString(InKey.GetDisplayName().ToString())
-		, AxisName(InAxisName)
+		, Key(InKey) 
 		, Scale(InScale)
 	{ }
 	
@@ -420,6 +431,14 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintCallable, meta = (CompactNodeTitle = "-=",Keywords = "decrement integer"), Category = "VictoryBPLibrary|Math|Integer")
 	static void VictoryIntMinusEquals(UPARAM(ref) int32& Int, int32 Sub, int32& IntOut);
 	
+	/** Easily add to a float! <3 Rama*/
+	UFUNCTION(BlueprintCallable, meta = (CompactNodeTitle = "+=",Keywords = "increment float"), Category = "VictoryBPLibrary|Math|Float")
+	static void VictoryFloatPlusEquals(UPARAM(ref) float& Float, float Add, float& FloatOut);
+	
+	/** Easily subtract from a float! <3 Rama*/
+	UFUNCTION(BlueprintCallable, meta = (CompactNodeTitle = "-=",Keywords = "decrement float"), Category = "VictoryBPLibrary|Math|Float")
+	static void VictoryFloatMinusEquals(UPARAM(ref) float& Float, float Sub, float& FloatOut);
+	
 	/** Sort an integer array, smallest value will be at index 0 after sorting. Modifies the input array, no new data created. <3 Rama */
 	UFUNCTION(BlueprintCallable, meta = (Keywords = "sort integer array"), Category = "VictoryBPLibrary|Array")
 	static void VictorySortIntArray(UPARAM(ref) TArray<int32>& IntArray, TArray<int32>& IntArrayRef);
@@ -622,7 +641,8 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	FVector TransformVectorToActorSpace(AActor* Actor, const FVector& InVector);
 
 
-
+	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary", meta=(keywords="HMD vive oculus rift gearvr morpheus"))
+	static EVictoryHMDDevice GetHeadMountedDisplayDeviceType();
 
 
 	/** The FName that is expected is the exact same format as when you right click on asset -> Copy Reference! You can directly paste copied references into this node! IsValid lets you know if the path was correct or not and I was able to load the object. MAKE SURE TO SAVE THE RETURNED OBJECT AS A VARIABLE. Otherwise your shiny new asset will get garbage collected. I recommend you cast the return value to the appropriate object and then promote it to a variable :)  -Rama */
@@ -645,6 +665,16 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|UMG", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
 		static bool IsWidgetOfClassInViewport(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass);
 
+	/** Handy helper to check if a Key Event was for specified Key ♥ Rama*/
+	UFUNCTION(BlueprintPure,Category="VictoryBPLibrary|UMG", meta = (Keywords = "== match same equal"))
+	static void JoyIsKey(const FKeyEvent& KeyEvent, FKey Key, bool& Ctrl, bool& Shift, bool& Alt, bool& Cmd, bool& Match)
+	{     
+		Ctrl = KeyEvent.IsControlDown();
+		Alt =  KeyEvent.IsAltDown();
+		Shift = KeyEvent.IsShiftDown();
+		Cmd = KeyEvent.IsCommandDown();
+		Match = KeyEvent.GetKey() == Key;
+	}
 
 	/** Retrieves the unique net ID for the local player as a number! The number itself will vary based on what Online Subsystem is being used, but you are guaranteed that this number is unique per player! */
 	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary")
@@ -848,6 +878,9 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 		
 	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|String")
+	static bool IsAlphaNumeric(const FString& String);
+	
+	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|String")
 	static void Victory_GetStringFromOSClipboard(FString& FromClipboard);
 	
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|String")
@@ -925,7 +958,9 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		static bool Physics__UpdateCharacterCameraToRagdollLocation(AActor* TheCharacter, float HeightOffset = 128, float InterpSpeed = 3);
 
 		
-		
+	/** This node checks all Scalar, Vector, and Texture parameters of a material to see if the supplied parameter name is an actual parameter in the material! ♥ Rama*/
+	UFUNCTION(BlueprintPure,Category="VictoryBPLibrary")
+	static bool DoesMaterialHaveParameter(UMaterialInterface* Mat, FName Parameter);	
 		
 		
 	/** Get Name as String*/
@@ -939,13 +974,17 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	/** Get Player Character's Player Controller. Requires: The Passed in Actor must be a character and it must be a player controlled character. IsValid will tell you if the return value is valid, make sure to do a Branch to confirm this! */
 	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary")
 		static APlayerController* Accessor__GetPlayerController(AActor* TheCharacter, bool&IsValid);
-
+	
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
-		static void VictorySimulateMouseWheel(const float& Delta);
-
+	static void VictorySimulateMouseWheel(const float& Delta);
+	
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
-		static void VictorySimulateKeyPress(APlayerController* ThePC, FKey Key, EInputEvent EventType);
+	static void VictorySimulateKeyPress(APlayerController* ThePC, FKey Key, EInputEvent EventType);
 	 
+	/** This handy node lets you turn the rendering of the entire world on or off! Does not affect UMG or HUD, which allows you to use loading screens effectively! <3 Rama. Returns false if player controller could not be used to get the viewport. */
+	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary", meta=(keywords="disable show hide loading screen"))
+	static bool Viewport__EnableWorldRendering(const APlayerController* ThePC, bool RenderTheWorld);
+		
 	/** SET the Mouse Position! Returns false if the operation could not occur */
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
 		static bool Viewport__SetMousePosition(const APlayerController* ThePC, const float& PosX, const float& PosY);
