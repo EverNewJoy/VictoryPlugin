@@ -1652,6 +1652,35 @@ static bool Capture2D_Project(class ASceneCapture2D* Target, FVector Location, F
 	/** Make sure your image path has a valid extension! Supported types can be seen in the BP node Victory_LoadTexture2D_FromFile. Contributed by Community Member Kris! */
 	UFUNCTION(Category = "VictoryBPLibrary|Load Texture From File", BlueprintCallable)
 	static UTexture2D*  LoadTexture2D_FromFileByExtension(const FString& ImagePath, bool& IsValid, int32& OutWidth, int32& OutHeight);
+
+	/**
+	 * Find first widget of a certain class and return them.
+	 * @param WidgetClass The widget class to filter by.
+	 * @param TopLevelOnly Only a widget that is a direct child of the viewport will be returned.
+	 */
+	UFUNCTION(Category = "Widget", BlueprintCallable, BlueprintCosmetic, Meta = (WorldContext = "WorldContextObject"))
+	static UUserWidget* GetFirstWidgetOfClass(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass, bool TopLevelOnly);
+
+	/**
+	 * Recurses up the list of parents and returns true if this widget is a descendant of the PossibleParent
+	 * @return true if this widget is a child of the PossibleParent
+	 */
+	UFUNCTION(Category = "Widget", BlueprintCallable, BlueprintCosmetic, Meta = (DefaultToSelf = "ChildWidget"))
+	static bool IsChildOf(UWidget* ChildWidget, UWidget* PossibleParent);
+
+	/**
+	 * Recurses up the list of parents until it finds a widget of WidgetClass.
+	 * @return widget that is Parent of ChildWidget that matches WidgetClass.
+	 */
+	UFUNCTION(Category = "Widget", BlueprintCallable, BlueprintCosmetic, Meta = (DefaultToSelf = "ChildWidget"))
+	static UUserWidget* GetParentOfClass(UWidget* ChildWidget, TSubclassOf<UUserWidget> WidgetClass);
+
+	UFUNCTION(Category = "Widget", BlueprintCallable, BlueprintCosmetic, Meta = (DefaultToSelf = "ParentWidget"))
+	static void GetChildrenOfClass(UWidget* ParentWidget, TArray<UUserWidget*>& ChildWidgets, TSubclassOf<UUserWidget> WidgetClass);
+
+	UFUNCTION(Category = "Widget", BlueprintCallable, BlueprintCosmetic, Meta = (DefaultToSelf = "ParentUserWidget"))
+	static UWidget* GetWidgetFromName(UUserWidget* ParentUserWidget, const FName& Name);
+
 	
 //~~~~~~~~~
 

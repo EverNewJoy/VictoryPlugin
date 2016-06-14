@@ -4900,6 +4900,166 @@ UTexture2D* UVictoryBPFunctionLibrary::LoadTexture2D_FromFileByExtension(const F
 	return Texture;
 }
 
+UUserWidget* UVictoryBPFunctionLibrary::GetFirstWidgetOfClass(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass, bool TopLevelOnly)
+{
+	if (!WidgetClass || !WorldContextObject)
+	{
+		return nullptr;
+	}
+
+	const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	if (!World)
+	{
+		return nullptr;
+	}
+
+	UUserWidget* ResultWidget = nullptr;
+	for (TObjectIterator<UUserWidget> Itr; Itr; ++Itr)
+	{
+		UUserWidget* LiveWidget = *Itr;
+
+		// Skip any widget that's not in the current world context.
+		if (LiveWidget->GetWorld() != World)
+		{
+			continue;
+		}
+
+		// Skip any widget that is not a child of the class specified.
+		if (!LiveWidget->GetClass()->IsChildOf(WidgetClass))
+		{
+			continue;
+		}
+
+		if (!TopLevelOnly || LiveWidget->IsInViewport())
+		{
+			ResultWidget = LiveWidget;
+			break;
+		}
+	}
+
+	return ResultWidget;
+}
+
+bool UVictoryBPFunctionLibrary::IsChildOf(UWidget* ChildWidget, UWidget* PossibleParent)
+{
+	return (ChildWidget && PossibleParent) ? ChildWidget->IsChildOf(PossibleParent) : false;
+}
+
+UUserWidget* UVictoryBPFunctionLibrary::GetParentOfClass(UWidget* ChildWidget, TSubclassOf<UUserWidget> WidgetClass)
+{
+	UUserWidget* ResultParent = nullptr;
+
+	if (ChildWidget && WidgetClass)
+	{
+		UWidget* PossibleParent = ChildWidget->GetParent();
+		UWidget* NextPossibleParent = nullptr;
+		int32 count = 0;
+
+		while (PossibleParent != nullptr)
+		{
+			// Return once we find a parent of the desired class.
+			if (PossibleParent->GetClass()->IsChildOf(WidgetClass))
+			{
+				ResultParent = Cast<UUserWidget>(PossibleParent);
+				break;
+			}
+			
+			NextPossibleParent = PossibleParent->GetParent();
+
+			// If we don't have a parent, follow the outer chain until we find another widget, if at all.
+			if (NextPossibleParent == nullptr)
+			{
+				UWidgetTree* WidgetTree = Cast<UWidgetTree>(PossibleParent->GetOuter());
+				if (WidgetTree)
+				{
+					NextPossibleParent = Cast<UWidget>(WidgetTree->GetOuter());
+				}
+			}
+
+			PossibleParent = NextPossibleParent;
+		}
+	}
+
+	return ResultParent;
+}
+
+void UVictoryBPFunctionLibrary::GetChildrenOfClass(UWidget* ParentWidget, TArray<UUserWidget*>& ChildWidgets, TSubclassOf<UUserWidget> WidgetClass)
+{
+	ChildWidgets.Empty();
+
+	if (ParentWidget && WidgetClass)
+	{
+		// Current set of widgets to check
+		TInlineComponentArray<UWidget*> WidgetsToCheck;
+
+		// Set of all widgets we have checked
+		TInlineComponentArray<UWidget*> CheckedWidgets;
+
+		WidgetsToCheck.Push(ParentWidget);
+
+		// While still work left to do
+		while (WidgetsToCheck.Num() > 0)
+		{
+			// Get the next widgets off the queue
+			const bool bAllowShrinking = false;
+			UWidget* PossibleParent = WidgetsToCheck.Pop(bAllowShrinking);
+
+			// Add it to the 'checked' set, should not already be there!
+			if (!CheckedWidgets.Contains(PossibleParent))
+			{
+				CheckedWidgets.Add(PossibleParent);
+
+				// Add any widget that is a child of the class specified.
+				if (PossibleParent->GetClass()->IsChildOf(WidgetClass))
+				{
+					ChildWidgets.Add(Cast<UUserWidget>(PossibleParent));
+				}
+
+				UUserWidget* PossibleParentUserWidget = Cast<UUserWidget>(PossibleParent);
+
+				// If this is a UUserWidget, add its root widget to the check next.
+				if (PossibleParentUserWidget)
+				{
+					WidgetsToCheck.Push(PossibleParentUserWidget->GetRootWidget());
+				}
+				else
+				{
+					TArray<UWidget*> Widgets;
+
+					UWidgetTree::GetChildWidgets(PossibleParent, Widgets);
+
+					for (UWidget* Widget : Widgets)
+					{
+						if (!CheckedWidgets.Contains(Widget))
+						{
+							// Add the widget to the check next.
+							WidgetsToCheck.Push(Widget);
+
+							// Add any widget that is a child of the class specified.
+							if (Widget->GetClass()->IsChildOf(WidgetClass))
+							{
+								ChildWidgets.Add(Cast<UUserWidget>(Widget));
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+UWidget* UVictoryBPFunctionLibrary::GetWidgetFromName(UUserWidget* ParentUserWidget, const FName& Name)
+{
+	UWidget* ResultWidget = nullptr;
+
+	if (ParentUserWidget && (Name != NAME_None))
+	{
+		ResultWidget = ParentUserWidget->GetWidgetFromName(Name);
+	}
+
+	return ResultWidget;
+}
+
 //~~~~~~~~~ END OF CONTRIBUTED BY KRIS ~~~~~~~~~~~
  
 
