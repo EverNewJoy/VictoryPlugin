@@ -876,7 +876,15 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "VictoryBPLibrary")
 		static int32 Conversion__FloatToRoundedInteger(float IN_Float);
 
-		
+
+	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|String", meta=( Keywords = "concatenate append"))
+	static void VictoryAppendInline(UPARAM(ref) FString& String, const FString& ToAppend, FString& Result, bool AppendNewline=false)
+	{     
+		String += ToAppend;
+		if(AppendNewline) String += LINE_TERMINATOR;
+		Result = String;  
+	}
+	
 	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|String")
 	static bool IsAlphaNumeric(const FString& String);
 	
