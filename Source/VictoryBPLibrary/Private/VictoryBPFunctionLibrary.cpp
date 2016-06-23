@@ -4940,12 +4940,12 @@ UUserWidget* UVictoryBPFunctionLibrary::GetFirstWidgetOfClass(UObject* WorldCont
 	return ResultWidget;
 }
 
-bool UVictoryBPFunctionLibrary::IsChildOf(UWidget* ChildWidget, UWidget* PossibleParent)
+bool UVictoryBPFunctionLibrary::WidgetIsChildOf(UWidget* ChildWidget, UWidget* PossibleParent)
 {
 	return (ChildWidget && PossibleParent) ? ChildWidget->IsChildOf(PossibleParent) : false;
 }
 
-UUserWidget* UVictoryBPFunctionLibrary::GetParentOfClass(UWidget* ChildWidget, TSubclassOf<UUserWidget> WidgetClass)
+UUserWidget* UVictoryBPFunctionLibrary::WidgetGetParentOfClass(UWidget* ChildWidget, TSubclassOf<UUserWidget> WidgetClass)
 {
 	UUserWidget* ResultParent = nullptr;
 
@@ -4982,8 +4982,8 @@ UUserWidget* UVictoryBPFunctionLibrary::GetParentOfClass(UWidget* ChildWidget, T
 
 	return ResultParent;
 }
-
-void UVictoryBPFunctionLibrary::GetChildrenOfClass(UWidget* ParentWidget, TArray<UUserWidget*>& ChildWidgets, TSubclassOf<UUserWidget> WidgetClass)
+ 
+void UVictoryBPFunctionLibrary::WidgetGetChildrenOfClass(UWidget* ParentWidget, TArray<UUserWidget*>& ChildWidgets, TSubclassOf<UUserWidget> WidgetClass)
 {
 	ChildWidgets.Empty();
 
