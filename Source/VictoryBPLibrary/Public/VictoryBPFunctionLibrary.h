@@ -1680,8 +1680,13 @@ static bool Capture2D_Project(class ASceneCapture2D* Target, FVector Location, F
 
 	UFUNCTION(Category = "VictoryBPLibrary|UMG", BlueprintCallable, BlueprintCosmetic, Meta = (DefaultToSelf = "ParentUserWidget"))
 	static UWidget* GetWidgetFromName(UUserWidget* ParentUserWidget, const FName& Name);
-
 	
+	UFUNCTION(Category = "VictoryBPLibrary|Team", BlueprintPure)
+	static uint8 GetGenericTeamId(AActor* Target);
+
+	UFUNCTION(Category = "VictoryBPLibrary|Team", BlueprintCallable)
+	static void SetGenericTeamId(AActor* Target, uint8 NewTeamId);
+
 //~~~~~~~~~
 
 //~~~ KeyToTruth ~~~
