@@ -655,9 +655,9 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 
 	/** Find all widgets of a certain class! Top level only means only widgets that are directly added to the viewport will be found */
-	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|UMG", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
+	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|UMG", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject", DeterminesOutputType = "WidgetClass", DynamicOutputParam = "FoundWidgets"))
 	static void GetAllWidgetsOfClass(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass, TArray<UUserWidget*>& FoundWidgets, bool TopLevelOnly = true);
-
+  
 	/** Remove all widgets of a certain class from viewport! */
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|UMG", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
 	static void RemoveAllWidgetsOfClass(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass);
@@ -877,7 +877,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		static int32 Conversion__FloatToRoundedInteger(float IN_Float);
 
 
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|String", meta=( Keywords = "concatenate append"))
+	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|String", meta=( Keywords = "concatenate append"))
 	static void VictoryAppendInline(UPARAM(ref) FString& String, const FString& ToAppend, FString& Result, bool AppendNewline=false)
 	{     
 		String += ToAppend;
