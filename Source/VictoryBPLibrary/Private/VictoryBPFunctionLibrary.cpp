@@ -9,7 +9,9 @@
 #include "StaticMeshResources.h"
 
 #include "HeadMountedDisplay.h"
-   
+
+#include "GenericTeamAgentInterface.h"
+
 //For PIE error messages
 #include "MessageLog.h"
 #define LOCTEXT_NAMESPACE "Fun BP Lib"
@@ -30,7 +32,6 @@
 #define WITH_APEX 0
 #endif //APEX EXCLUSIONS
 
- 
 //~~~ PhysX ~~~
 #include "PhysXIncludes.h"
 #include "PhysXPublic.h"		//For the ptou conversions
@@ -5058,6 +5059,28 @@ UWidget* UVictoryBPFunctionLibrary::GetWidgetFromName(UUserWidget* ParentUserWid
 	}
 
 	return ResultWidget;
+}
+
+uint8 UVictoryBPFunctionLibrary::GetGenericTeamId(AActor* Target)
+{
+	IGenericTeamAgentInterface* TeamAgentInterface = nullptr;
+	if (Target)
+	{
+		TeamAgentInterface = Cast<IGenericTeamAgentInterface>(Target);
+	}
+	return (TeamAgentInterface != nullptr) ? TeamAgentInterface->GetGenericTeamId() : FGenericTeamId::NoTeam;
+}
+
+void UVictoryBPFunctionLibrary::SetGenericTeamId(AActor* Target, uint8 NewTeamId)
+{
+	if (Target)
+	{
+		IGenericTeamAgentInterface* TeamAgentInterface = Cast<IGenericTeamAgentInterface>(Target);
+		if (TeamAgentInterface != nullptr)
+		{
+			TeamAgentInterface->SetGenericTeamId(NewTeamId);
+		}
+	}
 }
 
 //~~~~~~~~~ END OF CONTRIBUTED BY KRIS ~~~~~~~~~~~

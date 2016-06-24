@@ -1672,16 +1672,21 @@ static bool Capture2D_Project(class ASceneCapture2D* Target, FVector Location, F
 	 * Recurses up the list of parents until it finds a widget of WidgetClass.
 	 * @return widget that is Parent of ChildWidget that matches WidgetClass.
 	 */
-	UFUNCTION(Category = "VictoryBPLibrary|UMG", BlueprintCallable, BlueprintCosmetic, Meta = (DefaultToSelf = "ChildWidget"))
+	UFUNCTION(Category = "VictoryBPLibrary|UMG", BlueprintCallable, BlueprintCosmetic, Meta = (DefaultToSelf = "ChildWidget", DeterminesOutputType = "WidgetClass"))
 	static UUserWidget* WidgetGetParentOfClass(UWidget* ChildWidget, TSubclassOf<UUserWidget> WidgetClass);
 
-	UFUNCTION(Category = "VictoryBPLibrary|UMG", BlueprintCallable, BlueprintCosmetic, Meta = (DefaultToSelf = "ParentWidget"))
+	UFUNCTION(Category = "VictoryBPLibrary|UMG", BlueprintCallable, BlueprintCosmetic, Meta = (DefaultToSelf = "ParentWidget", DeterminesOutputType = "WidgetClass", DynamicOutputParam = "ChildWidgets"))
 	static void WidgetGetChildrenOfClass(UWidget* ParentWidget, TArray<UUserWidget*>& ChildWidgets, TSubclassOf<UUserWidget> WidgetClass);
 
 	UFUNCTION(Category = "VictoryBPLibrary|UMG", BlueprintCallable, BlueprintCosmetic, Meta = (DefaultToSelf = "ParentUserWidget"))
 	static UWidget* GetWidgetFromName(UUserWidget* ParentUserWidget, const FName& Name);
-
 	
+	UFUNCTION(Category = "VictoryBPLibrary|Team", BlueprintPure)
+	static uint8 GetGenericTeamId(AActor* Target);
+
+	UFUNCTION(Category = "VictoryBPLibrary|Team", BlueprintCallable)
+	static void SetGenericTeamId(AActor* Target, uint8 NewTeamId);
+
 //~~~~~~~~~
 
 //~~~ KeyToTruth ~~~
