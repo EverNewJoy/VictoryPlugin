@@ -1657,8 +1657,8 @@ static bool Capture2D_Project(class ASceneCapture2D* Target, FVector Location, F
 	 * Find first widget of a certain class and return it.
 	 * @param WidgetClass The widget class to filter by.
 	 * @param TopLevelOnly Only a widget that is a direct child of the viewport will be returned.
-	 */
-	UFUNCTION(Category = "VictoryBPLibrary|UMG", BlueprintCallable, BlueprintCosmetic, Meta = (WorldContext = "WorldContextObject"))
+	 */  
+	UFUNCTION(Category = "VictoryBPLibrary|UMG", BlueprintCallable, BlueprintCosmetic, Meta = (WorldContext = "WorldContextObject", DeterminesOutputType = "WidgetClass"))
 	static UUserWidget* GetFirstWidgetOfClass(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass, bool TopLevelOnly);
 
 	/**
