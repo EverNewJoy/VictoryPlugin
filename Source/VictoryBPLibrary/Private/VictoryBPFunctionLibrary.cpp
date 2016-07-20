@@ -4838,7 +4838,7 @@ bool UVictoryBPFunctionLibrary::CaptureComponent2D_SaveImage(class USceneCapture
 		Pixel.B = PR;
 
 		// Set alpha based on RGB values of ClearColour.
-		Pixel.A = ((Pixel.R == ClearFColour.R) && (Pixel.R == ClearFColour.R) && (Pixel.R == ClearFColour.R)) ? 0 : 255;
+		Pixel.A = ((Pixel.R == ClearFColour.R) && (Pixel.G == ClearFColour.G) && (Pixel.B == ClearFColour.B)) ? 0 : 255;
 	}
 	
 	IImageWrapperPtr ImageWrapper = GetImageWrapperByExtention(ImagePath);
