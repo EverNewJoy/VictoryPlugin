@@ -3430,15 +3430,15 @@ bool UVictoryBPFunctionLibrary::Physics__EnterRagDoll(AActor * TheCharacter)
 	if(!AsCharacter->GetMesh()->GetPhysicsAsset()) return false;
 	
 	//Victory Ragdoll
-	AsCharacter->GetMesh()->SetPhysicsBlendWeight(1);
-	AsCharacter->GetMesh()->bBlendPhysics = true;
-	
+	AsCharacter->GetMesh()->SetSimulatePhysics(true);
+
 	return true;
 }
 
 
 bool UVictoryBPFunctionLibrary::Physics__LeaveRagDoll(
 	AActor* TheCharacter,
+	bool SetToFallingMovementMode,
 	float HeightAboveRBMesh,
 	const FVector& InitLocation, 
 	const FRotator& InitRotation
@@ -3448,7 +3448,7 @@ bool UVictoryBPFunctionLibrary::Physics__LeaveRagDoll(
 	
 	//Mesh?
 	if (!AsCharacter->GetMesh()) return false;
-	
+	 
 	//Set Actor Location to Be Near Ragdolled Mesh
 	//Calc Ref Bone Relative Pos for use with IsRagdoll
 	TArray<FName> BoneNames;
@@ -3459,14 +3459,18 @@ bool UVictoryBPFunctionLibrary::Physics__LeaveRagDoll(
 	}
 	
 	//Exit Ragdoll
-	AsCharacter->GetMesh()->SetPhysicsBlendWeight(0); //1 for full physics
-
+	AsCharacter->GetMesh()->SetSimulatePhysics(false);
+	AsCharacter->GetMesh()->AttachToComponent(AsCharacter->GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+            
 	//Restore Defaults
 	AsCharacter->GetMesh()->SetRelativeRotation(InitRotation);
 	AsCharacter->GetMesh()->SetRelativeLocation(InitLocation);
 	
 	//Set Falling After Final Capsule Relocation
-	if(AsCharacter->GetCharacterMovement()) AsCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Falling);	
+	if(SetToFallingMovementMode)
+	{ 
+		if(AsCharacter->GetCharacterMovement()) AsCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Falling);	
+	}
 	
 	return true;
 }	

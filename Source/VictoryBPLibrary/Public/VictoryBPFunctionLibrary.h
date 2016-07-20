@@ -947,7 +947,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 	/** Cause a supplied Character (casted from Actor internally) to exit Ragdoll physics. HeightAboveRBMesh is how far above the RB Mesh the Actor Capsule should be moved to upon exiting. Pass in the InitLocation and InitRotation from InitializeVictoryRagdoll */
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
-		static bool Physics__LeaveRagDoll(AActor* TheCharacter, float HeightAboveRBMesh = 64, const FVector& InitLocation = FVector(0, 0, 0), const FRotator& InitRotation = FRotator(0, 0, 0));
+	static bool Physics__LeaveRagDoll(AActor* TheCharacter, bool SetToFallingMovementMode=true, float HeightAboveRBMesh = 64, const FVector& InitLocation = FVector(0, 0, 0), const FRotator& InitRotation = FRotator(0, 0, 0));
 
 	/** Returns whether or not a supplied Character is in Ragdoll Physics. Cast from Actor done internally for your convenience. */
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
