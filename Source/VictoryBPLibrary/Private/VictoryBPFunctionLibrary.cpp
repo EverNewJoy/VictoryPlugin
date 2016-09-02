@@ -5,11 +5,14 @@
 #include "VictoryBPLibraryPrivatePCH.h"
  
 #include "VictoryBPFunctionLibrary.h"
- 
+
+//MD5 Hash
+#include "Runtime/Core/Public/Misc/SecureHash.h"
+
 #include "StaticMeshResources.h"
 
 #include "HeadMountedDisplay.h"
-
+ 
 #include "GenericTeamAgentInterface.h"
 
 //For PIE error messages
@@ -401,6 +404,106 @@ float UVictoryBPFunctionLibrary::GetDistanceBetweenComponentSurfaces(UPrimitiveC
   
 	//Closest Point on 1 to closest point on surface of 2
 	return CollisionComponent1->GetDistanceToCollision(PointOnSurface2, PointOnSurface1);
+}
+
+
+
+void UVictoryBPFunctionLibrary::VictoryCreateProc(int32& ProcessId, FString FullPathOfProgramToRun,TArray<FString> CommandlineArgs,bool Detach,bool Hidden, int32 Priority, FString OptionalWorkingDirectory)
+{   
+	//Please note ProcessId should really be uint32 but that is not supported by BP yet
+	 
+	FString Args = "";
+	if(CommandlineArgs.Num() > 1)
+	{
+		Args = CommandlineArgs[0]; 
+		for(int32 v = 1; v < CommandlineArgs.Num(); v++)
+		{
+			Args += " " + CommandlineArgs[v];
+		}
+	}
+	else if(CommandlineArgs.Num() > 0)
+	{
+		Args = CommandlineArgs[0];
+	}
+	
+	uint32 NeedBPUINT32 = 0;
+	FProcHandle ProcHandle = FPlatformProcess::CreateProc( 
+		*FullPathOfProgramToRun, 
+		*Args, 
+		Detach,//* @param bLaunchDetached		if true, the new process will have its own window
+		false,//* @param bLaunchHidded			if true, the new process will be minimized in the task bar
+		Hidden,//* @param bLaunchReallyHidden	if true, the new process will not have a window or be in the task bar
+		&NeedBPUINT32, 
+		Priority, 
+		(OptionalWorkingDirectory != "") ? *OptionalWorkingDirectory : nullptr,//const TCHAR* OptionalWorkingDirectory, 
+		nullptr
+	);
+	 
+	//Not sure what to do to expose UINT32 to BP
+	ProcessId = NeedBPUINT32; 
+}
+	
+bool UVictoryBPFunctionLibrary::CompareMD5Hash(FString MD5HashFile1, FString MD5HashFile2 )
+{
+	//Load Hash Files
+	TArray<uint8> TheBinaryArray;
+	if (!FFileHelper::LoadFileToArray(TheBinaryArray, *MD5HashFile1))
+	{
+		UE_LOG(LogTemp,Error,TEXT("First hash file invalid %s"), *MD5HashFile1);
+		return false;
+		//~~
+	}
+	FMemoryReader FromBinary = FMemoryReader(TheBinaryArray, true); //true, free data after done
+	FMD5Hash FirstHash;
+	FromBinary << FirstHash;
+	
+	TheBinaryArray.Empty();
+	if (!FFileHelper::LoadFileToArray(TheBinaryArray, *MD5HashFile2))
+	{
+		UE_LOG(LogTemp,Error,TEXT("second hash file invalid %s"), *MD5HashFile2);
+		return false;
+		//~~
+	}
+	
+	FMemoryReader FromBinarySecond = FMemoryReader(TheBinaryArray, true); //true, free data after done
+	FMD5Hash SecondHash;
+	FromBinarySecond << SecondHash;
+	 
+	return FirstHash == SecondHash;
+}
+bool UVictoryBPFunctionLibrary::CreateMD5Hash(FString FileToHash, FString FileToStoreHashTo )
+{
+	if(!FPlatformFileManager::Get().GetPlatformFile().FileExists(*FileToHash))
+	{
+		UE_LOG(LogTemp,Error,TEXT("File to hash not found %d"), *FileToHash);
+		return false;
+	}
+	
+	int64 SizeOfFileToHash = FPlatformFileManager::Get().GetPlatformFile().FileSize(*FileToHash);
+	if(SizeOfFileToHash > 2 * 1000000000)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("File is >2gb, hashing will be very slow %d"), SizeOfFileToHash);
+	}
+	
+	FMD5Hash FileHash = FMD5Hash::HashFile(*FileToHash);
+	
+	//write to file
+	FBufferArchive ToBinary;
+	ToBinary << FileHash;
+	
+	if (FFileHelper::SaveArrayToFile(ToBinary, * FileToStoreHashTo)) 
+	{
+		// Free Binary Array 	
+		ToBinary.FlushCache();
+		ToBinary.Empty();
+	}
+	else
+	{ 
+		UE_LOG(LogTemp,Warning,TEXT("File hashed successfully but could not be saved to disk, file IO error %s"), *FileToHash);
+		return false;
+	}
+	 
+	return true;
 }
 
 bool UVictoryBPFunctionLibrary::VictoryPhysics_UpdateAngularDamping(UPrimitiveComponent* CompToUpdate, float NewAngularDamping)
@@ -2117,11 +2220,12 @@ void UVictoryBPFunctionLibrary::OperatingSystem__GetCurrentPlatform(
 	bool& Linux, 
 	bool& iOS, 
 	bool& Android,
+	bool& Android_ARM,
+	bool& Android_Vulkan,
 	bool& PS4,
 	bool& XBoxOne,
 	bool& HTML5,
-	bool& WinRT_Arm,
-	bool& WinRT
+	bool& Apple
 ){
 	//#define's in UE4 source code
 	Windows_ = 				PLATFORM_WINDOWS;
@@ -2133,11 +2237,11 @@ void UVictoryBPFunctionLibrary::OperatingSystem__GetCurrentPlatform(
 	
 	iOS = 						PLATFORM_IOS;
 	Android = 				PLATFORM_ANDROID;
-	
+	Android_ARM  	=		PLATFORM_ANDROID_ARM;
+	Android_Vulkan	= 		PLATFORM_ANDROID_VULKAN;
 	HTML5 = 					PLATFORM_HTML5;
-	
-	WinRT_Arm =	 			PLATFORM_WINRT_ARM;
-	WinRT 	= 				PLATFORM_WINRT;
+	 
+	Apple =	 			PLATFORM_APPLE;
 }
 
 FString UVictoryBPFunctionLibrary::RealWorldTime__GetCurrentOSTime( 
@@ -4648,8 +4752,8 @@ int32 UVictoryBPFunctionLibrary::findSource(class USoundWave* sw, class FSoundSo
 			{
 				sw_instance = WaveInstanceIt.Value();
 				if (sw_instance->WaveData->CompressedDataGuid == sw->CompressedDataGuid)
-				{
-					audioSource = device->WaveInstanceSourceMap.FindRef(sw_instance);
+				{   
+					audioSource = device->GetSoundSource(sw_instance); //4.13 onwards, <3 Rama
 					out_audioSource = audioSource;
 					return 0;
 				}
