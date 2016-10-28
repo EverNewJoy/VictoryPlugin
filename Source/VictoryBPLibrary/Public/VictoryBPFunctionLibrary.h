@@ -234,6 +234,23 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		bool bCanStrafe = false
 	);
 	 
+	//~~~~~~~~~~~~~~~~
+	// 	GPU  <3 Rama
+	//~~~~~~~~~~~~~~~~
+
+	UFUNCTION(BlueprintPure,Category="Victory BP Library|GPU")
+	static FString Victory_GetGPUBrand()
+	{  
+		return FPlatformMisc::GetPrimaryGPUBrand();
+	}
+	UFUNCTION(BlueprintPure,Category="Victory BP Library|GPU", meta=(Keywords="GPU"))
+	static FString Victory_GetGRHIAdapterName()
+	{  
+		return GRHIAdapterName;
+	}
+ 
+	UFUNCTION(BlueprintPure,Category="Victory BP Library|GPU")
+	static void Victory_GetGPUInfo(FString& DeviceDescription, FString& Provider, FString& DriverVersion, FString& DriverDate);
 	
 	//~~~~~~~~~~
 	// 	Core
@@ -921,9 +938,16 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 	/** Converts a float to a rounded Integer, examples: 1.4 becomes 1,   1.6 becomes 2 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "VictoryBPLibrary")
-		static int32 Conversion__FloatToRoundedInteger(float IN_Float);
+	static int32 Conversion__FloatToRoundedInteger(float IN_Float);
 
+	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|String")
+	static int32 CountOccurrancesOfSubString(FString Source, FString SubString, ESearchCase::Type SearchCase = ESearchCase::IgnoreCase)
+	{
+		return Source.ReplaceInline(*SubString,TEXT(""),SearchCase);
+	}
 
+	
+	
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|String", meta=( Keywords = "concatenate append"))
 	static void VictoryAppendInline(UPARAM(ref) FString& String, const FString& ToAppend, FString& Result, bool AppendNewline=false)
 	{     
@@ -931,6 +955,10 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		if(AppendNewline) String += LINE_TERMINATOR;
 		Result = String;  
 	}
+	
+	/** Handy option to trim any extra 00: 's while keeping a base set of 00:ss as per user expectation. 00:05:30 will become 05:30. ♥ Rama */
+	UFUNCTION(BlueprintPure, Category = "File BP Library")
+	static FString Victory_SecondsToHoursMinutesSeconds(float Seconds, bool TrimZeroes=true);
 	
 	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|String")
 	static bool IsAlphaNumeric(const FString& String);

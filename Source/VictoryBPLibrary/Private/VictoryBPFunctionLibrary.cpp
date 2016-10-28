@@ -6,6 +6,9 @@
  
 #include "VictoryBPFunctionLibrary.h"
 
+//FGPUDriverInfo GPU 
+#include "Runtime/Core/Public/GenericPlatform/GenericPlatformDriver.h"
+ 
 //MD5 Hash
 #include "Runtime/Core/Public/Misc/SecureHash.h"
 
@@ -18,6 +21,13 @@
 //For PIE error messages
 #include "MessageLog.h"
 #define LOCTEXT_NAMESPACE "Fun BP Lib"
+
+//Use MessasgeLog like this: (see GameplayStatics.cpp
+/*
+#if WITH_EDITOR
+		FMessageLog("PIE").Error(FText::Format(LOCTEXT("SpawnObjectWrongClass", "SpawnObject wrong class: {0}'"), FText::FromString(GetNameSafe(*ObjectClass))));
+#endif // WITH_EDITOR
+*/
 
 
 #include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapper.h"
@@ -381,6 +391,19 @@ EPathFollowingRequestResult::Type UVictoryBPFunctionLibrary::Victory_AI_MoveToWi
 	);
 }
 	
+//~~~~~~
+//GPU
+//~~~~~~ 
+void UVictoryBPFunctionLibrary::Victory_GetGPUInfo(FString& DeviceDescription, FString& Provider, FString& DriverVersion, FString& DriverDate )
+{   
+	FGPUDriverInfo GPUDriverInfo = FPlatformMisc::GetGPUDriverInfo(GRHIAdapterName);
+	 
+	DeviceDescription 	= GPUDriverInfo.DeviceDescription;
+	Provider 			= GPUDriverInfo.ProviderName;
+	DriverVersion 		= GPUDriverInfo.UserDriverVersion;
+	DriverDate 			= GPUDriverInfo.DriverDate;
+}
+
 //~~~~~~
 //Core
 //~~~~~~ 
@@ -2366,7 +2389,30 @@ int32 UVictoryBPFunctionLibrary::Conversion__FloatToRoundedInteger(float IN_Floa
 {
 	return FGenericPlatformMath::RoundToInt(IN_Float);
 }
-
+ 
+FString UVictoryBPFunctionLibrary::Victory_SecondsToHoursMinutesSeconds(float Seconds, bool TrimZeroes)
+{
+	FString Str = FTimespan(0, 0, Seconds).ToString();
+	
+	if(TrimZeroes)
+	{
+		FString Left,Right;
+		Str.Split(TEXT("."),&Left,&Right);
+		Str = Left;
+		Str.ReplaceInline(TEXT("00:00"), TEXT("00"));
+		
+		//Str Count!  
+		int32 Count = CountOccurrancesOfSubString(Str,":");
+		   
+		//Remove Empty Hours
+		if(Count >= 2)
+		{
+			Str.ReplaceInline(TEXT("00:"), TEXT(""));
+		} 
+	}
+ 
+	return Str;
+}
 
 bool UVictoryBPFunctionLibrary::IsAlphaNumeric(const FString& String)
 {
