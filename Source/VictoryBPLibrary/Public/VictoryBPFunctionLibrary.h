@@ -309,6 +309,12 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		if(!Component) return;
 		Component->PrimaryComponentTick.TickInterval = Seconds;
 	}
+
+	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|Core")
+		static const FString GetCommandLine()
+	{
+		return FCommandLine::Get();
+	}
 	
 	/**
 	* Create a new Texture Render Target 2D, ideal for use with Scene Capture Components created during runtime that need their own unique Render Targets
