@@ -310,6 +310,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		Component->PrimaryComponentTick.TickInterval = Seconds;
 	}
 
+	/** Retrieves command line arguments that were passed into unreal */
 	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|Core")
 		static const FString GetCommandLine()
 	{
