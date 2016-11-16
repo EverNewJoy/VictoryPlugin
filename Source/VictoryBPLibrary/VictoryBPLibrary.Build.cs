@@ -51,6 +51,8 @@ public class VictoryBPLibrary : ModuleRules
 				"ImageWrapper",
 				
 				"PhysX", 
+				
+				"HeadMountedDisplay",
   
                 "AIModule"	
 			}

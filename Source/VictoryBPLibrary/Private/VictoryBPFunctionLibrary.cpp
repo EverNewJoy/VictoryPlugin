@@ -5,12 +5,29 @@
 #include "VictoryBPLibraryPrivatePCH.h"
  
 #include "VictoryBPFunctionLibrary.h"
+
+//FGPUDriverInfo GPU 
+#include "Runtime/Core/Public/GenericPlatform/GenericPlatformDriver.h"
  
+//MD5 Hash
+#include "Runtime/Core/Public/Misc/SecureHash.h"
+
 #include "StaticMeshResources.h"
+
+#include "HeadMountedDisplay.h"
+ 
+#include "GenericTeamAgentInterface.h"
 
 //For PIE error messages
 #include "MessageLog.h"
 #define LOCTEXT_NAMESPACE "Fun BP Lib"
+
+//Use MessasgeLog like this: (see GameplayStatics.cpp
+/*
+#if WITH_EDITOR
+		FMessageLog("PIE").Error(FText::Format(LOCTEXT("SpawnObjectWrongClass", "SpawnObject wrong class: {0}'"), FText::FromString(GetNameSafe(*ObjectClass))));
+#endif // WITH_EDITOR
+*/
 
 
 #include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapper.h"
@@ -28,7 +45,6 @@
 #define WITH_APEX 0
 #endif //APEX EXCLUSIONS
 
- 
 //~~~ PhysX ~~~
 #include "PhysXIncludes.h"
 #include "PhysXPublic.h"		//For the ptou conversions
@@ -46,6 +62,8 @@
 #include <chrono>
 #include <random>
  
+#include <string>
+   
 /*
 	~~~ Rama File Operations CopyRight ~~~ 
 	
@@ -374,6 +392,19 @@ EPathFollowingRequestResult::Type UVictoryBPFunctionLibrary::Victory_AI_MoveToWi
 }
 	
 //~~~~~~
+//GPU
+//~~~~~~ 
+void UVictoryBPFunctionLibrary::Victory_GetGPUInfo(FString& DeviceDescription, FString& Provider, FString& DriverVersion, FString& DriverDate )
+{   
+	FGPUDriverInfo GPUDriverInfo = FPlatformMisc::GetGPUDriverInfo(GRHIAdapterName);
+	 
+	DeviceDescription 	= GPUDriverInfo.DeviceDescription;
+	Provider 			= GPUDriverInfo.ProviderName;
+	DriverVersion 		= GPUDriverInfo.UserDriverVersion;
+	DriverDate 			= GPUDriverInfo.DriverDate;
+}
+
+//~~~~~~
 //Core
 //~~~~~~ 
  
@@ -396,6 +427,106 @@ float UVictoryBPFunctionLibrary::GetDistanceBetweenComponentSurfaces(UPrimitiveC
   
 	//Closest Point on 1 to closest point on surface of 2
 	return CollisionComponent1->GetDistanceToCollision(PointOnSurface2, PointOnSurface1);
+}
+
+
+
+void UVictoryBPFunctionLibrary::VictoryCreateProc(int32& ProcessId, FString FullPathOfProgramToRun,TArray<FString> CommandlineArgs,bool Detach,bool Hidden, int32 Priority, FString OptionalWorkingDirectory)
+{   
+	//Please note ProcessId should really be uint32 but that is not supported by BP yet
+	 
+	FString Args = "";
+	if(CommandlineArgs.Num() > 1)
+	{
+		Args = CommandlineArgs[0]; 
+		for(int32 v = 1; v < CommandlineArgs.Num(); v++)
+		{
+			Args += " " + CommandlineArgs[v];
+		}
+	}
+	else if(CommandlineArgs.Num() > 0)
+	{
+		Args = CommandlineArgs[0];
+	}
+	
+	uint32 NeedBPUINT32 = 0;
+	FProcHandle ProcHandle = FPlatformProcess::CreateProc( 
+		*FullPathOfProgramToRun, 
+		*Args, 
+		Detach,//* @param bLaunchDetached		if true, the new process will have its own window
+		false,//* @param bLaunchHidded			if true, the new process will be minimized in the task bar
+		Hidden,//* @param bLaunchReallyHidden	if true, the new process will not have a window or be in the task bar
+		&NeedBPUINT32, 
+		Priority, 
+		(OptionalWorkingDirectory != "") ? *OptionalWorkingDirectory : nullptr,//const TCHAR* OptionalWorkingDirectory, 
+		nullptr
+	);
+	 
+	//Not sure what to do to expose UINT32 to BP
+	ProcessId = NeedBPUINT32; 
+}
+	
+bool UVictoryBPFunctionLibrary::CompareMD5Hash(FString MD5HashFile1, FString MD5HashFile2 )
+{
+	//Load Hash Files
+	TArray<uint8> TheBinaryArray;
+	if (!FFileHelper::LoadFileToArray(TheBinaryArray, *MD5HashFile1))
+	{
+		UE_LOG(LogTemp,Error,TEXT("First hash file invalid %s"), *MD5HashFile1);
+		return false;
+		//~~
+	}
+	FMemoryReader FromBinary = FMemoryReader(TheBinaryArray, true); //true, free data after done
+	FMD5Hash FirstHash;
+	FromBinary << FirstHash;
+	
+	TheBinaryArray.Empty();
+	if (!FFileHelper::LoadFileToArray(TheBinaryArray, *MD5HashFile2))
+	{
+		UE_LOG(LogTemp,Error,TEXT("second hash file invalid %s"), *MD5HashFile2);
+		return false;
+		//~~
+	}
+	
+	FMemoryReader FromBinarySecond = FMemoryReader(TheBinaryArray, true); //true, free data after done
+	FMD5Hash SecondHash;
+	FromBinarySecond << SecondHash;
+	 
+	return FirstHash == SecondHash;
+}
+bool UVictoryBPFunctionLibrary::CreateMD5Hash(FString FileToHash, FString FileToStoreHashTo )
+{
+	if(!FPlatformFileManager::Get().GetPlatformFile().FileExists(*FileToHash))
+	{
+		UE_LOG(LogTemp,Error,TEXT("File to hash not found %d"), *FileToHash);
+		return false;
+	}
+	
+	int64 SizeOfFileToHash = FPlatformFileManager::Get().GetPlatformFile().FileSize(*FileToHash);
+	if(SizeOfFileToHash > 2 * 1000000000)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("File is >2gb, hashing will be very slow %d"), SizeOfFileToHash);
+	}
+	
+	FMD5Hash FileHash = FMD5Hash::HashFile(*FileToHash);
+	
+	//write to file
+	FBufferArchive ToBinary;
+	ToBinary << FileHash;
+	
+	if (FFileHelper::SaveArrayToFile(ToBinary, * FileToStoreHashTo)) 
+	{
+		// Free Binary Array 	
+		ToBinary.FlushCache();
+		ToBinary.Empty();
+	}
+	else
+	{ 
+		UE_LOG(LogTemp,Warning,TEXT("File hashed successfully but could not be saved to disk, file IO error %s"), *FileToHash);
+		return false;
+	}
+	 
+	return true;
 }
 
 bool UVictoryBPFunctionLibrary::VictoryPhysics_UpdateAngularDamping(UPrimitiveComponent* CompToUpdate, float NewAngularDamping)
@@ -1264,6 +1395,17 @@ void UVictoryBPFunctionLibrary::VictoryIntMinusEquals(UPARAM(ref) int32& Int, in
 	IntOut = Int; 
 }
 
+void UVictoryBPFunctionLibrary::VictoryFloatPlusEquals(UPARAM(ref) float& Float, float Add, float& FloatOut)
+{
+	Float += Add;
+	FloatOut = Float;
+}
+void UVictoryBPFunctionLibrary::VictoryFloatMinusEquals(UPARAM(ref) float& Float, float Sub, float& FloatOut)
+{
+	Float -= Sub;
+	FloatOut = Float; 
+}
+
 void UVictoryBPFunctionLibrary::VictorySortIntArray(UPARAM(ref) TArray<int32>& IntArray, TArray<int32>& IntArrayRef)
 {
 	IntArray.Sort();
@@ -1533,11 +1675,30 @@ void UVictoryBPFunctionLibrary::VictorySetCustomConfigVar_String(FString Section
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-
-
-
-
+EVictoryHMDDevice UVictoryBPFunctionLibrary::GetHeadMountedDisplayDeviceType()
+{
+	if(!GEngine) return EVictoryHMDDevice::None;
+	 
+	if (GEngine->HMDDevice.IsValid())
+	{  
+		//Actively connected?
+		if(!GEngine->HMDDevice->IsHMDConnected()) 
+		{  
+			return EVictoryHMDDevice::None;
+		} 
+		
+		switch (GEngine->HMDDevice->GetHMDDeviceType()) 
+		{       
+			case EHMDDeviceType::DT_OculusRift 				: return EVictoryHMDDevice::OculusRift;
+			case EHMDDeviceType::DT_Morpheus 				: return EVictoryHMDDevice::Morpheus;
+			case EHMDDeviceType::DT_SteamVR 				: return EVictoryHMDDevice::SteamVR;
+			case EHMDDeviceType::DT_ES2GenericStereoMesh 	: return EVictoryHMDDevice::ES2GenericStereoMesh;
+			case EHMDDeviceType::DT_GearVR 					: return EVictoryHMDDevice::GearVR;
+		}
+	}
+	  
+	return EVictoryHMDDevice::None;
+}
 
 
 
@@ -2105,11 +2266,12 @@ void UVictoryBPFunctionLibrary::OperatingSystem__GetCurrentPlatform(
 	bool& Linux, 
 	bool& iOS, 
 	bool& Android,
+	bool& Android_ARM,
+	bool& Android_Vulkan,
 	bool& PS4,
 	bool& XBoxOne,
 	bool& HTML5,
-	bool& WinRT_Arm,
-	bool& WinRT
+	bool& Apple
 ){
 	//#define's in UE4 source code
 	Windows_ = 				PLATFORM_WINDOWS;
@@ -2121,11 +2283,11 @@ void UVictoryBPFunctionLibrary::OperatingSystem__GetCurrentPlatform(
 	
 	iOS = 						PLATFORM_IOS;
 	Android = 				PLATFORM_ANDROID;
-	
+	Android_ARM  	=		PLATFORM_ANDROID_ARM;
+	Android_Vulkan	= 		PLATFORM_ANDROID_VULKAN;
 	HTML5 = 					PLATFORM_HTML5;
-	
-	WinRT_Arm =	 			PLATFORM_WINRT_ARM;
-	WinRT 	= 				PLATFORM_WINRT;
+	 
+	Apple =	 			PLATFORM_APPLE;
 }
 
 FString UVictoryBPFunctionLibrary::RealWorldTime__GetCurrentOSTime( 
@@ -2250,7 +2412,45 @@ int32 UVictoryBPFunctionLibrary::Conversion__FloatToRoundedInteger(float IN_Floa
 {
 	return FGenericPlatformMath::RoundToInt(IN_Float);
 }
+ 
+FString UVictoryBPFunctionLibrary::Victory_SecondsToHoursMinutesSeconds(float Seconds, bool TrimZeroes)
+{
+	FString Str = FTimespan(0, 0, Seconds).ToString();
+	
+	if(TrimZeroes)
+	{
+		FString Left,Right;
+		Str.Split(TEXT("."),&Left,&Right);
+		Str = Left;
+		Str.ReplaceInline(TEXT("00:00"), TEXT("00"));
+		
+		//Str Count!  
+		int32 Count = CountOccurrancesOfSubString(Str,":");
+		   
+		//Remove Empty Hours
+		if(Count >= 2)
+		{
+			Str.ReplaceInline(TEXT("00:"), TEXT(""));
+		} 
+	}
+ 
+	return Str;
+}
 
+bool UVictoryBPFunctionLibrary::IsAlphaNumeric(const FString& String)
+{
+	std::string str = (TCHAR_TO_UTF8(*String));
+	    
+	for ( std::string::iterator it=str.begin(); it!=str.end(); ++it)
+	{
+		if(!isalnum(*it))
+		{   
+			return false;
+		}
+	}
+	
+	return true;
+}
 
 void UVictoryBPFunctionLibrary::Victory_GetStringFromOSClipboard(FString& FromClipboard)
 {  
@@ -2379,29 +2579,29 @@ AStaticMeshActor* UVictoryBPFunctionLibrary::Clone__StaticMeshActor(UObject* Wor
 	NewSMA->SetActorTransform(ToClone->GetTransform());
 	
 	//Mobility
-	NewSMA->StaticMeshComponent->SetMobility(EComponentMobility::Movable	);
+	NewSMA->GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable	);
 	
 	//copy static mesh
-	NewSMA->StaticMeshComponent->SetStaticMesh(ToClone->StaticMeshComponent->StaticMesh);
+	NewSMA->GetStaticMeshComponent()->SetStaticMesh(ToClone->GetStaticMeshComponent()->StaticMesh);
 	
 	//~~~
 	
 	//copy materials
 	TArray<UMaterialInterface*> Mats;
-	ToClone->StaticMeshComponent->GetUsedMaterials(Mats);
+	ToClone->GetStaticMeshComponent()->GetUsedMaterials(Mats);
 	
 	const int32 Total = Mats.Num();
 	for(int32 v = 0; v < Total; v++ )
 	{
-		NewSMA->StaticMeshComponent->SetMaterial(v,Mats[v]);
+		NewSMA->GetStaticMeshComponent()->SetMaterial(v,Mats[v]);
 	}
 	
 	//~~~
 	
 	//copy physics state
-	if(ToClone->StaticMeshComponent->IsSimulatingPhysics())
+	if(ToClone->GetStaticMeshComponent()->IsSimulatingPhysics())
 	{
-		NewSMA->StaticMeshComponent->SetSimulatePhysics(true);
+		NewSMA->GetStaticMeshComponent()->SetSimulatePhysics(true);
 	}
 	
 	//~~~
@@ -2473,6 +2673,46 @@ bool UVictoryBPFunctionLibrary::WorldType__InGameInstanceWorld(UObject* WorldCon
     return (World->WorldType == EWorldType::Game );
 }
 	
+
+
+bool UVictoryBPFunctionLibrary::DoesMaterialHaveParameter(UMaterialInterface* Mat, FName Parameter)
+{    
+	if(!Mat || Parameter == NAME_None) 
+	{
+		return false;
+	}
+	
+	//Lesson, always use the parent of a Material Instance Dynamic, 
+	//	for some reason the dynamic version finds parameters that aren't actually valid.
+	//		-Rama
+	UMaterialInterface* Parent = Mat;
+	UMaterialInstance* MatInst = Cast<UMaterialInstance>(Mat);
+	if(MatInst)
+	{
+		Parent = MatInst->Parent;
+	}
+	
+	if(!Parent) 
+	{
+		return false;
+	} 
+	
+	float ScalarValue;
+	if(Parent->GetScalarParameterValue(Parameter,ScalarValue))
+	{
+		return true;
+	}
+  
+	FLinearColor VectValue;
+	if(Parent->GetVectorParameterValue(Parameter,VectValue))
+	{
+		return true;
+	}
+ 
+	UTexture* T2DValue; 
+	return Parent->GetTextureParameterValue(Parameter,T2DValue);
+}
+
 FString UVictoryBPFunctionLibrary::Accessor__GetNameAsString(const UObject* TheObject)
 {
 	if (!TheObject) return "";
@@ -3141,12 +3381,11 @@ AActor* UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestSocket(
 	//Actor
 	return HitActor;
 }
-
+	
 void UVictoryBPFunctionLibrary::VictorySimulateMouseWheel(const float& Delta)
 {
 	FSlateApplication::Get().OnMouseWheel(int32(Delta));
 }
-
 void UVictoryBPFunctionLibrary::VictorySimulateKeyPress(APlayerController* ThePC, FKey Key, EInputEvent EventType)
 {
 	if (!ThePC) return;
@@ -3208,6 +3447,29 @@ void UVictoryBPFunctionLibrary::VictorySimulateKeyPress(APlayerController* ThePC
 			FSlateApplication::Get().OnKeyUp(KeyCodeVal, CharacterCodeVal, false);
 		}
 	}
+}
+
+bool UVictoryBPFunctionLibrary::Viewport__EnableWorldRendering(const APlayerController* ThePC, bool RenderTheWorld)
+{ 
+	if (!ThePC) return false;
+	//~~~~~~~~~~~~~
+	
+	//Get Player
+	ULocalPlayer * VictoryPlayer = Cast<ULocalPlayer>(ThePC->Player); 
+											//PlayerController::Player is UPlayer
+           
+	if (!VictoryPlayer) return false;
+	//~~~~~~~~~~~~~~~~~~~~
+	
+	//get view port ptr
+	UGameViewportClient * VictoryViewportClient = 
+		Cast < UGameViewportClient > (VictoryPlayer->ViewportClient);
+		
+	if (!VictoryViewportClient) return false;
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	    
+	VictoryViewportClient->bDisableWorldRendering = !RenderTheWorld;
+	return true;
 }
 
 //Most HUD stuff is in floats so I do the conversion internally
@@ -3341,15 +3603,15 @@ bool UVictoryBPFunctionLibrary::Physics__EnterRagDoll(AActor * TheCharacter)
 	if(!AsCharacter->GetMesh()->GetPhysicsAsset()) return false;
 	
 	//Victory Ragdoll
-	AsCharacter->GetMesh()->SetPhysicsBlendWeight(1);
-	AsCharacter->GetMesh()->bBlendPhysics = true;
-	
+	AsCharacter->GetMesh()->SetSimulatePhysics(true);
+
 	return true;
 }
 
 
 bool UVictoryBPFunctionLibrary::Physics__LeaveRagDoll(
 	AActor* TheCharacter,
+	bool SetToFallingMovementMode,
 	float HeightAboveRBMesh,
 	const FVector& InitLocation, 
 	const FRotator& InitRotation
@@ -3359,7 +3621,7 @@ bool UVictoryBPFunctionLibrary::Physics__LeaveRagDoll(
 	
 	//Mesh?
 	if (!AsCharacter->GetMesh()) return false;
-	
+	 
 	//Set Actor Location to Be Near Ragdolled Mesh
 	//Calc Ref Bone Relative Pos for use with IsRagdoll
 	TArray<FName> BoneNames;
@@ -3370,14 +3632,18 @@ bool UVictoryBPFunctionLibrary::Physics__LeaveRagDoll(
 	}
 	
 	//Exit Ragdoll
-	AsCharacter->GetMesh()->SetPhysicsBlendWeight(0); //1 for full physics
-
+	AsCharacter->GetMesh()->SetSimulatePhysics(false);
+	AsCharacter->GetMesh()->AttachToComponent(AsCharacter->GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+            
 	//Restore Defaults
 	AsCharacter->GetMesh()->SetRelativeRotation(InitRotation);
 	AsCharacter->GetMesh()->SetRelativeLocation(InitLocation);
 	
 	//Set Falling After Final Capsule Relocation
-	if(AsCharacter->GetCharacterMovement()) AsCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Falling);	
+	if(SetToFallingMovementMode)
+	{ 
+		if(AsCharacter->GetCharacterMovement()) AsCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Falling);	
+	}
 	
 	return true;
 }	
@@ -3718,11 +3984,11 @@ bool UVictoryBPFunctionLibrary::AnimatedVertex__DrawCharacterAnimatedVertexLocat
 float UVictoryBPFunctionLibrary::DistanceToSurface__DistaceOfPointToMeshSurface(AStaticMeshActor* TheSMA, const FVector& TestPoint, FVector& ClosestSurfacePoint)
 {
 	if(!TheSMA) return -1;
-	if(!TheSMA->StaticMeshComponent) return -1;
+	if(!TheSMA->GetStaticMeshComponent()) return -1;
 	//~~~~~~~~~~
 	
 	//Dist of pt to Surface, retrieve closest Surface Point to Actor
-	return TheSMA->StaticMeshComponent->GetDistanceToCollision(TestPoint, ClosestSurfacePoint);
+	return TheSMA->GetStaticMeshComponent()->GetDistanceToCollision(TestPoint, ClosestSurfacePoint);
 }
 
 bool UVictoryBPFunctionLibrary::Mobility__SetSceneCompMobility(
@@ -4555,8 +4821,8 @@ int32 UVictoryBPFunctionLibrary::findSource(class USoundWave* sw, class FSoundSo
 			{
 				sw_instance = WaveInstanceIt.Value();
 				if (sw_instance->WaveData->CompressedDataGuid == sw->CompressedDataGuid)
-				{
-					audioSource = device->WaveInstanceSourceMap.FindRef(sw_instance);
+				{   
+					audioSource = device->GetSoundSource(sw_instance); //4.13 onwards, <3 Rama
 					out_audioSource = audioSource;
 					return 0;
 				}
@@ -4745,7 +5011,7 @@ bool UVictoryBPFunctionLibrary::CaptureComponent2D_SaveImage(class USceneCapture
 		Pixel.B = PR;
 
 		// Set alpha based on RGB values of ClearColour.
-		Pixel.A = ((Pixel.R == ClearFColour.R) && (Pixel.R == ClearFColour.R) && (Pixel.R == ClearFColour.R)) ? 0 : 255;
+		Pixel.A = ((Pixel.R == ClearFColour.R) && (Pixel.G == ClearFColour.G) && (Pixel.B == ClearFColour.B)) ? 0 : 255;
 	}
 	
 	IImageWrapperPtr ImageWrapper = GetImageWrapperByExtention(ImagePath);
@@ -4810,6 +5076,188 @@ UTexture2D* UVictoryBPFunctionLibrary::LoadTexture2D_FromFileByExtension(const F
 	}
 
 	return Texture;
+}
+
+UUserWidget* UVictoryBPFunctionLibrary::GetFirstWidgetOfClass(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass, bool TopLevelOnly)
+{
+	if (!WidgetClass || !WorldContextObject)
+	{
+		return nullptr;
+	}
+
+	const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	if (!World)
+	{
+		return nullptr;
+	}
+
+	UUserWidget* ResultWidget = nullptr;
+	for (TObjectIterator<UUserWidget> Itr; Itr; ++Itr)
+	{
+		UUserWidget* LiveWidget = *Itr;
+
+		// Skip any widget that's not in the current world context.
+		if (LiveWidget->GetWorld() != World)
+		{
+			continue;
+		}
+
+		// Skip any widget that is not a child of the class specified.
+		if (!LiveWidget->GetClass()->IsChildOf(WidgetClass))
+		{
+			continue;
+		}
+
+		if (!TopLevelOnly || LiveWidget->IsInViewport())
+		{
+			ResultWidget = LiveWidget;
+			break;
+		}
+	}
+
+	return ResultWidget;
+}
+
+bool UVictoryBPFunctionLibrary::WidgetIsChildOf(UWidget* ChildWidget, UWidget* PossibleParent)
+{
+	return (ChildWidget && PossibleParent) ? ChildWidget->IsChildOf(PossibleParent) : false;
+}
+
+UUserWidget* UVictoryBPFunctionLibrary::WidgetGetParentOfClass(UWidget* ChildWidget, TSubclassOf<UUserWidget> WidgetClass)
+{
+	UUserWidget* ResultParent = nullptr;
+
+	if (ChildWidget && WidgetClass)
+	{
+		UWidget* PossibleParent = ChildWidget->GetParent();
+		UWidget* NextPossibleParent = nullptr;
+		int32 count = 0;
+
+		while (PossibleParent != nullptr)
+		{
+			// Return once we find a parent of the desired class.
+			if (PossibleParent->GetClass()->IsChildOf(WidgetClass))
+			{
+				ResultParent = Cast<UUserWidget>(PossibleParent);
+				break;
+			}
+			
+			NextPossibleParent = PossibleParent->GetParent();
+
+			// If we don't have a parent, follow the outer chain until we find another widget, if at all.
+			if (NextPossibleParent == nullptr)
+			{
+				UWidgetTree* WidgetTree = Cast<UWidgetTree>(PossibleParent->GetOuter());
+				if (WidgetTree)
+				{
+					NextPossibleParent = Cast<UWidget>(WidgetTree->GetOuter());
+				}
+			}
+
+			PossibleParent = NextPossibleParent;
+		}
+	}
+
+	return ResultParent;
+}
+ 
+void UVictoryBPFunctionLibrary::WidgetGetChildrenOfClass(UWidget* ParentWidget, TArray<UUserWidget*>& ChildWidgets, TSubclassOf<UUserWidget> WidgetClass)
+{
+	ChildWidgets.Empty();
+
+	if (ParentWidget && WidgetClass)
+	{
+		// Current set of widgets to check
+		TInlineComponentArray<UWidget*> WidgetsToCheck;
+
+		// Set of all widgets we have checked
+		TInlineComponentArray<UWidget*> CheckedWidgets;
+
+		WidgetsToCheck.Push(ParentWidget);
+
+		// While still work left to do
+		while (WidgetsToCheck.Num() > 0)
+		{
+			// Get the next widgets off the queue
+			const bool bAllowShrinking = false;
+			UWidget* PossibleParent = WidgetsToCheck.Pop(bAllowShrinking);
+
+			// Add it to the 'checked' set, should not already be there!
+			if (!CheckedWidgets.Contains(PossibleParent))
+			{
+				CheckedWidgets.Add(PossibleParent);
+
+				// Add any widget that is a child of the class specified.
+				if (PossibleParent->GetClass()->IsChildOf(WidgetClass))
+				{
+					ChildWidgets.Add(Cast<UUserWidget>(PossibleParent));
+				}
+
+				UUserWidget* PossibleParentUserWidget = Cast<UUserWidget>(PossibleParent);
+
+				// If this is a UUserWidget, add its root widget to the check next.
+				if (PossibleParentUserWidget)
+				{
+					WidgetsToCheck.Push(PossibleParentUserWidget->GetRootWidget());
+				}
+				else
+				{
+					TArray<UWidget*> Widgets;
+
+					UWidgetTree::GetChildWidgets(PossibleParent, Widgets);
+
+					for (UWidget* Widget : Widgets)
+					{
+						if (!CheckedWidgets.Contains(Widget))
+						{
+							// Add the widget to the check next.
+							WidgetsToCheck.Push(Widget);
+
+							// Add any widget that is a child of the class specified.
+							if (Widget->GetClass()->IsChildOf(WidgetClass))
+							{
+								ChildWidgets.Add(Cast<UUserWidget>(Widget));
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+UWidget* UVictoryBPFunctionLibrary::GetWidgetFromName(UUserWidget* ParentUserWidget, const FName& Name)
+{
+	UWidget* ResultWidget = nullptr;
+
+	if (ParentUserWidget && (Name != NAME_None))
+	{
+		ResultWidget = ParentUserWidget->GetWidgetFromName(Name);
+	}
+
+	return ResultWidget;
+}
+
+uint8 UVictoryBPFunctionLibrary::GetGenericTeamId(AActor* Target)
+{
+	IGenericTeamAgentInterface* TeamAgentInterface = nullptr;
+	if (Target)
+	{
+		TeamAgentInterface = Cast<IGenericTeamAgentInterface>(Target);
+	}
+	return (TeamAgentInterface != nullptr) ? TeamAgentInterface->GetGenericTeamId() : FGenericTeamId::NoTeam;
+}
+
+void UVictoryBPFunctionLibrary::SetGenericTeamId(AActor* Target, uint8 NewTeamId)
+{
+	if (Target)
+	{
+		IGenericTeamAgentInterface* TeamAgentInterface = Cast<IGenericTeamAgentInterface>(Target);
+		if (TeamAgentInterface != nullptr)
+		{
+			TeamAgentInterface->SetGenericTeamId(NewTeamId);
+		}
+	}
 }
 
 //~~~~~~~~~ END OF CONTRIBUTED BY KRIS ~~~~~~~~~~~
