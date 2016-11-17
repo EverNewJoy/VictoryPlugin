@@ -834,14 +834,14 @@ void UVictoryBPFunctionLibrary::VictoryISM_ConvertToVictoryISMActors(
 		//~~~~~~~~~
 		
 		//Add Key if not present!
-		if(!VictoryISMMap.Contains(Comp->StaticMesh))
+		if(!VictoryISMMap.Contains(Comp->GetStaticMesh()))
 		{
-			VictoryISMMap.Add(Comp->StaticMesh);
-			VictoryISMMap[Comp->StaticMesh].Empty(); //ensure array is properly initialized
+			VictoryISMMap.Add(Comp->GetStaticMesh());
+			VictoryISMMap[Comp->GetStaticMesh()].Empty(); //ensure array is properly initialized
 		}
 		
 		//Add the actor!
-		VictoryISMMap[Comp->StaticMesh].Add(*Itr);
+		VictoryISMMap[Comp->GetStaticMesh()].Add(*Itr);
 	}
 	  
 	//For each Static Mesh Asset in the Victory ISM Map
@@ -889,7 +889,7 @@ void UVictoryBPFunctionLibrary::VictoryISM_ConvertToVictoryISMActors(
 		//~~~~~~~~~~
 		
 		//Mesh
-		NewISM->Mesh->SetStaticMesh(RootSMC->StaticMesh);
+		NewISM->Mesh->SetStaticMesh(RootSMC->GetStaticMesh());
 	
 		//Materials
 		const int32 MatTotal = RootSMC->GetNumMaterials();
@@ -2559,7 +2559,7 @@ AStaticMeshActor* UVictoryBPFunctionLibrary::Clone__StaticMeshActor(UObject* Wor
 	NewSMA->GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable	);
 	
 	//copy static mesh
-	NewSMA->GetStaticMeshComponent()->SetStaticMesh(ToClone->GetStaticMeshComponent()->StaticMesh);
+	NewSMA->GetStaticMeshComponent()->SetStaticMesh(ToClone->GetStaticMeshComponent()->GetStaticMesh());
 	
 	//~~~
 	
