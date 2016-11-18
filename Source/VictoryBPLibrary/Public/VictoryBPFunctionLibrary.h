@@ -1784,5 +1784,16 @@ static FString AppendMultiple(FString A, FString B);
  
 //~~~ Mhousse ~~~
 
+
+// To be reviewed by Rama -- Submitted by Michael Gaskin aka / teak421
+
+/** Set the Min and Max Target Length & ZoomIntensity */
+UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|Camera|ZoomIn")
+static void CameraZoomIn(USpringArmComponent* SpringArm, float MinTargetLength, float MaxTargetLength, float ZoomIntensity);
+
+/** Set the Min and Max Target Length & ZoomIntensity */
+UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|Camera|ZoomOut")
+static void CameraZoomOut(USpringArmComponent* SpringArm, float MinTargetLength, float MaxTargetLength, float ZoomIntensity);
+
 }; 
 
