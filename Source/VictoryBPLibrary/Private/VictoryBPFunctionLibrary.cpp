@@ -5138,7 +5138,7 @@ UUserWidget* UVictoryBPFunctionLibrary::WidgetGetParentOfClass(UWidget* ChildWid
 	return ResultParent;
 }
  
-void UVictoryBPFunctionLibrary::WidgetGetChildrenOfClass(UWidget* ParentWidget, TArray<UUserWidget*>& ChildWidgets, TSubclassOf<UUserWidget> WidgetClass)
+void UVictoryBPFunctionLibrary::WidgetGetChildrenOfClass(UWidget* ParentWidget, TArray<UUserWidget*>& ChildWidgets, TSubclassOf<UUserWidget> WidgetClass, bool bImmediateOnly)
 {
 	ChildWidgets.Empty();
 
@@ -5164,39 +5164,32 @@ void UVictoryBPFunctionLibrary::WidgetGetChildrenOfClass(UWidget* ParentWidget, 
 			{
 				CheckedWidgets.Add(PossibleParent);
 
-				// Add any widget that is a child of the class specified.
-				if (PossibleParent->GetClass()->IsChildOf(WidgetClass))
+				TArray<UWidget*> Widgets;
+
+				UWidgetTree::GetChildWidgets(PossibleParent, Widgets);
+
+				for (UWidget* Widget : Widgets)
 				{
-					ChildWidgets.Add(Cast<UUserWidget>(PossibleParent));
-				}
-
-				UUserWidget* PossibleParentUserWidget = Cast<UUserWidget>(PossibleParent);
-
-				// If this is a UUserWidget, add its root widget to the check next.
-				if (PossibleParentUserWidget)
-				{
-					WidgetsToCheck.Push(PossibleParentUserWidget->GetRootWidget());
-				}
-				else
-				{
-					TArray<UWidget*> Widgets;
-
-					UWidgetTree::GetChildWidgets(PossibleParent, Widgets);
-
-					for (UWidget* Widget : Widgets)
+					if (!CheckedWidgets.Contains(Widget))
 					{
-						if (!CheckedWidgets.Contains(Widget))
+						// Add any widget that is a child of the class specified.
+						if (Widget->GetClass()->IsChildOf(WidgetClass))
 						{
-							// Add the widget to the check next.
-							WidgetsToCheck.Push(Widget);
+							ChildWidgets.Add(Cast<UUserWidget>(Widget));
+						}
 
-							// Add any widget that is a child of the class specified.
-							if (Widget->GetClass()->IsChildOf(WidgetClass))
-							{
-								ChildWidgets.Add(Cast<UUserWidget>(Widget));
-							}
+						// If we're not just looking for our immediate children,
+						// add this widget to list of widgets to check next.
+						if (!bImmediateOnly)
+						{
+							WidgetsToCheck.Push(Widget);
 						}
 					}
+				}
+
+				if (bImmediateOnly)
+				{
+					break;
 				}
 			}
 		}
