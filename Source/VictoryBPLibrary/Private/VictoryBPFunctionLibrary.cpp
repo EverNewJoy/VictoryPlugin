@@ -5,16 +5,29 @@
 #include "VictoryBPLibraryPrivatePCH.h"
  
 #include "VictoryBPFunctionLibrary.h"
+
+//FGPUDriverInfo GPU 
+#include "Runtime/Core/Public/GenericPlatform/GenericPlatformDriver.h"
  
+//MD5 Hash
+#include "Runtime/Core/Public/Misc/SecureHash.h"
+
 #include "StaticMeshResources.h"
 
 #include "HeadMountedDisplay.h"
-
+ 
 #include "GenericTeamAgentInterface.h"
 
 //For PIE error messages
 #include "MessageLog.h"
 #define LOCTEXT_NAMESPACE "Fun BP Lib"
+
+//Use MessasgeLog like this: (see GameplayStatics.cpp
+/*
+#if WITH_EDITOR
+		FMessageLog("PIE").Error(FText::Format(LOCTEXT("SpawnObjectWrongClass", "SpawnObject wrong class: {0}'"), FText::FromString(GetNameSafe(*ObjectClass))));
+#endif // WITH_EDITOR
+*/
 
 
 #include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapper.h"
@@ -379,6 +392,19 @@ EPathFollowingRequestResult::Type UVictoryBPFunctionLibrary::Victory_AI_MoveToWi
 }
 	
 //~~~~~~
+//GPU
+//~~~~~~ 
+void UVictoryBPFunctionLibrary::Victory_GetGPUInfo(FString& DeviceDescription, FString& Provider, FString& DriverVersion, FString& DriverDate )
+{   
+	FGPUDriverInfo GPUDriverInfo = FPlatformMisc::GetGPUDriverInfo(GRHIAdapterName);
+	 
+	DeviceDescription 	= GPUDriverInfo.DeviceDescription;
+	Provider 			= GPUDriverInfo.ProviderName;
+	DriverVersion 		= GPUDriverInfo.UserDriverVersion;
+	DriverDate 			= GPUDriverInfo.DriverDate;
+}
+
+//~~~~~~
 //Core
 //~~~~~~ 
  
@@ -401,6 +427,106 @@ float UVictoryBPFunctionLibrary::GetDistanceBetweenComponentSurfaces(UPrimitiveC
   
 	//Closest Point on 1 to closest point on surface of 2
 	return CollisionComponent1->GetDistanceToCollision(PointOnSurface2, PointOnSurface1);
+}
+
+
+
+void UVictoryBPFunctionLibrary::VictoryCreateProc(int32& ProcessId, FString FullPathOfProgramToRun,TArray<FString> CommandlineArgs,bool Detach,bool Hidden, int32 Priority, FString OptionalWorkingDirectory)
+{   
+	//Please note ProcessId should really be uint32 but that is not supported by BP yet
+	 
+	FString Args = "";
+	if(CommandlineArgs.Num() > 1)
+	{
+		Args = CommandlineArgs[0]; 
+		for(int32 v = 1; v < CommandlineArgs.Num(); v++)
+		{
+			Args += " " + CommandlineArgs[v];
+		}
+	}
+	else if(CommandlineArgs.Num() > 0)
+	{
+		Args = CommandlineArgs[0];
+	}
+	
+	uint32 NeedBPUINT32 = 0;
+	FProcHandle ProcHandle = FPlatformProcess::CreateProc( 
+		*FullPathOfProgramToRun, 
+		*Args, 
+		Detach,//* @param bLaunchDetached		if true, the new process will have its own window
+		false,//* @param bLaunchHidded			if true, the new process will be minimized in the task bar
+		Hidden,//* @param bLaunchReallyHidden	if true, the new process will not have a window or be in the task bar
+		&NeedBPUINT32, 
+		Priority, 
+		(OptionalWorkingDirectory != "") ? *OptionalWorkingDirectory : nullptr,//const TCHAR* OptionalWorkingDirectory, 
+		nullptr
+	);
+	 
+	//Not sure what to do to expose UINT32 to BP
+	ProcessId = NeedBPUINT32; 
+}
+	
+bool UVictoryBPFunctionLibrary::CompareMD5Hash(FString MD5HashFile1, FString MD5HashFile2 )
+{
+	//Load Hash Files
+	TArray<uint8> TheBinaryArray;
+	if (!FFileHelper::LoadFileToArray(TheBinaryArray, *MD5HashFile1))
+	{
+		UE_LOG(LogTemp,Error,TEXT("First hash file invalid %s"), *MD5HashFile1);
+		return false;
+		//~~
+	}
+	FMemoryReader FromBinary = FMemoryReader(TheBinaryArray, true); //true, free data after done
+	FMD5Hash FirstHash;
+	FromBinary << FirstHash;
+	
+	TheBinaryArray.Empty();
+	if (!FFileHelper::LoadFileToArray(TheBinaryArray, *MD5HashFile2))
+	{
+		UE_LOG(LogTemp,Error,TEXT("second hash file invalid %s"), *MD5HashFile2);
+		return false;
+		//~~
+	}
+	
+	FMemoryReader FromBinarySecond = FMemoryReader(TheBinaryArray, true); //true, free data after done
+	FMD5Hash SecondHash;
+	FromBinarySecond << SecondHash;
+	 
+	return FirstHash == SecondHash;
+}
+bool UVictoryBPFunctionLibrary::CreateMD5Hash(FString FileToHash, FString FileToStoreHashTo )
+{
+	if(!FPlatformFileManager::Get().GetPlatformFile().FileExists(*FileToHash))
+	{
+		UE_LOG(LogTemp,Error,TEXT("File to hash not found %d"), *FileToHash);
+		return false;
+	}
+	
+	int64 SizeOfFileToHash = FPlatformFileManager::Get().GetPlatformFile().FileSize(*FileToHash);
+	if(SizeOfFileToHash > 2 * 1000000000)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("File is >2gb, hashing will be very slow %d"), SizeOfFileToHash);
+	}
+	
+	FMD5Hash FileHash = FMD5Hash::HashFile(*FileToHash);
+	
+	//write to file
+	FBufferArchive ToBinary;
+	ToBinary << FileHash;
+	
+	if (FFileHelper::SaveArrayToFile(ToBinary, * FileToStoreHashTo)) 
+	{
+		// Free Binary Array 	
+		ToBinary.FlushCache();
+		ToBinary.Empty();
+	}
+	else
+	{ 
+		UE_LOG(LogTemp,Warning,TEXT("File hashed successfully but could not be saved to disk, file IO error %s"), *FileToHash);
+		return false;
+	}
+	 
+	return true;
 }
 
 bool UVictoryBPFunctionLibrary::VictoryPhysics_UpdateAngularDamping(UPrimitiveComponent* CompToUpdate, float NewAngularDamping)
@@ -708,14 +834,14 @@ void UVictoryBPFunctionLibrary::VictoryISM_ConvertToVictoryISMActors(
 		//~~~~~~~~~
 		
 		//Add Key if not present!
-		if(!VictoryISMMap.Contains(Comp->StaticMesh))
+		if(!VictoryISMMap.Contains(Comp->GetStaticMesh()))
 		{
-			VictoryISMMap.Add(Comp->StaticMesh);
-			VictoryISMMap[Comp->StaticMesh].Empty(); //ensure array is properly initialized
+			VictoryISMMap.Add(Comp->GetStaticMesh());
+			VictoryISMMap[Comp->GetStaticMesh()].Empty(); //ensure array is properly initialized
 		}
 		
 		//Add the actor!
-		VictoryISMMap[Comp->StaticMesh].Add(*Itr);
+		VictoryISMMap[Comp->GetStaticMesh()].Add(*Itr);
 	}
 	  
 	//For each Static Mesh Asset in the Victory ISM Map
@@ -763,7 +889,7 @@ void UVictoryBPFunctionLibrary::VictoryISM_ConvertToVictoryISMActors(
 		//~~~~~~~~~~
 		
 		//Mesh
-		NewISM->Mesh->SetStaticMesh(RootSMC->StaticMesh);
+		NewISM->Mesh->SetStaticMesh(RootSMC->GetStaticMesh());
 	
 		//Materials
 		const int32 MatTotal = RootSMC->GetNumMaterials();
@@ -2117,11 +2243,12 @@ void UVictoryBPFunctionLibrary::OperatingSystem__GetCurrentPlatform(
 	bool& Linux, 
 	bool& iOS, 
 	bool& Android,
+	bool& Android_ARM,
+	bool& Android_Vulkan,
 	bool& PS4,
 	bool& XBoxOne,
 	bool& HTML5,
-	bool& WinRT_Arm,
-	bool& WinRT
+	bool& Apple
 ){
 	//#define's in UE4 source code
 	Windows_ = 				PLATFORM_WINDOWS;
@@ -2133,11 +2260,11 @@ void UVictoryBPFunctionLibrary::OperatingSystem__GetCurrentPlatform(
 	
 	iOS = 						PLATFORM_IOS;
 	Android = 				PLATFORM_ANDROID;
-	
+	Android_ARM  	=		PLATFORM_ANDROID_ARM;
+	Android_Vulkan	= 		PLATFORM_ANDROID_VULKAN;
 	HTML5 = 					PLATFORM_HTML5;
-	
-	WinRT_Arm =	 			PLATFORM_WINRT_ARM;
-	WinRT 	= 				PLATFORM_WINRT;
+	 
+	Apple =	 			PLATFORM_APPLE;
 }
 
 FString UVictoryBPFunctionLibrary::RealWorldTime__GetCurrentOSTime( 
@@ -2262,7 +2389,30 @@ int32 UVictoryBPFunctionLibrary::Conversion__FloatToRoundedInteger(float IN_Floa
 {
 	return FGenericPlatformMath::RoundToInt(IN_Float);
 }
-
+ 
+FString UVictoryBPFunctionLibrary::Victory_SecondsToHoursMinutesSeconds(float Seconds, bool TrimZeroes)
+{
+	FString Str = FTimespan(0, 0, Seconds).ToString();
+	
+	if(TrimZeroes)
+	{
+		FString Left,Right;
+		Str.Split(TEXT("."),&Left,&Right);
+		Str = Left;
+		Str.ReplaceInline(TEXT("00:00"), TEXT("00"));
+		
+		//Str Count!  
+		int32 Count = CountOccurrancesOfSubString(Str,":");
+		   
+		//Remove Empty Hours
+		if(Count >= 2)
+		{
+			Str.ReplaceInline(TEXT("00:"), TEXT(""));
+		} 
+	}
+ 
+	return Str;
+}
 
 bool UVictoryBPFunctionLibrary::IsAlphaNumeric(const FString& String)
 {
@@ -2409,7 +2559,7 @@ AStaticMeshActor* UVictoryBPFunctionLibrary::Clone__StaticMeshActor(UObject* Wor
 	NewSMA->GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable	);
 	
 	//copy static mesh
-	NewSMA->GetStaticMeshComponent()->SetStaticMesh(ToClone->GetStaticMeshComponent()->StaticMesh);
+	NewSMA->GetStaticMeshComponent()->SetStaticMesh(ToClone->GetStaticMeshComponent()->GetStaticMesh());
 	
 	//~~~
 	
@@ -3430,15 +3580,15 @@ bool UVictoryBPFunctionLibrary::Physics__EnterRagDoll(AActor * TheCharacter)
 	if(!AsCharacter->GetMesh()->GetPhysicsAsset()) return false;
 	
 	//Victory Ragdoll
-	AsCharacter->GetMesh()->SetPhysicsBlendWeight(1);
-	AsCharacter->GetMesh()->bBlendPhysics = true;
-	
+	AsCharacter->GetMesh()->SetSimulatePhysics(true);
+
 	return true;
 }
 
 
 bool UVictoryBPFunctionLibrary::Physics__LeaveRagDoll(
 	AActor* TheCharacter,
+	bool SetToFallingMovementMode,
 	float HeightAboveRBMesh,
 	const FVector& InitLocation, 
 	const FRotator& InitRotation
@@ -3448,7 +3598,7 @@ bool UVictoryBPFunctionLibrary::Physics__LeaveRagDoll(
 	
 	//Mesh?
 	if (!AsCharacter->GetMesh()) return false;
-	
+	 
 	//Set Actor Location to Be Near Ragdolled Mesh
 	//Calc Ref Bone Relative Pos for use with IsRagdoll
 	TArray<FName> BoneNames;
@@ -3459,14 +3609,18 @@ bool UVictoryBPFunctionLibrary::Physics__LeaveRagDoll(
 	}
 	
 	//Exit Ragdoll
-	AsCharacter->GetMesh()->SetPhysicsBlendWeight(0); //1 for full physics
-
+	AsCharacter->GetMesh()->SetSimulatePhysics(false);
+	AsCharacter->GetMesh()->AttachToComponent(AsCharacter->GetCapsuleComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+            
 	//Restore Defaults
 	AsCharacter->GetMesh()->SetRelativeRotation(InitRotation);
 	AsCharacter->GetMesh()->SetRelativeLocation(InitLocation);
 	
 	//Set Falling After Final Capsule Relocation
-	if(AsCharacter->GetCharacterMovement()) AsCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Falling);	
+	if(SetToFallingMovementMode)
+	{ 
+		if(AsCharacter->GetCharacterMovement()) AsCharacter->GetCharacterMovement()->SetMovementMode(MOVE_Falling);	
+	}
 	
 	return true;
 }	
@@ -4644,8 +4798,8 @@ int32 UVictoryBPFunctionLibrary::findSource(class USoundWave* sw, class FSoundSo
 			{
 				sw_instance = WaveInstanceIt.Value();
 				if (sw_instance->WaveData->CompressedDataGuid == sw->CompressedDataGuid)
-				{
-					audioSource = device->WaveInstanceSourceMap.FindRef(sw_instance);
+				{   
+					audioSource = device->GetSoundSource(sw_instance); //4.13 onwards, <3 Rama
 					out_audioSource = audioSource;
 					return 0;
 				}
@@ -4834,7 +4988,7 @@ bool UVictoryBPFunctionLibrary::CaptureComponent2D_SaveImage(class USceneCapture
 		Pixel.B = PR;
 
 		// Set alpha based on RGB values of ClearColour.
-		Pixel.A = ((Pixel.R == ClearFColour.R) && (Pixel.R == ClearFColour.R) && (Pixel.R == ClearFColour.R)) ? 0 : 255;
+		Pixel.A = ((Pixel.R == ClearFColour.R) && (Pixel.G == ClearFColour.G) && (Pixel.B == ClearFColour.B)) ? 0 : 255;
 	}
 	
 	IImageWrapperPtr ImageWrapper = GetImageWrapperByExtention(ImagePath);
@@ -4984,7 +5138,7 @@ UUserWidget* UVictoryBPFunctionLibrary::WidgetGetParentOfClass(UWidget* ChildWid
 	return ResultParent;
 }
  
-void UVictoryBPFunctionLibrary::WidgetGetChildrenOfClass(UWidget* ParentWidget, TArray<UUserWidget*>& ChildWidgets, TSubclassOf<UUserWidget> WidgetClass)
+void UVictoryBPFunctionLibrary::WidgetGetChildrenOfClass(UWidget* ParentWidget, TArray<UUserWidget*>& ChildWidgets, TSubclassOf<UUserWidget> WidgetClass, bool bImmediateOnly)
 {
 	ChildWidgets.Empty();
 
@@ -5010,39 +5164,32 @@ void UVictoryBPFunctionLibrary::WidgetGetChildrenOfClass(UWidget* ParentWidget, 
 			{
 				CheckedWidgets.Add(PossibleParent);
 
-				// Add any widget that is a child of the class specified.
-				if (PossibleParent->GetClass()->IsChildOf(WidgetClass))
+				TArray<UWidget*> Widgets;
+
+				UWidgetTree::GetChildWidgets(PossibleParent, Widgets);
+
+				for (UWidget* Widget : Widgets)
 				{
-					ChildWidgets.Add(Cast<UUserWidget>(PossibleParent));
-				}
-
-				UUserWidget* PossibleParentUserWidget = Cast<UUserWidget>(PossibleParent);
-
-				// If this is a UUserWidget, add its root widget to the check next.
-				if (PossibleParentUserWidget)
-				{
-					WidgetsToCheck.Push(PossibleParentUserWidget->GetRootWidget());
-				}
-				else
-				{
-					TArray<UWidget*> Widgets;
-
-					UWidgetTree::GetChildWidgets(PossibleParent, Widgets);
-
-					for (UWidget* Widget : Widgets)
+					if (!CheckedWidgets.Contains(Widget))
 					{
-						if (!CheckedWidgets.Contains(Widget))
+						// Add any widget that is a child of the class specified.
+						if (Widget->GetClass()->IsChildOf(WidgetClass))
 						{
-							// Add the widget to the check next.
-							WidgetsToCheck.Push(Widget);
+							ChildWidgets.Add(Cast<UUserWidget>(Widget));
+						}
 
-							// Add any widget that is a child of the class specified.
-							if (Widget->GetClass()->IsChildOf(WidgetClass))
-							{
-								ChildWidgets.Add(Cast<UUserWidget>(Widget));
-							}
+						// If we're not just looking for our immediate children,
+						// add this widget to list of widgets to check next.
+						if (!bImmediateOnly)
+						{
+							WidgetsToCheck.Push(Widget);
 						}
 					}
+				}
+
+				if (bImmediateOnly)
+				{
+					break;
 				}
 			}
 		}

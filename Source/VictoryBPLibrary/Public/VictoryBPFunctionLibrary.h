@@ -234,17 +234,87 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		bool bCanStrafe = false
 	);
 	 
+	//~~~~~~~~~~~~~~~~
+	// 	GPU  <3 Rama
+	//~~~~~~~~~~~~~~~~
+
+	UFUNCTION(BlueprintPure,Category="Victory BP Library|GPU")
+	static FString Victory_GetGPUBrand()
+	{  
+		return FPlatformMisc::GetPrimaryGPUBrand();
+	}
+	UFUNCTION(BlueprintPure,Category="Victory BP Library|GPU", meta=(Keywords="GPU"))
+	static FString Victory_GetGRHIAdapterName()
+	{  
+		return GRHIAdapterName;
+	}
+ 
+	UFUNCTION(BlueprintPure,Category="Victory BP Library|GPU")
+	static void Victory_GetGPUInfo(FString& DeviceDescription, FString& Provider, FString& DriverVersion, FString& DriverDate);
 	
 	//~~~~~~~~~~
 	// 	Core
 	//~~~~~~~~~~
 
+	/** 
+		Launch a new process, if it is not set to be detached, UE4 will not fully close until the other process completes. 
+		
+		The new process id is returned!
+		
+		Priority options: -2 idle, -1 low, 0 normal, 1 high, 2 higher
+		
+		♥ Rama
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|System")
+	static void VictoryCreateProc(int32& ProcessId, FString FullPathOfProgramToRun,TArray<FString> CommandlineArgs,bool Detach,bool Hidden, int32 Priority=0, FString OptionalWorkingDirectory="");
+	
+	/** You can obtain ProcessID from processes you initiate via VictoryCreateProc */
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|System")
+	static FString VictoryGetApplicationName(int32 ProcessId)
+	{
+		//Please note it should really be uint32 but that is not supported by BP yet
+		return FPlatformProcess::GetApplicationName(ProcessId);
+	}
+	
+	/** You can obtain ProcessID from processes you initiate via VictoryCreateProc */
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|System")
+	static bool VictoryIsApplicationRunning( int32 ProcessId )
+	{
+		//Please note it should really be uint32 but that is not supported by BP yet
+		return FPlatformProcess::IsApplicationRunning(ProcessId);
+	}
+ 
+	UFUNCTION(BlueprintPure, Category = "Rama Save System|File IO")
+	static void UTCToLocal(const FDateTime& UTCTime, FDateTime& LocalTime)
+	{    
+		//Turn UTC into local ♥ Rama
+		FTimespan UTCOffset = FDateTime::Now() - FDateTime::UtcNow();
+		LocalTime = UTCTime;
+		LocalTime += UTCOffset;
+		//♥ Rama
+	}
+	
+	/** Game thread may pause while hashing is ocurring. Please note that hashing multi-gb size files is very very slow, smaller files will process much faster :) <3 Rama*/
+	UFUNCTION(BlueprintCallable,Category="VictoryBPLibrary|MD5")
+	static bool CreateMD5Hash(FString FileToHash, FString FileToStoreHashTo );
+	 
+	/** Game thread may pause while hashing is ocurring. Please note that hashing multi-gb size files is very very slow, smaller files will process much faster :) <3 Rama */
+	UFUNCTION(BlueprintCallable,Category="VictoryBPLibrary|MD5")
+	static bool CompareMD5Hash(FString MD5HashFile1, FString MD5HashFile2 );
+	
 	/** Dynamically change how frequently in seconds a component will tick! Can be altered at any point during game-time! ♥ Rama */
 	UFUNCTION(BlueprintCallable,Category="VictoryBPLibrary|Core")
 	static void SetComponentTickRate(UActorComponent* Component, float Seconds)
 	{   
 		if(!Component) return;
 		Component->PrimaryComponentTick.TickInterval = Seconds;
+	}
+
+	/** Retrieves command line arguments that were passed into unreal */
+	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|Core")
+		static const FString GetCommandLine()
+	{
+		return FCommandLine::Get();
 	}
 	
 	/**
@@ -655,15 +725,15 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 
 	/** Find all widgets of a certain class! Top level only means only widgets that are directly added to the viewport will be found */
-	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|UMG", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
+	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|UMG", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject", DeterminesOutputType = "WidgetClass", DynamicOutputParam = "FoundWidgets"))
 	static void GetAllWidgetsOfClass(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass, TArray<UUserWidget*>& FoundWidgets, bool TopLevelOnly = true);
-
+  
 	/** Remove all widgets of a certain class from viewport! */
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|UMG", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
 	static void RemoveAllWidgetsOfClass(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass);
 
-	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|UMG", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
-		static bool IsWidgetOfClassInViewport(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass);
+	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|UMG", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
+	static bool IsWidgetOfClassInViewport(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass);
 
 	/** Handy helper to check if a Key Event was for specified Key ♥ Rama*/
 	UFUNCTION(BlueprintPure,Category="VictoryBPLibrary|UMG", meta = (Keywords = "== match same equal"))
@@ -797,11 +867,12 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		bool& Linux,
 		bool& iOS,
 		bool& Android,
+		bool& Android_ARM,
+		bool& Android_Vulkan,
 		bool& PS4,
 		bool& XBoxOne,
 		bool& HTML5,
-		bool& WinRT_Arm,
-		bool& WinRT
+		bool& Apple
 		);
 
 	//~~~
@@ -874,16 +945,27 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 	/** Converts a float to a rounded Integer, examples: 1.4 becomes 1,   1.6 becomes 2 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "VictoryBPLibrary")
-		static int32 Conversion__FloatToRoundedInteger(float IN_Float);
+	static int32 Conversion__FloatToRoundedInteger(float IN_Float);
 
+	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|String")
+	static int32 CountOccurrancesOfSubString(FString Source, FString SubString, ESearchCase::Type SearchCase = ESearchCase::IgnoreCase)
+	{
+		return Source.ReplaceInline(*SubString,TEXT(""),SearchCase);
+	}
 
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|String", meta=( Keywords = "concatenate append"))
+	
+	
+	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|String", meta=( Keywords = "concatenate append"))
 	static void VictoryAppendInline(UPARAM(ref) FString& String, const FString& ToAppend, FString& Result, bool AppendNewline=false)
 	{     
 		String += ToAppend;
 		if(AppendNewline) String += LINE_TERMINATOR;
 		Result = String;  
 	}
+	
+	/** Handy option to trim any extra 00: 's while keeping a base set of 00:ss as per user expectation. 00:05:30 will become 05:30. ♥ Rama */
+	UFUNCTION(BlueprintPure, Category = "File BP Library")
+	static FString Victory_SecondsToHoursMinutesSeconds(float Seconds, bool TrimZeroes=true);
 	
 	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|String")
 	static bool IsAlphaNumeric(const FString& String);
@@ -947,7 +1029,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 	/** Cause a supplied Character (casted from Actor internally) to exit Ragdoll physics. HeightAboveRBMesh is how far above the RB Mesh the Actor Capsule should be moved to upon exiting. Pass in the InitLocation and InitRotation from InitializeVictoryRagdoll */
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
-		static bool Physics__LeaveRagDoll(AActor* TheCharacter, float HeightAboveRBMesh = 64, const FVector& InitLocation = FVector(0, 0, 0), const FRotator& InitRotation = FRotator(0, 0, 0));
+	static bool Physics__LeaveRagDoll(AActor* TheCharacter, bool SetToFallingMovementMode=true, float HeightAboveRBMesh = 64, const FVector& InitLocation = FVector(0, 0, 0), const FRotator& InitRotation = FRotator(0, 0, 0));
 
 	/** Returns whether or not a supplied Character is in Ragdoll Physics. Cast from Actor done internally for your convenience. */
 	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
@@ -1057,15 +1139,19 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		static void Visibility__GetNotRenderedActors(UObject* WorldContextObject, TArray<AActor*>& CurrentlyNotRenderedActors, float MinRecentTime = 0.01);
 
 	/** Is the Current Game Window the Foreground window in the OS, or in the Editor? This will be accurate in standalone running of the game as well as in the editor PIE */
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary")
+	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|GameWindow")
 	static bool ClientWindow__GameWindowIsForeGroundInOS();
 
+	/** Flashes the game on the windows OS task bar! Please note this won't look the best in PIE, flashing is smoother in Standalone or packaged game. You can use GameWindowIsForeGroundInOS to see if there is a need to get the user's attention! <3 Rama */
+	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|GameWindow")
+	static void FlashGameOnTaskBar(APlayerController* PC, bool FlashContinuous=false, int32 MaxFlashCount = 3, int32 FlashFrequencyMilliseconds=500);
+	
 	/** Freeze Game Render, Does Not Stop Game Logic, Just Rendering. This is not like Pausing. Mainly useful for freezing render when window is not in the foreground */
-	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
+	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|GameWindow")
 		static void Rendering__FreezeGameRendering();
 
 	/** Unfreeze Game Render. This is not an unpause function, it's just for actual screen rendering */
-	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary")
+	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|GameWindow")
 	static void Rendering__UnFreezeGameRendering();
 
 	/** Compare Source Vector against Array of Vectors. Returns: Returns the Closest Vector to Source and what that closest Distance is, or -1 if there was an error such as array being empty. Ignores: Ignores Source if source is in the array */
@@ -1657,8 +1743,8 @@ static bool Capture2D_Project(class ASceneCapture2D* Target, FVector Location, F
 	 * Find first widget of a certain class and return it.
 	 * @param WidgetClass The widget class to filter by.
 	 * @param TopLevelOnly Only a widget that is a direct child of the viewport will be returned.
-	 */
-	UFUNCTION(Category = "VictoryBPLibrary|UMG", BlueprintCallable, BlueprintCosmetic, Meta = (WorldContext = "WorldContextObject"))
+	 */  
+	UFUNCTION(Category = "VictoryBPLibrary|UMG", BlueprintCallable, BlueprintCosmetic, Meta = (WorldContext = "WorldContextObject", DeterminesOutputType = "WidgetClass"))
 	static UUserWidget* GetFirstWidgetOfClass(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass, bool TopLevelOnly);
 
 	/**
