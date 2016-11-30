@@ -5230,6 +5230,80 @@ void UVictoryBPFunctionLibrary::SetGenericTeamId(AActor* Target, uint8 NewTeamId
 	}
 }
 
+FLevelStreamInstanceInfo::FLevelStreamInstanceInfo(ULevelStreamingKismet* LevelInstance)
+{
+	PackageName = LevelInstance->GetWorldAssetPackageFName();
+	PackageNameToLoad = LevelInstance->PackageNameToLoad;
+	Location = LevelInstance->LevelTransform.GetLocation();
+	Rotation = LevelInstance->LevelTransform.GetRotation().Rotator();
+	bShouldBeLoaded = LevelInstance->bShouldBeLoaded;
+	bShouldBeVisible = LevelInstance->bShouldBeVisible;
+	bShouldBlockOnLoad = LevelInstance->bShouldBlockOnLoad;
+	LODIndex = LevelInstance->LevelLODIndex;
+};
+
+FLevelStreamInstanceInfo UVictoryBPFunctionLibrary::GetLevelInstanceInfo(ULevelStreamingKismet* LevelInstance)
+{
+	return FLevelStreamInstanceInfo(LevelInstance);
+}
+
+void UVictoryBPFunctionLibrary::AddToStreamingLevels(UObject* WorldContextObject, const FLevelStreamInstanceInfo& LevelInstanceInfo)
+{
+	bool bResult = true;
+
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
+
+	if (World != nullptr)
+	{
+		bool bAlreadyExists = false;
+
+		for (auto StreamingLevel : World->StreamingLevels)
+		{
+			if (StreamingLevel->GetWorldAssetPackageFName() == LevelInstanceInfo.PackageName)
+			{
+				bAlreadyExists = true;
+				// KRIS : Would normally log a warning here! Is there a LogVictory?
+				break;
+			}
+		}
+		
+		if (!bAlreadyExists)
+		{
+			FName PackageName = LevelInstanceInfo.PackageName;
+
+			// For PIE Networking: remap the packagename to our local PIE packagename
+			FString PackageNameStr = PackageName.ToString();
+			if (GEngine->NetworkRemapPath(World, PackageNameStr, true))
+			{
+				PackageName = FName(*PackageNameStr);
+			}
+
+			World->DelayGarbageCollection();
+
+			// Setup streaming level object that will load specified map
+			ULevelStreamingKismet* StreamingLevel = NewObject<ULevelStreamingKismet>(World, ULevelStreamingKismet::StaticClass(), NAME_None, RF_Transient, nullptr);
+			StreamingLevel->SetWorldAssetByPackageName(PackageName);
+			StreamingLevel->LevelColor = FColor::MakeRandomColor();
+			StreamingLevel->bShouldBeLoaded = LevelInstanceInfo.bShouldBeLoaded;
+			StreamingLevel->bShouldBeVisible = LevelInstanceInfo.bShouldBeVisible;
+			StreamingLevel->bShouldBlockOnLoad = LevelInstanceInfo.bShouldBlockOnLoad;
+			StreamingLevel->bInitiallyLoaded = true;
+			StreamingLevel->bInitiallyVisible = true;
+
+			// Transform
+			StreamingLevel->LevelTransform = FTransform(LevelInstanceInfo.Rotation, LevelInstanceInfo.Location);
+
+			// Map to Load
+			StreamingLevel->PackageNameToLoad = LevelInstanceInfo.PackageNameToLoad;
+
+			// Add the new level to world.
+			World->StreamingLevels.Add(StreamingLevel);
+
+			World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+		}
+	}
+}
+
 //~~~~~~~~~ END OF CONTRIBUTED BY KRIS ~~~~~~~~~~~
  
 
