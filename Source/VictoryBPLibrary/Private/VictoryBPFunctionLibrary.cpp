@@ -5273,7 +5273,7 @@ void UVictoryBPFunctionLibrary::AddToStreamingLevels(UObject* WorldContextObject
 
 			// For PIE Networking: remap the packagename to our local PIE packagename
 			FString PackageNameStr = PackageName.ToString();
-			if (GEngine->NetworkRemapPath(World, PackageNameStr, true))
+			if (GEngine->NetworkRemapPath(World->GetNetDriver(), PackageNameStr, true))
 			{
 				PackageName = FName(*PackageNameStr);
 			}
