@@ -246,9 +246,9 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	* @param Rotation - Worldspace rotation for rotating the entire level
 	* @return false if the level name was not found 
 	*/ 
-	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|Dynamic Level Generation",meta=(WorldContext="WorldContextObject"))
+	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|Dynamic Level Generation",meta=(DeprecatedFunction, DeprecationMessage="My LoadLevelInstance BP node is in the main UE4 Engine as of 4.13! This version is deprecated and will be removed in the near future. <3 -Rama",WorldContext="WorldContextObject"))
 	static ULevelStreaming* VictoryLoadLevelInstance(UObject* WorldContextObject, FString MapFolderOffOfContent, FString LevelName, int32 InstanceNumber, FVector Location, FRotator Rotation,bool& Success);
-	
+	 
 	//~~~~~~~~~~
 	// 	AI
 	//~~~~~~~~~~
