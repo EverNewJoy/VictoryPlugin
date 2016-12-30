@@ -2934,19 +2934,11 @@ bool UVictoryBPFunctionLibrary::FileIO__SaveStringTextToFile(
 	FString SaveText,
 	bool AllowOverWriting
 ){
-	//Dir Exists?
-	if ( !FPlatformFileManager::Get().GetPlatformFile().DirectoryExists( *SaveDirectory))
+	if(!FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*SaveDirectory))
 	{
-		//create directory if it not exist
-		FPlatformFileManager::Get().GetPlatformFile().CreateDirectory( *SaveDirectory);
-		
-		//still could not make directory?
-		if (!FPlatformFileManager::Get().GetPlatformFile().DirectoryExists( *SaveDirectory))
-		{
-			//Could not make the specified directory
-			return false;
-			//~~~~~~~~~~~~~~~~~~~~~~
-		}
+		//Could not make the specified directory
+		return false;
+		//~~~~~~~~~~~~~~~~~~~~~~
 	}
 	
 	//get complete file path
@@ -2969,18 +2961,11 @@ bool UVictoryBPFunctionLibrary::FileIO__SaveStringTextToFile(
 bool UVictoryBPFunctionLibrary::FileIO__SaveStringArrayToFile(FString SaveDirectory, FString JoyfulFileName, TArray<FString> SaveText, bool AllowOverWriting)  
 {
 	//Dir Exists?
-	if ( !FPlatformFileManager::Get().GetPlatformFile().DirectoryExists( *SaveDirectory))
+	if ( !VCreateDirectory(SaveDirectory))
 	{
-		//create directory if it not exist
-		FPlatformFileManager::Get().GetPlatformFile().CreateDirectory( *SaveDirectory);
-		
-		//still could not make directory?
-		if (!FPlatformFileManager::Get().GetPlatformFile().DirectoryExists( *SaveDirectory))
-		{
-			//Could not make the specified directory
-			return false;
-			//~~~~~~~~~~~~~~~~~~~~~~
-		}
+		//Could not make the specified directory
+		return false;
+		//~~~~~~~~~~~~~~~~~~~~~~
 	}
 	
 	//get complete file path
