@@ -3217,6 +3217,7 @@ AActor*  UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestBone(
 	if (!AsCharacter->GetMesh()) return HitActor;
 	
 	//Component Trace
+	FHitResult Hit;
 	IsValid = AsCharacter->GetMesh()->K2_LineTraceComponent(
 		TraceStart, 
 		TraceEnd, 
@@ -3224,7 +3225,8 @@ AActor*  UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestBone(
 		false, 
 		OutImpactPoint, 
 		OutImpactNormal,
-		ClosestBoneName
+		ClosestBoneName,
+		Hit
 	); 
 	
 	//Location
@@ -3286,6 +3288,7 @@ AActor* UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestSocket(
 	if (!AsCharacter->GetMesh()) return HitActor;
 	
 	//Component Trace
+	FHitResult Hit;
 	FName BoneName;
 	if (! AsCharacter->GetMesh()->K2_LineTraceComponent(
 		TraceStart, 
@@ -3294,7 +3297,8 @@ AActor* UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestSocket(
 		false, 
 		OutImpactPoint, 
 		OutImpactNormal,
-		BoneName
+		BoneName,
+		Hit
 	)) return HitActor;
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
