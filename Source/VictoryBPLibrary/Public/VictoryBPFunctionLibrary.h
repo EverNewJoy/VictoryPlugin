@@ -1956,10 +1956,18 @@ static bool Capture2D_Project(class ASceneCapture2D* Target, FVector Location, F
 
 	UFUNCTION(Category = "VictoryBPLibrary|Actor", BlueprintPure, Meta = (DefaultToSelf = "ChildActor"))
 	static FRotator GetActorRelativeRotation(class AActor* ParentActor, class AActor* ChildActor);
-	
+
+	/** 
+	 *	Helper function to calculate vertical FOV from horizontal FOV and aspect ratio.
+	 *	Useful to for determining distance from camera fit in-game objects to the width of the screen.
+	 */
 	UFUNCTION(Category = "VictoryBPLibrary|Game|Viewport", BlueprintPure)
 	static float HorizontalFOV(float VerticalFOV, float AspectRatio);
 
+	/** 
+	 *	Helper function to calculate vertical FOV from horizontal FOV and aspect ratio.
+	 *	Useful to for determining distance from camera fit in-game objects to the height of the screen.
+	 */
 	UFUNCTION(Category = "VictoryBPLibrary|Game|Viewport", BlueprintPure)
 	static float VerticalFOV(float HorizontalFOV, float AspectRatio);
 
