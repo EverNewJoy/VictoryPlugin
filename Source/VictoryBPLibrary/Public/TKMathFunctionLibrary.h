@@ -57,34 +57,34 @@ class VICTORYBPLIBRARY_API UTKMathFunctionLibrary : public UBlueprintFunctionLib
 
 public:
 	
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|Console")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Console")
 	static float GetConsoleVariableFloat(FString VariableName);
 	
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|Console")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Console")
 	static int32 GetConsoleVariableInt(FString VariableName);
 	 
 	//Reverses the sign (- or +) of a float.
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Float")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Float")
 	static float NegateFloat(float A);
 
 	//Reverses the sign (- or +) of an integer.
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Integer")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Integer")
 	static int32 NegateInt(int32 A);
 
 	//Reverses the sign (- or +) of a Vector2D.
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector2D")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector2D")
 	static FVector2D NegateVector2D(FVector2D A);
 
 	//Changes the size (length) of a Vector to the given size (normalized vector * size).
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector")
 	static FVector SetVectorLength(FVector A, float size);
 
 	//Converts radians to degrees.
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector")
 	static FVector VectorRadiansToDegrees(FVector RadVector);
 
 	//Converts degrees to radians.
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector")
 	static FVector VectorDegreesToRadians(FVector DegVector);
 
 	/**
@@ -93,7 +93,7 @@ public:
 	* @param Multiple - The multiple number to round to.
 	* @param skipSelf - Skip to the previous multiple if the integer rounds to itself.
 	*/
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Integer")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Integer")
 	static int32 RoundToLowerMultiple(int32 A, int32 Multiple = 32, bool skipSelf = false);
 
 	/**
@@ -102,23 +102,23 @@ public:
 	* @param Multiple - The multiple number to round to.
 	* @param skipSelf - Skip to the next multiple if the integer rounds to itself.
 	*/
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Integer")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Integer")
 	static int32 RoundToUpperMultiple(int32 A, int32 Multiple = 32, bool skipSelf = false);
 
 	/** Rounds an integer to the nearest multiple of the given number. */
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Integer")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Integer")
 	static int32 RoundToNearestMultiple(int32 A, int32 Multiple = 32);
 
 	/** Returns true if the integer is a power of two number. */
-	UFUNCTION(BlueprintPure, meta = (CompactNodeTitle = "PwrOf2"), Category = "VictoryBPLibrary|TK-Master Math|Integer")
+	UFUNCTION(BlueprintPure, meta = (CompactNodeTitle = "PwrOf2"), Category = "Victory BP Library|TK-Master Math|Integer")
 	static bool IsPowerOfTwo(int32 x);
 
 	/** Returns true if the integer is a multiple of the given number. */
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Integer")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Integer")
 	static bool IsMultipleOf(int32 A, int32 Multiple);
 
 	/** Returns true if the number is even (false if it's odd). */
-	UFUNCTION(BlueprintPure, meta = (CompactNodeTitle = "isEven"), Category = "VictoryBPLibrary|TK-Master Math|Float")
+	UFUNCTION(BlueprintPure, meta = (CompactNodeTitle = "isEven"), Category = "Victory BP Library|TK-Master Math|Float")
 	static bool IsEvenNumber(float A);
 
 	/**
@@ -130,40 +130,40 @@ public:
 	* @param LineDir			Direction of line.
 	* @return Closest point on sphere to given line.
 	*/ 
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector")
 	static FVector ClosestPointOnSphereToLine(FVector SphereOrigin, float SphereRadius, FVector LineOrigin, FVector LineDir);
 
 	/** Find the point on line segment from LineStart to LineEnd which is closest to Point. */
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector")
 	static FVector ClosestPointOnLineSeqment(FVector Point, FVector LineStart, FVector LineEnd);
 
 	/** Returns true if the given Point vector is within a box (defined by BoxOrigin and BoxExtent). */
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector|Intersection")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector|Intersection")
 	static bool IsPointInsideBox(FVector Point, FVector BoxOrigin, FVector BoxExtent);
 
 	/** Determines whether a line intersects a sphere. */
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector|Intersection")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector|Intersection")
 	static bool IsLineInsideSphere(FVector LineStart, FVector LineDir, float LineLength, FVector SphereOrigin, float SphereRadius);
 
 	/**
 	* Swept-Box vs Box test.
 	* Sweps a box defined by Extend from Start to End points and returns whether it hit a box or not plus the hit location and hit normal if successful.
 	*/
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector|Intersection")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector|Intersection")
 	static bool LineExtentBoxIntersection(FBox inBox, FVector Start, FVector End, FVector Extent, FVector& HitLocation, FVector& HitNormal, float& HitTime);
 
 	/**
 	* Get the shortest distance between a point and a plane.
 	* The output is signed so it holds information as to which side of the plane normal the point is.
 	*/
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector")
 	static float SignedDistancePlanePoint(FVector planeNormal, FVector planePoint, FVector point);
 
 	/**
 	* Returns a vector point which is a projection from a point to a line (defined by the vector couple LineOrigin, LineDirection).
 	* The line is infinite (in both directions).
 	*/
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector")
 	static FVector ProjectPointOnLine(FVector LineOrigin, FVector LineDirection, FVector Point);
 
 	/**
@@ -174,7 +174,7 @@ public:
 	* @param BoxExtent the box extend (width, depth, height).
 	* @return Whether the sphere/box intersect or not.
 	*/
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector|Intersection")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector|Intersection")
 	static bool SphereBoxIntersection(FVector SphereOrigin, float SphereRadius, FVector BoxOrigin, FVector BoxExtent);
 
 	/**
@@ -184,7 +184,7 @@ public:
 	* @param	LinePoint1		Closest point on segment 1 to segment 2.
 	* @param	LinePoint2		Closest point on segment 2 to segment 1.
 	*/
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector|Intersection")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector|Intersection")
 	static void ClosestPointsOfLineSegments(FVector Line1Start, FVector Line1End, FVector Line2Start, FVector Line2End, FVector& LinePoint1, FVector& LinePoint2);
 
 	/**
@@ -198,7 +198,7 @@ public:
 	* @param LineDir2 Line direction (normal) of the second line. Should be a normalized vector.
 	* @return true if lines intersect, otherwise false.
 	*/
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector|Intersection")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector|Intersection")
 	static bool LineToLineIntersection(FVector& IntersectionPoint, FVector LinePoint1, FVector LineDir1, FVector LinePoint2, FVector LineDir2);
 
 	/*
@@ -212,7 +212,7 @@ public:
 	* @param lineVec2 Line direction (normal) of the second line. Should be a normalized vector.
 	* @return true if lines are parallel, false otherwise.
 	*/
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector")
 	static bool ClosestPointsOnTwoLines(FVector& closestPointLine1, FVector& closestPointLine2, FVector linePoint1, FVector lineVec1, FVector linePoint2, FVector lineVec2);
 
 	/*
@@ -220,26 +220,26 @@ public:
 	* Returns 1 if point is not on the line segment and it is on the side of linePoint1.
 	* Returns 2 if point is not on the line segment and it is on the side of linePoint2.
 	*/
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector")
 	static int32 PointOnWhichSideOfLineSegment(FVector linePoint1, FVector linePoint2, FVector point);
 
 	/*
 	* Returns true if the two line segments are intersecting and not parallel.
 	* If you need the intersection point, use Closest Points On Two Lines.
 	*/
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector|Intersection")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector|Intersection")
 	static bool AreLineSegmentsCrossing(FVector pointA1, FVector pointA2, FVector pointB1, FVector pointB2);
 
 	/*Snaps vector to nearest grid multiple.*/
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector")
 	static FVector GridSnap(FVector A, float Grid);
 
 	/*Converts UMG layout offsets to another anchor.*/
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Anchor", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Anchor", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
 	static void ConvertAnchorToAnchor(UObject* WorldContextObject, FAnchors CurrentAnchor, FMargin Offsets, FAnchors TargetAnchor, FMargin& ConvertedOffsets);
 
 	/*Converts Physics Linear Velocity to a more useful speed unit.*/
-	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|TK-Master Math|Vector")
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|TK-Master Math|Vector")
 	static float ConvertPhysicsLinearVelocity(FVector Velocity, TEnumAsByte<enum ESpeedUnit> SpeedUnit);
 
 	//------------------------------------------------------------
