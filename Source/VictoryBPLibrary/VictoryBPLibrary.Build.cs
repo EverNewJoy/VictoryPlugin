@@ -5,7 +5,9 @@ using UnrealBuildTool;
 public class VictoryBPLibrary : ModuleRules
 {
 	public VictoryBPLibrary(TargetInfo Target)
-	{
+	{ 
+		//4.15 Include What You Use
+		bEnforceIWYU = false;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
