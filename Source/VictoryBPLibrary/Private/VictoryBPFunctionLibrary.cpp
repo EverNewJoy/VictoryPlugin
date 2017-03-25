@@ -942,6 +942,10 @@ FString UVictoryBPFunctionLibrary::VictoryPaths__SavedDir()
 {
 	return FPaths::ConvertRelativePathToFull(FPaths::GameSavedDir());
 }
+FString UVictoryBPFunctionLibrary::VictoryPaths__ConfigDir()
+{
+	return FPaths::ConvertRelativePathToFull(FPaths::GameConfigDir());
+}
 
 FString UVictoryBPFunctionLibrary::VictoryPaths__ScreenShotsDir()
 {

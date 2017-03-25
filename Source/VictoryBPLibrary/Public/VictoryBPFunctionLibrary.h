@@ -1307,6 +1307,10 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Paths")
 	static FString VictoryPaths__SavedDir();
 	
+	/** InstallDir/GameName/Saved/Config/ */
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Paths")
+	static FString VictoryPaths__ConfigDir();
+	
 	/** InstallDir/GameName/Saved/Screenshots/Windows */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Paths")
 	static FString VictoryPaths__ScreenShotsDir();
