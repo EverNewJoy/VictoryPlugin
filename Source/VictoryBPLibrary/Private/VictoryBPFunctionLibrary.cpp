@@ -5297,6 +5297,240 @@ void UVictoryBPFunctionLibrary::AddToStreamingLevels(UObject* WorldContextObject
 	}
 }
 
+bool UVictoryBPFunctionLibrary::GenericArray_SortCompare(const UProperty* LeftProperty, void* LeftValuePtr, const UProperty* RightProperty, void* RightValuePtr)
+{
+	bool bResult = false;
+
+	if (const UNumericProperty *LeftNumericProperty = Cast<const UNumericProperty>(LeftProperty))
+	{
+		if (LeftNumericProperty->IsFloatingPoint())
+		{
+			bResult = (LeftNumericProperty->GetFloatingPointPropertyValue(LeftValuePtr) < Cast<const UNumericProperty>(RightProperty)->GetFloatingPointPropertyValue(RightValuePtr));
+		}
+		else if (LeftNumericProperty->IsInteger())
+		{
+			bResult = (LeftNumericProperty->GetSignedIntPropertyValue(LeftValuePtr) < Cast<const UNumericProperty>(RightProperty)->GetSignedIntPropertyValue(RightValuePtr));
+		}
+	}
+	else if (const UBoolProperty* LeftBoolProperty = Cast<const UBoolProperty>(LeftProperty))
+	{
+		bResult = (!LeftBoolProperty->GetPropertyValue(LeftValuePtr) && Cast<const UBoolProperty>(RightProperty)->GetPropertyValue(RightValuePtr));
+	}
+	else if (const UNameProperty* LeftNameProperty = Cast<const UNameProperty>(LeftProperty))
+	{
+		bResult = (LeftNameProperty->GetPropertyValue(LeftValuePtr).ToString() < Cast<const UNameProperty>(RightProperty)->GetPropertyValue(RightValuePtr).ToString());
+	}
+	else if (const UStrProperty* LeftStringProperty = Cast<const UStrProperty>(LeftProperty))
+	{
+		bResult = (LeftStringProperty->GetPropertyValue(LeftValuePtr) < Cast<const UStrProperty>(RightProperty)->GetPropertyValue(RightValuePtr));
+	}
+	else if (const UTextProperty* LeftTextProperty = Cast<const UTextProperty>(LeftProperty))
+	{
+		bResult = (LeftTextProperty->GetPropertyValue(LeftValuePtr).ToString() < Cast<const UTextProperty>(RightProperty)->GetPropertyValue(RightValuePtr).ToString());
+	}
+
+	return bResult;
+}
+
+void UVictoryBPFunctionLibrary::GenericArray_Sort(void* TargetArray, const UArrayProperty* ArrayProp, bool bAscendingOrder /* = true */, FName VariableName /* = NAME_None */)
+{
+	if (TargetArray)
+	{
+		FScriptArrayHelper ArrayHelper(ArrayProp, TargetArray);
+		const int32 LastIndex = ArrayHelper.Num();
+
+		if (const UObjectProperty* ObjectProperty = Cast<const UObjectProperty>(ArrayProp->Inner))
+		{
+			for (int32 i = 0; i < LastIndex; ++i)
+			{
+				for (int32 j = 0; j < LastIndex - 1 - i; ++j)
+				{
+					UObject* LeftObject = ObjectProperty->GetObjectPropertyValue(ArrayHelper.GetRawPtr(j));
+					UObject* RightObject = ObjectProperty->GetObjectPropertyValue(ArrayHelper.GetRawPtr(j + 1));
+
+					UProperty* LeftProperty = FindField<UProperty>(LeftObject->GetClass(), VariableName);
+					UProperty* RightProperty = FindField<UProperty>(RightObject->GetClass(), VariableName);
+						
+					if (LeftProperty && RightProperty)
+					{
+						void* LeftValuePtr = LeftProperty->ContainerPtrToValuePtr<void>(LeftObject);
+						void* RightValuePtr = RightProperty->ContainerPtrToValuePtr<void>(RightObject);
+
+						if (GenericArray_SortCompare(LeftProperty, LeftValuePtr, RightProperty, RightValuePtr) != bAscendingOrder)
+						{
+							ArrayHelper.SwapValues(j, j + 1);
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			UProperty* Property = nullptr;
+
+			if (const UStructProperty* StructProperty = Cast<const UStructProperty>(ArrayProp->Inner))
+			{
+				Property = FindField<UProperty>(StructProperty->Struct, VariableName);
+			}
+			else
+			{
+				Property = ArrayProp->Inner;
+			}
+
+			if (Property)
+			{
+				for (int32 i = 0; i < LastIndex; ++i)
+				{
+					for (int32 j = 0; j < LastIndex - 1 - i; ++j)
+					{
+						void* LeftValuePtr = Property->ContainerPtrToValuePtr<void>(ArrayHelper.GetRawPtr(j));
+						void* RightValuePtr = Property->ContainerPtrToValuePtr<void>(ArrayHelper.GetRawPtr(j + 1));
+
+						if (GenericArray_SortCompare(Property, LeftValuePtr, Property, RightValuePtr) != bAscendingOrder)
+						{
+							ArrayHelper.SwapValues(j, j + 1);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void UVictoryBPFunctionLibrary::Array_Sort(const TArray<int32>& TargetArray, bool bAscendingOrder /* = true */, FName VariableName /* = NAME_None */)
+{
+	// We should never hit these!  They're stubs to avoid NoExport on the class.  Call the Generic* equivalent instead
+	check(0);
+}
+
+void UVictoryBPFunctionLibrary::Actor_PrestreamTextures(AActor* Target, float Seconds, bool bEnableStreaming /*= true*/, int32 CinematicTextureGroups /*= 0*/)
+{
+	if (Target != nullptr)
+	{
+		Target->PrestreamTextures(Seconds, bEnableStreaming, CinematicTextureGroups);
+	}
+}
+
+void UVictoryBPFunctionLibrary::Component_PrestreamTextures(UMeshComponent* Target, float Seconds, bool bEnableStreaming /*= true*/, int32 CinematicTextureGroups /*= 0*/)
+{
+	if ((Target != nullptr) && (Target->IsRegistered()))
+	{
+		float Duration = Seconds;
+
+		if (bEnableStreaming)
+		{
+			// A Seconds==0.0f, it means infinite (e.g. 30 days)
+			Duration = FMath::IsNearlyZero(Seconds) ? (60.0f*60.0f*24.0f*30.0f) : Seconds;
+		}
+
+		Target->PrestreamTextures(Duration, false, CinematicTextureGroups);
+	}
+}
+
+bool UVictoryBPFunctionLibrary::GetViewportPosition(UObject* WorldContextObject, const FVector2D& ScreenPosition, FVector2D& ViewportPosition)
+{
+	ViewportPosition = FVector2D::ZeroVector;
+
+	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject))
+	{
+		FVector2D ViewportSize;
+		World->GetGameViewport()->GetViewportSize(ViewportSize);
+		ViewportPosition = World->GetGameViewport()->Viewport->VirtualDesktopPixelToViewport(FIntPoint(ScreenPosition.X, ScreenPosition.Y)) * ViewportSize;
+	}
+
+	return !ViewportPosition.IsZero();
+}
+
+UPanelSlot* UVictoryBPFunctionLibrary::InsertChildAt(UWidget* Parent, int32 Index, UWidget* Content)
+{
+	UPanelSlot* ResultSlot = nullptr;
+
+	if (Parent && Content)
+	{
+		if (UPanelWidget* PanelWidget = Cast<UPanelWidget>(Parent))
+		{
+			Index = FMath::Clamp(Index, 0, FMath::Max(0, PanelWidget->GetChildrenCount() - 1));
+
+			if (PanelWidget->GetChildIndex(Content) != Index)
+			{
+				ResultSlot = PanelWidget->AddChild(Content);
+
+				UWidget* SlotContent = nullptr;
+
+				for (int32 i = Index; i < PanelWidget->GetChildrenCount(); ++i)
+				{
+					SlotContent = PanelWidget->GetChildAt(Index);
+					if (SlotContent == Content)
+					{
+						break;
+					}
+					PanelWidget->RemoveChild(SlotContent);
+					PanelWidget->AddChild(SlotContent);
+				}
+			}
+		}
+	}
+
+	return ResultSlot;
+}
+
+void UVictoryBPFunctionLibrary::FlushPressedKeys(class APlayerController* PlayerController)
+{
+	if (PlayerController)
+	{
+		PlayerController->FlushPressedKeys();
+	}
+}
+
+FVector UVictoryBPFunctionLibrary::GetVectorRelativeLocation(FVector ParentLocation, FRotator ParentRotation, FVector ChildLocation)
+{
+	return ParentRotation.UnrotateVector(ChildLocation - ParentLocation);
+}
+
+FVector UVictoryBPFunctionLibrary::GetComponentRelativeLocation(class USceneComponent* ParentComponent, class USceneComponent* ChildComponent)
+{
+	return (ParentComponent && ChildComponent) ? GetVectorRelativeLocation(ParentComponent->GetComponentLocation(), ParentComponent->GetComponentRotation(), ChildComponent->GetComponentLocation()) : FVector::ZeroVector;
+}
+
+FVector UVictoryBPFunctionLibrary::GetActorRelativeLocation(class AActor* ParentActor, class AActor* ChildActor)
+{
+	return (ParentActor && ChildActor) ? GetVectorRelativeLocation(ParentActor->GetActorLocation(), ParentActor->GetActorRotation(), ChildActor->GetActorLocation()) : FVector::ZeroVector;
+}
+
+FRotator UVictoryBPFunctionLibrary::GetRotatorRelativeRotation(FRotator ParentRotation, FRotator ChildRotation)
+{
+	const FRotator RelativeRotation = (FQuatRotationMatrix(ChildRotation.Quaternion()) * FQuatRotationMatrix(ParentRotation.Quaternion()).GetTransposed()).Rotator();
+
+	return RelativeRotation;
+}
+
+FRotator UVictoryBPFunctionLibrary::GetComponentRelativeRotation(class USceneComponent* ParentComponent, class USceneComponent* ChildComponent)
+{
+	return (ParentComponent && ChildComponent) ? GetRotatorRelativeRotation(ParentComponent->GetComponentRotation(), ChildComponent->GetComponentRotation())  : FRotator::ZeroRotator;
+}
+
+FRotator UVictoryBPFunctionLibrary::GetActorRelativeRotation(class AActor* ParentActor, class AActor* ChildActor)
+{
+	return (ParentActor && ChildActor) ? GetRotatorRelativeRotation(ParentActor->GetActorRotation(), ChildActor->GetActorRotation()) : FRotator::ZeroRotator;
+}
+
+float UVictoryBPFunctionLibrary::HorizontalFOV(float VerticalFOV, float AspectRatio)
+{
+	VerticalFOV = FMath::DegreesToRadians(VerticalFOV);
+	return FMath::RadiansToDegrees(2 * FMath::Atan2(FMath::Tan(VerticalFOV * 0.5f) * AspectRatio, 1));
+}
+
+float UVictoryBPFunctionLibrary::VerticalFOV(float HorizontalFOV, float AspectRatio)
+{
+	HorizontalFOV = FMath::DegreesToRadians(HorizontalFOV);
+	return FMath::RadiansToDegrees(2 * FMath::Atan2(FMath::Tan(HorizontalFOV * 0.5f) * (1 / AspectRatio), 1));
+}
+
+bool UVictoryBPFunctionLibrary::StringIsEmpty(const FString& Target)
+{
+	return Target.IsEmpty();
+}
+
 //~~~~~~~~~ END OF CONTRIBUTED BY KRIS ~~~~~~~~~~~
  
 

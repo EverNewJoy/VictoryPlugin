@@ -1732,6 +1732,17 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 
 //~~~ Kris ~~~
 
+<<<<<<< HEAD
+	/* 
+	 *See if index is a valid index for this array
+	 *    
+	 *@param    TargetArray        The array to perform the operation on
+	 *@param    Index            The index to check.
+	 *@return    Bool if integer is valid index for this array
+	*/
+	UFUNCTION(Category="VictoryBPLibrary|Utilities|Array", BlueprintPure, CustomThunk, meta=(DisplayName = "Valid Index", CompactNodeTitle = "VALID INDEX", ArrayParm = "TargetArray"))
+	static bool Array_IsValidIndex(const TArray<int32>& TargetArray, int32 Index);
+=======
 /* 
  *See if index is a valid index for this array
  *    
@@ -1741,27 +1752,45 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 */
 UFUNCTION(Category="Victory BP Library|Utilities|Array", BlueprintPure, CustomThunk, meta=(DisplayName = "Valid Index", CompactNodeTitle = "VALID INDEX", ArrayParm = "TargetArray"))
 static bool Array_IsValidIndex(const TArray<int32>& TargetArray, int32 Index);
+>>>>>>> a0373028600db9be19dcba75ace78574b0b5334d
 
-static bool GenericArray_IsValidIndex(void* TargetArray, const UArrayProperty* ArrayProp, int32 Index);
-  
-DECLARE_FUNCTION(execArray_IsValidIndex)
-{
-	Stack.MostRecentProperty = nullptr;
-	Stack.StepCompiledIn<UArrayProperty>(NULL);
-	void* ArrayAddr = Stack.MostRecentPropertyAddress;
-	UArrayProperty* ArrayProperty = Cast<UArrayProperty>(Stack.MostRecentProperty);
-	if (!ArrayProperty)
+	static bool GenericArray_IsValidIndex(void* TargetArray, const UArrayProperty* ArrayProp, int32 Index);
+	  
+	DECLARE_FUNCTION(execArray_IsValidIndex)
 	{
-		Stack.bArrayContextFailed = true;
-		return;
+		Stack.MostRecentProperty = nullptr;
+		Stack.StepCompiledIn<UArrayProperty>(NULL);
+		void* ArrayAddr = Stack.MostRecentPropertyAddress;
+		UArrayProperty* ArrayProperty = Cast<UArrayProperty>(Stack.MostRecentProperty);
+		if (!ArrayProperty)
+		{
+			Stack.bArrayContextFailed = true;
+			return;
+		}
+		P_GET_PROPERTY(UIntProperty, Index);
+		P_FINISH;
+
+		bool WasValid = GenericArray_IsValidIndex(ArrayAddr, ArrayProperty, Index);
+		*(bool*)RESULT_PARAM = WasValid;
 	}
-	P_GET_PROPERTY(UIntProperty, Index);
-	P_FINISH;
 
-	bool WasValid = GenericArray_IsValidIndex(ArrayAddr, ArrayProperty, Index);
-	*(bool*)RESULT_PARAM = WasValid;
-}
+<<<<<<< HEAD
+	/** Get the time target actor was created. */
+	UFUNCTION(Category = "VictoryBPLibrary|Actor", BlueprintPure, Meta = (DefaultToSelf = "Target"))
+	static float GetCreationTime(const AActor* Target);
 
+	/** Get the time target actor has been alive. */
+	UFUNCTION(Category = "VictoryBPLibrary|Actor", BlueprintPure, Meta = (DefaultToSelf = "Target"))
+	static float GetTimeAlive(const AActor* Target);
+		
+	/** Contributed by Community Member Kris! */
+	UFUNCTION(Category = "VictoryBPLibrary|SceneCapture", BlueprintPure)
+	static bool CaptureComponent2D_Project(class USceneCaptureComponent2D* Target, FVector Location, FVector2D& OutPixelLocation);
+	  
+	/** Contributed by Community Member Kris! */
+	UFUNCTION(Category = "VictoryBPLibrary|SceneCapture", BlueprintPure, Meta = (DefaultToSelf = "Target"))
+	static bool Capture2D_Project(class ASceneCapture2D* Target, FVector Location, FVector2D& OutPixelLocation);
+=======
 /** Get the time target actor was created. */
 UFUNCTION(Category = "Victory BP Library|Actor", BlueprintPure, Meta = (DefaultToSelf = "Target"))
 static float GetCreationTime(const AActor* Target);
@@ -1777,6 +1806,7 @@ static bool CaptureComponent2D_Project(class USceneCaptureComponent2D* Target, F
 /** Contributed by Community Member Kris! */
 UFUNCTION(Category = "Victory BP Library|SceneCapture", BlueprintPure, Meta = (DefaultToSelf = "Target"))
 static bool Capture2D_Project(class ASceneCapture2D* Target, FVector Location, FVector2D& OutPixelLocation);
+>>>>>>> a0373028600db9be19dcba75ace78574b0b5334d
      
 	/** Make sure to include the appropriate image extension in your file path! Recommended: .bmp, .jpg, .png. Contributed by Community Member Kris! */
 	UFUNCTION(Category = "Victory BP Library|SceneCapture", BlueprintCallable)
@@ -1829,7 +1859,125 @@ static bool Capture2D_Project(class ASceneCapture2D* Target, FVector Location, F
 
 	UFUNCTION(Category = "LevelStreaming", BlueprintCallable, Meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
 	static void AddToStreamingLevels(UObject* WorldContextObject, const FLevelStreamInstanceInfo& LevelInstanceInfo);
+	
+	static bool GenericArray_SortCompare(const UProperty* LeftProperty, void* LeftValuePtr, const UProperty* RightProperty, void* RightValuePtr);
 
+	/**
+	 *	Sort the elements of an array by FString, FName, FText, float, int or boolean.
+	 *	Supports struct and object based arrays.
+	 *
+	 *	@param	TargetArray		The array to sort.
+	 *	@param	bAscendingOrder	If true, sort by ascending order.
+	 *	@param	VariableName	If a struct or object based array, the name of the variable to sort by.
+	 */
+	UFUNCTION(Category = "VictoryBPLibrary|Utilities|Array", BlueprintCallable, CustomThunk, Meta = (DisplayName = "Sort", ArrayParm = "TargetArray", AdvancedDisplay = "bAscendingOrder,VariableName"))
+	static void Array_Sort(const TArray<int32>& TargetArray, bool bAscendingOrder = true, FName VariableName = NAME_None);
+
+	static void GenericArray_Sort(void* TargetArray, const UArrayProperty* ArrayProp, bool bAscendingOrder = true, FName VariableName = NAME_None);
+
+	DECLARE_FUNCTION(execArray_Sort)
+	{
+		Stack.MostRecentProperty = nullptr;
+		Stack.StepCompiledIn<UArrayProperty>(NULL);
+		void* ArrayAddr = Stack.MostRecentPropertyAddress;
+		UArrayProperty* ArrayProperty = Cast<UArrayProperty>(Stack.MostRecentProperty);
+		if (!ArrayProperty)
+		{
+			Stack.bArrayContextFailed = true;
+			return;
+		}
+
+		P_GET_UBOOL(bAscendingOrder);
+
+		P_GET_PROPERTY(UNameProperty, VariableName);
+
+		P_FINISH;
+		P_NATIVE_BEGIN;
+		GenericArray_Sort(ArrayAddr, ArrayProperty, bAscendingOrder, VariableName);
+		P_NATIVE_END;
+	}
+
+	/**
+	 *	Calls PrestreamTextures() for all the actor's meshcomponents.
+	 *	PrestreamTextures() tells the streaming system to start loading all textures with all mip-levels.
+	 *	@param Seconds - Number of seconds to force all mip-levels to be resident
+	 *	@param bEnableStreaming	- Whether to start (true) or stop (false) streaming
+	 *	@param CinematicTextureGroups - Bitfield indicating which texture groups that use extra high-resolution mips
+	 */
+	UFUNCTION(Category = "VictoryBPLibrary|Actor", BlueprintCallable, Meta = (DisplayName = "PrestreamTextures (Actor)"))
+	static void Actor_PrestreamTextures(AActor* Target, float Seconds = 1.0f, bool bEnableStreaming = true, int32 CinematicTextureGroups = 0);
+
+	/**
+	 *	Tells the streaming system to start loading all textures with all mip-levels.
+	 *	@param Seconds - Number of seconds to force all mip-levels to be resident
+	 *	@param bEnableStreaming	- Whether to start (true) or stop (false) streaming
+	 *	@param CinematicTextureGroups - Bitfield indicating which texture groups that use extra high-resolution mips
+	 */
+	UFUNCTION(Category = "VictoryBPLibrary|Component", BlueprintCallable, Meta = (DisplayName = "PrestreamTextures (Component)"))
+	static void Component_PrestreamTextures(UMeshComponent* Target, float Seconds = 1.0f, bool bEnableStreaming = true, int32 CinematicTextureGroups = 0);
+
+	/**
+	 * Converts the screen position (primary screen's top left corner) supplied by pointer events or similar 
+	 *	to the local space of viewport related to WorldContextObject.
+	 *
+	 * @param ScreenPosition   Coordinates take from FPointerEvent GetScreenSpacePosition() or similar.
+	 *
+	 * @return true if view position is not 0,0.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|Game|Viewport")
+	static bool GetViewportPosition(UObject* WorldContextObject, const FVector2D& ScreenPosition, FVector2D& ViewportPosition);
+	
+	/**
+	 *	Inserts child widget into panel widget at given location.
+	 *	NOTE: The child widgets "Construct" event will be fired again!
+	 *
+	 *	@param	Parent	- The panel to insert the child into.
+	 *	@param	Index	- Where to insert the new widget.
+	 *	@param	Content - The child widget to insert.
+	 *	@return slot assigned to content.
+	 */
+	UFUNCTION(Category = "VictoryBPLibrary|Widget|Panel", BlueprintCallable)
+	static class UPanelSlot* InsertChildAt(class UWidget* Parent, int32 Index, UWidget* Content);
+	
+	/** Flushes the current key state for target player controller. */
+	UFUNCTION(Category = "VictoryBPLibrary|Input", BlueprintCallable)
+	static void FlushPressedKeys(class APlayerController* PlayerController);
+	
+	UFUNCTION(Category = "VictoryBPLibrary|Vector", BlueprintPure)
+	static FVector GetVectorRelativeLocation(FVector ParentLocation, FRotator ParentRotation, FVector ChildLocation);
+
+	UFUNCTION(Category = "VictoryBPLibrary|Components", BlueprintPure, Meta = (DefaultToSelf = "ChildComponent"))
+	static FVector GetComponentRelativeLocation(class USceneComponent* ParentComponent, class USceneComponent* ChildComponent);
+
+	UFUNCTION(Category = "VictoryBPLibrary|Actor", BlueprintPure, Meta = (DefaultToSelf = "ChildActor"))
+	static FVector GetActorRelativeLocation(class AActor* ParentActor, class AActor* ChildActor);
+
+	UFUNCTION(Category = "VictoryBPLibrary|Rotator", BlueprintPure)
+	static FRotator GetRotatorRelativeRotation(FRotator ParentRotation, FRotator ChildRotation);
+
+	UFUNCTION(Category = "VictoryBPLibrary|Components", BlueprintPure, Meta = (DefaultToSelf = "ChildComponent"))
+	static FRotator GetComponentRelativeRotation(class USceneComponent* ParentComponent, class USceneComponent* ChildComponent);
+
+	UFUNCTION(Category = "VictoryBPLibrary|Actor", BlueprintPure, Meta = (DefaultToSelf = "ChildActor"))
+	static FRotator GetActorRelativeRotation(class AActor* ParentActor, class AActor* ChildActor);
+
+	/** 
+	 *	Helper function to calculate vertical FOV from horizontal FOV and aspect ratio.
+	 *	Useful to for determining distance from camera fit in-game objects to the width of the screen.
+	 */
+	UFUNCTION(Category = "VictoryBPLibrary|Game|Viewport", BlueprintPure)
+	static float HorizontalFOV(float VerticalFOV, float AspectRatio);
+
+	/** 
+	 *	Helper function to calculate vertical FOV from horizontal FOV and aspect ratio.
+	 *	Useful to for determining distance from camera fit in-game objects to the height of the screen.
+	 */
+	UFUNCTION(Category = "VictoryBPLibrary|Game|Viewport", BlueprintPure)
+	static float VerticalFOV(float HorizontalFOV, float AspectRatio);
+
+	UFUNCTION(Category = "VictoryBPLibrary|Utilities|String", BlueprintPure, Meta = (DisplayName = "IsEmpty"))
+	static bool StringIsEmpty(const FString& Target);
+	
 //~~~~~~~~~
 
 //~~~ KeyToTruth ~~~
