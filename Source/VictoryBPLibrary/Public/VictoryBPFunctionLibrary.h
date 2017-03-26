@@ -1918,14 +1918,44 @@ static bool Capture2D_Project(class ASceneCapture2D* Target, FVector Location, F
 
 	/**
 	 * Converts the screen position (primary screen's top left corner) supplied by pointer events or similar 
-	 *	to the local space of viewport related to WorldContextObject.
+	 * to the local space of viewport related to WorldContextObject.
 	 *
-	 * @param ScreenPosition   Coordinates take from FPointerEvent GetScreenSpacePosition() or similar.
+	 * @param WorldContextObject	World context.
+	 * @param ScreenPosition		Coordinates from FPointerEvent GetScreenSpacePosition() or similar.
+	 * @param OutViewportPosition	Coordinates based on the local viewport (fullscreen or otherwise).
 	 *
-	 * @return true if view position is not 0,0.
+	 * @return True if OutViewportPosition is not 0,0.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "VictoryBPLibrary|Game|Viewport")
-	static bool GetViewportPosition(UObject* WorldContextObject, const FVector2D& ScreenPosition, FVector2D& ViewportPosition);
+	UFUNCTION(Category = "VictoryBPLibrary|Game|Viewport", BlueprintCallable)
+	static bool GetViewportPosition(UObject* WorldContextObject, const FVector2D& ScreenPosition, FVector2D& OutViewportPosition);
+
+	/**
+	 * Does a line collision trace based the viewport position and returns the first blocking hit encountered.
+	 * This trace finds the objects that RESPOND to the given TraceChannel
+	 *
+	 * @param WorldContextObject	World context.
+	 * @param ViewportPosition		Local space of viewport from GetViewportPosition() or similar.
+	 * @param TraceChannel
+	 * @param bTraceComplex			True to test against complex collision, false to test against simplified collision.
+	 * @param OutHitResult			Properties of the trace hit.
+	 *
+	 * @return True if there was a hit, false otherwise.
+	 */
+	UFUNCTION(Category = "VictoryBPLibrary|Game|Viewport", BlueprintCallable, Meta = (bTraceComplex = true, TraceChannel = ECC_Visibility))
+	static bool GetViewportPositionHitResultByChannel(UObject* WorldContextObject, const FVector2D& ViewportPosition, ECollisionChannel TraceChannel, bool bTraceComplex, FHitResult& OutHitResult);
+
+	/**
+	 * Transforms the viewport position into a world space origin and direction.
+	 *
+	 * @param WorldContextObject	World context.
+	 * @param ViewportPosition		Local space of viewport from GetViewportPosition() or similar.
+	 * @param OutWorldOrigin		Corresponding 3D location in world space.
+	 * @param OutWorldDirection		World space direction vector away from the camera at the given 2d point.
+	 *
+	 * @return false if something went wrong during the deproject process.
+	 */
+	UFUNCTION(Category = "VictoryBPLibrary|Game|Viewport", BlueprintCallable)
+	static bool ViewportPositionDeproject(UObject* WorldContextObject, const FVector2D& ViewportPosition, FVector& OutWorldOrigin, FVector& OutWorldDirection);
 	
 	/**
 	 *	Inserts child widget into panel widget at given location.

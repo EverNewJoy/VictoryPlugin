@@ -5427,18 +5427,47 @@ void UVictoryBPFunctionLibrary::Component_PrestreamTextures(UMeshComponent* Targ
 	}
 }
 
-bool UVictoryBPFunctionLibrary::GetViewportPosition(UObject* WorldContextObject, const FVector2D& ScreenPosition, FVector2D& ViewportPosition)
+bool UVictoryBPFunctionLibrary::GetViewportPosition(UObject* WorldContextObject, const FVector2D& ScreenPosition, FVector2D& OutViewportPosition)
 {
-	ViewportPosition = FVector2D::ZeroVector;
+	OutViewportPosition = FVector2D::ZeroVector;
 
 	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject))
 	{
 		FVector2D ViewportSize;
 		World->GetGameViewport()->GetViewportSize(ViewportSize);
-		ViewportPosition = World->GetGameViewport()->Viewport->VirtualDesktopPixelToViewport(FIntPoint(ScreenPosition.X, ScreenPosition.Y)) * ViewportSize;
+		OutViewportPosition = World->GetGameViewport()->Viewport->VirtualDesktopPixelToViewport(FIntPoint(ScreenPosition.X, ScreenPosition.Y)) * ViewportSize;
 	}
 
-	return !ViewportPosition.IsZero();
+	return !OutViewportPosition.IsZero();
+}
+
+bool UVictoryBPFunctionLibrary::GetViewportPositionHitResultByChannel(UObject* WorldContextObject, const FVector2D& ViewportPosition, ECollisionChannel TraceChannel, bool bTraceComplex, FHitResult& OutHitResult)
+{
+	bool bResult = false;
+
+	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject))
+	{
+		bResult = World->GetFirstPlayerController()->GetHitResultAtScreenPosition(ViewportPosition, TraceChannel, bTraceComplex, OutHitResult);
+	}
+
+	if (!bResult)	// For Blueprint users
+	{
+		OutHitResult = FHitResult();
+	}
+
+	return bResult;
+}
+
+bool UVictoryBPFunctionLibrary::ViewportPositionDeproject(UObject* WorldContextObject, const FVector2D& ViewportPosition, FVector& OutWorldOrigin, FVector& OutWorldDirection)
+{
+	bool bResult = false;
+
+	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject))
+	{
+		bResult = UGameplayStatics::DeprojectScreenToWorld(World->GetFirstPlayerController(), ViewportPosition, OutWorldOrigin, OutWorldDirection);
+	}
+
+	return bResult;
 }
 
 UPanelSlot* UVictoryBPFunctionLibrary::InsertChildAt(UWidget* Parent, int32 Index, UWidget* Content)
