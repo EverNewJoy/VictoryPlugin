@@ -5297,6 +5297,53 @@ void UVictoryBPFunctionLibrary::AddToStreamingLevels(UObject* WorldContextObject
 	}
 }
 
+
+void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextObject, const FLevelStreamInstanceInfo& LevelInstanceInfo)
+{
+
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
+
+	// Check if the world exists and we have a level to unload
+	if (World != nullptr && !LevelInstanceInfo.PackageName.IsNone())
+	{
+		FString packageNameToCheck = LevelInstanceInfo.PackageName.ToString();
+#if WITH_EDITOR
+		// Remove the play in editor string and client id to be able to use it with replication
+		if (packageNameToCheck.Contains("UEDPIE")) {
+			const int32 uedpiePos = packageNameToCheck.Find("UEDPIE");
+			packageNameToCheck = packageNameToCheck.Mid(0, uedpiePos) + packageNameToCheck.Mid(uedpiePos+9, packageNameToCheck.Len() - uedpiePos - 9);
+		}
+#endif WITH_EDITOR
+
+		// Find the level to unload
+		for (auto StreamingLevel : World->StreamingLevels)
+		{
+
+			FString loadedPackageName = StreamingLevel->GetWorldAssetPackageFName().ToString();
+#if WITH_EDITOR
+			// Remove the play in editor string and client id to be able to use it with replication
+			if (loadedPackageName.Contains("UEDPIE")) {
+				const int32 uedpiePos = loadedPackageName.Find("UEDPIE");
+				loadedPackageName = loadedPackageName.Mid(0, uedpiePos) + loadedPackageName.Mid(uedpiePos + 9, loadedPackageName.Len() - uedpiePos - 9);
+			}
+#endif WITH_EDITOR
+
+			// If we find the level unload it and break
+			if(packageNameToCheck == loadedPackageName)
+			{
+				// This unload the level
+				StreamingLevel->bShouldBeLoaded = false;
+				StreamingLevel->bShouldBeVisible = false;
+				// This removes the level from the streaming level list
+				StreamingLevel->bIsRequestingUnloadAndRemoval = true;
+				// Force a refresh of the world
+				World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+				break;
+			}
+		}
+	}
+}
+
 bool UVictoryBPFunctionLibrary::GenericArray_SortCompare(const UProperty* LeftProperty, void* LeftValuePtr, const UProperty* RightProperty, void* RightValuePtr)
 {
 	bool bResult = false;
