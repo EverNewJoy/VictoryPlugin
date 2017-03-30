@@ -29,6 +29,11 @@
 #endif // WITH_EDITOR
 */
 
+// To be able to perform regex operatins on level stream info package name
+#if WITH_EDITOR
+	#include "Runtime/Core/Public/Internationalization/Regex.h"
+#endif
+
 
 #include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapper.h"
 #include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapperModule.h"
@@ -5306,13 +5311,31 @@ void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextO
 	// Check if the world exists and we have a level to unload
 	if (World != nullptr && !LevelInstanceInfo.PackageName.IsNone())
 	{
+
+#if WITH_EDITOR
+		// If we are using the editor we will use this lambda to remove the play in editor string
+		auto getCorrectPackageName = []( FString packageName) {
+			//const FRegexPattern uedpiePattern(TEXT("UEDPIE\w.*"));
+			const FRegexPattern uedpiePattern(TEXT("UEDPIE_.*?_"));
+			//const FRegexPattern uedpiePattern(TEXT(".*"));
+			FRegexMatcher patternMatcher(uedpiePattern, packageName);
+			// Remove the play in editor string and client id to be able to use it with replication
+			if (patternMatcher.FindNext()) {
+				int32 beginning = patternMatcher.GetMatchBeginning();
+				int32 end = patternMatcher.GetMatchEnding();
+				FString strToReplace = packageName.Mid(beginning, end - beginning);
+				packageName = packageName.Replace(*strToReplace, TEXT(""));
+			}
+			return packageName;
+		};
+#endif WITH_EDITOR
+
+		// Get the package name that we want to check
 		FString packageNameToCheck = LevelInstanceInfo.PackageName.ToString();
+
 #if WITH_EDITOR
 		// Remove the play in editor string and client id to be able to use it with replication
-		if (packageNameToCheck.Contains("UEDPIE")) {
-			const int32 uedpiePos = packageNameToCheck.Find("UEDPIE");
-			packageNameToCheck = packageNameToCheck.Mid(0, uedpiePos) + packageNameToCheck.Mid(uedpiePos+9, packageNameToCheck.Len() - uedpiePos - 9);
-		}
+		packageNameToCheck = getCorrectPackageName(packageNameToCheck);
 #endif WITH_EDITOR
 
 		// Find the level to unload
@@ -5320,12 +5343,10 @@ void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextO
 		{
 
 			FString loadedPackageName = StreamingLevel->GetWorldAssetPackageFName().ToString();
+
 #if WITH_EDITOR
 			// Remove the play in editor string and client id to be able to use it with replication
-			if (loadedPackageName.Contains("UEDPIE")) {
-				const int32 uedpiePos = loadedPackageName.Find("UEDPIE");
-				loadedPackageName = loadedPackageName.Mid(0, uedpiePos) + loadedPackageName.Mid(uedpiePos + 9, loadedPackageName.Len() - uedpiePos - 9);
-			}
+			loadedPackageName = getCorrectPackageName(loadedPackageName);
 #endif WITH_EDITOR
 
 			// If we find the level unload it and break
