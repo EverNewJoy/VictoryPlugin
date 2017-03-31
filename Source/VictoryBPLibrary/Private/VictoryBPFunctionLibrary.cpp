@@ -5328,7 +5328,7 @@ void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextO
 			}
 			return packageName;
 		};
-#endif WITH_EDITOR
+#endif
 
 		// Get the package name that we want to check
 		FString packageNameToCheck = LevelInstanceInfo.PackageName.ToString();
@@ -5336,7 +5336,7 @@ void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextO
 #if WITH_EDITOR
 		// Remove the play in editor string and client id to be able to use it with replication
 		packageNameToCheck = getCorrectPackageName(packageNameToCheck);
-#endif WITH_EDITOR
+#endif
 
 		// Find the level to unload
 		for (auto StreamingLevel : World->StreamingLevels)
@@ -5347,7 +5347,7 @@ void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextO
 #if WITH_EDITOR
 			// Remove the play in editor string and client id to be able to use it with replication
 			loadedPackageName = getCorrectPackageName(loadedPackageName);
-#endif WITH_EDITOR
+#endif
 
 			// If we find the level unload it and break
 			if(packageNameToCheck == loadedPackageName)
