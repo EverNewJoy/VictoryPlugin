@@ -5314,43 +5314,38 @@ void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextO
 
 #if WITH_EDITOR
 		// If we are using the editor we will use this lambda to remove the play in editor string
-		auto getCorrectPackageName = []( FString packageName) {
-			//const FRegexPattern uedpiePattern(TEXT("UEDPIE\w.*"));
-			const FRegexPattern uedpiePattern(TEXT("UEDPIE_.*?_"));
-			//const FRegexPattern uedpiePattern(TEXT(".*"));
-			FRegexMatcher patternMatcher(uedpiePattern, packageName);
-			// Remove the play in editor string and client id to be able to use it with replication
-			if (patternMatcher.FindNext()) {
-				int32 beginning = patternMatcher.GetMatchBeginning();
-				int32 end = patternMatcher.GetMatchEnding();
-				FString strToReplace = packageName.Mid(beginning, end - beginning);
-				packageName = packageName.Replace(*strToReplace, TEXT(""));
+		auto getCorrectPackageName = [&]( FName PackageName) {
+			FString PackageNameStr = PackageName.ToString();
+			if (GEngine->NetworkRemapPath(World->GetNetDriver(), PackageNameStr, true))
+			{
+				PackageName = FName(*PackageNameStr);
 			}
-			return packageName;
+
+			return PackageName;
 		};
 #endif
 
 		// Get the package name that we want to check
-		FString packageNameToCheck = LevelInstanceInfo.PackageName.ToString();
+		FName PackageNameToCheck = LevelInstanceInfo.PackageName;
 
 #if WITH_EDITOR
 		// Remove the play in editor string and client id to be able to use it with replication
-		packageNameToCheck = getCorrectPackageName(packageNameToCheck);
+		PackageNameToCheck = getCorrectPackageName(PackageNameToCheck);
 #endif
 
 		// Find the level to unload
 		for (auto StreamingLevel : World->StreamingLevels)
 		{
 
-			FString loadedPackageName = StreamingLevel->GetWorldAssetPackageFName().ToString();
+			FName LoadedPackageName = StreamingLevel->GetWorldAssetPackageFName();
 
 #if WITH_EDITOR
 			// Remove the play in editor string and client id to be able to use it with replication
-			loadedPackageName = getCorrectPackageName(loadedPackageName);
+			LoadedPackageName = getCorrectPackageName(LoadedPackageName);
 #endif
 
 			// If we find the level unload it and break
-			if(packageNameToCheck == loadedPackageName)
+			if(PackageNameToCheck == LoadedPackageName)
 			{
 				// This unload the level
 				StreamingLevel->bShouldBeLoaded = false;
