@@ -5314,7 +5314,7 @@ void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextO
 
 #if WITH_EDITOR
 		// If we are using the editor we will use this lambda to remove the play in editor string
-		auto getCorrectPackageName = [&]( FName PackageName) {
+		auto GetCorrectPackageName = [&]( FName PackageName) {
 			FString PackageNameStr = PackageName.ToString();
 			if (GEngine->NetworkRemapPath(World->GetNetDriver(), PackageNameStr, true))
 			{
@@ -5330,7 +5330,7 @@ void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextO
 
 #if WITH_EDITOR
 		// Remove the play in editor string and client id to be able to use it with replication
-		PackageNameToCheck = getCorrectPackageName(PackageNameToCheck);
+		PackageNameToCheck = GetCorrectPackageName(PackageNameToCheck);
 #endif
 
 		// Find the level to unload
@@ -5341,7 +5341,7 @@ void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextO
 
 #if WITH_EDITOR
 			// Remove the play in editor string and client id to be able to use it with replication
-			LoadedPackageName = getCorrectPackageName(LoadedPackageName);
+			LoadedPackageName = GetCorrectPackageName(LoadedPackageName);
 #endif
 
 			// If we find the level unload it and break
