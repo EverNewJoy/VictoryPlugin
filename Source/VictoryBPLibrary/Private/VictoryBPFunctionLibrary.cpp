@@ -4646,6 +4646,65 @@ bool UVictoryBPFunctionLibrary::Victory_GetPixelFromT2D(UTexture2D* T2D, int32 X
 	RawImageData->Unlock();
 	return true;
 }
+bool UVictoryBPFunctionLibrary::Victory_GetPixelsArrayFromT2DDynamic(UTexture2DDynamic* T2D, int32& TextureWidth, int32& TextureHeight,TArray<FLinearColor>& PixelArray)
+{
+	if(!T2D) 
+	{
+		return false;
+	}
+	
+	//To prevent overflow in BP if used in a loop
+	PixelArray.Empty();
+	
+	//~~~~~~~~~~~~~~~~~~~~~~
+	// Modifying original here
+	T2D->SRGB = false;
+	T2D->CompressionSettings = TC_VectorDisplacementmap;
+	
+	//Update settings
+	T2D->UpdateResource();
+	//~~~~~~~~~~~~~~~~~~~~~~
+	
+	//Confused, DDC / platform data is invalid for dynamic, how to get its byte data?
+	//FTextureResource from UTexture base class?
+	return false;
+	
+	/*
+	FTexturePlatformData** PtrPtr = T2D->GetRunningPlatformData();
+	if(!PtrPtr) return false;
+	FTexturePlatformData* Ptr = *PtrPtr;
+	if(!Ptr) return false;
+	 
+	FTexture2DMipMap& MyMipMap 	= Ptr->Mips[0];
+	TextureWidth = MyMipMap.SizeX;
+	TextureHeight = MyMipMap.SizeY;
+	 
+	FByteBulkData* RawImageData 	= &MyMipMap.BulkData;
+	
+	if(!RawImageData) 
+	{
+		return false;
+	}
+	
+	FColor* RawColorArray = static_cast<FColor*>(RawImageData->Lock(LOCK_READ_ONLY));
+	
+	UE_LOG(LogTemp,Warning,TEXT("Victory Plugin, Get Pixels, tex width for mip %d"), TextureWidth);
+	UE_LOG(LogTemp,Warning,TEXT("Victory Plugin, Get Pixels, tex width from T2D ptr %d"), T2D->GetSurfaceWidth());
+	 
+	for(int32 x = 0; x < TextureWidth; x++)
+	{
+		for(int32 y = 0; y < TextureHeight; y++)   
+		{
+			PixelArray.Add(RawColorArray[x * TextureWidth + y]); 
+		}
+	}
+	  
+	RawImageData->Unlock();
+	*/
+	
+	return true;
+}
+
 bool UVictoryBPFunctionLibrary::Victory_GetPixelsArrayFromT2D(UTexture2D* T2D, int32& TextureWidth, int32& TextureHeight,TArray<FLinearColor>& PixelArray)
 {
 	if(!T2D) 
