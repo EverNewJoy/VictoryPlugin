@@ -431,6 +431,14 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|File IO")
 	static bool JoyFileIO_GetFilesInRootAndAllSubFolders(TArray<FString>& Files, FString RootFolderFullPath, FString Ext);
 	
+	/** Obtain all folders in a provided directory. Returns false if operation could not occur. */
+	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|File IO")
+	static bool JoyFileIO_GetFolders(TArray<FString>& Files, FString RootFolderFullPath);
+	
+	/** Obtain all folders in a provided root directory, including all subdirectories. The full file path is returned because the file could be in any subdirectory. Returns false if operation could not occur. */
+	UFUNCTION(BlueprintPure, Category = "VictoryBPLibrary|File IO")
+	static bool JoyFileIO_GetFoldersInRootAndAllSubFolders(TArray<FString>& Files, FString RootFolderFullPath);
+	
 	/** Obtain a listing of all SaveGame file names that were saved using the Blueprint Save Game system. */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|File IO")
 	static void SaveGameObject_GetAllSaveSlotFileNames(TArray<FString>& FileNames);

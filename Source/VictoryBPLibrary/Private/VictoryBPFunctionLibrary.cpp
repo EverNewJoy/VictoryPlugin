@@ -700,7 +700,30 @@ bool UVictoryBPFunctionLibrary::JoyFileIO_GetFilesInRootAndAllSubFolders(TArray<
 	FileManager.FindFilesRecursive(Files, *RootFolderFullPath, *Ext, true, false);
 	return true;
 }
-
+bool UVictoryBPFunctionLibrary::JoyFileIO_GetFolders(TArray<FString>& Files, FString RootFolderFullPath)
+{
+	if (RootFolderFullPath.Len() < 1) return false;
+	
+	FPaths::NormalizeDirectoryName(RootFolderFullPath);
+	
+	IFileManager& FileManager = IFileManager::Get();
+	
+	FString FinalPath = RootFolderFullPath + "/*.*";
+	FileManager.FindFiles(Files, *FinalPath, false, true);
+	return true;
+}
+bool UVictoryBPFunctionLibrary::JoyFileIO_GetFoldersInRootAndAllSubFolders(TArray<FString>& Files, FString RootFolderFullPath)
+{
+	if (RootFolderFullPath.Len() < 1) return false;
+	
+	FPaths::NormalizeDirectoryName(RootFolderFullPath);
+	
+	IFileManager& FileManager = IFileManager::Get();
+	FString Ext = "*.*";
+	
+	FileManager.FindFilesRecursive(Files, *RootFolderFullPath, *Ext, false, true);
+	return true;
+}
 bool UVictoryBPFunctionLibrary::ScreenShots_Rename_Move_Most_Recent(
 	FString& OriginalFileName,
 	FString NewName, 
