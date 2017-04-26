@@ -29,6 +29,11 @@
 #endif // WITH_EDITOR
 */
 
+// To be able to perform regex operatins on level stream info package name
+#if WITH_EDITOR
+	#include "Runtime/Core/Public/Internationalization/Regex.h"
+#endif
+
 
 #include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapper.h"
 #include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapperModule.h"
@@ -5352,6 +5357,64 @@ void UVictoryBPFunctionLibrary::AddToStreamingLevels(UObject* WorldContextObject
 			World->StreamingLevels.Add(StreamingLevel);
 
 			World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+		}
+	}
+}
+
+
+void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextObject, const FLevelStreamInstanceInfo& LevelInstanceInfo)
+{
+
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
+
+	// Check if the world exists and we have a level to unload
+	if (World != nullptr && !LevelInstanceInfo.PackageName.IsNone())
+	{
+
+#if WITH_EDITOR
+		// If we are using the editor we will use this lambda to remove the play in editor string
+		auto GetCorrectPackageName = [&]( FName PackageName) {
+			FString PackageNameStr = PackageName.ToString();
+			if (GEngine->NetworkRemapPath(World->GetNetDriver(), PackageNameStr, true))
+			{
+				PackageName = FName(*PackageNameStr);
+			}
+
+			return PackageName;
+		};
+#endif
+
+		// Get the package name that we want to check
+		FName PackageNameToCheck = LevelInstanceInfo.PackageName;
+
+#if WITH_EDITOR
+		// Remove the play in editor string and client id to be able to use it with replication
+		PackageNameToCheck = GetCorrectPackageName(PackageNameToCheck);
+#endif
+
+		// Find the level to unload
+		for (auto StreamingLevel : World->StreamingLevels)
+		{
+
+			FName LoadedPackageName = StreamingLevel->GetWorldAssetPackageFName();
+
+#if WITH_EDITOR
+			// Remove the play in editor string and client id to be able to use it with replication
+			LoadedPackageName = GetCorrectPackageName(LoadedPackageName);
+#endif
+
+			// If we find the level unload it and break
+			if(PackageNameToCheck == LoadedPackageName)
+			{
+				// This unload the level
+				StreamingLevel->bShouldBeLoaded = false;
+				StreamingLevel->bShouldBeVisible = false;
+				// This removes the level from the streaming level list
+				StreamingLevel->bIsRequestingUnloadAndRemoval = true;
+				// Force a refresh of the world
+				World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+				break;
+			}
 		}
 	}
 }

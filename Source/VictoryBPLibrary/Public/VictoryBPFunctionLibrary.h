@@ -1833,6 +1833,9 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 	UFUNCTION(Category = "LevelStreaming", BlueprintCallable, Meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
 	static void AddToStreamingLevels(UObject* WorldContextObject, const FLevelStreamInstanceInfo& LevelInstanceInfo);
 	
+	UFUNCTION(Category = "LevelStreaming", BlueprintCallable, Meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
+	static void RemoveFromStreamingLevels(UObject* WorldContextObject, const FLevelStreamInstanceInfo& LevelInstanceInfo);
+
 	static bool GenericArray_SortCompare(const UProperty* LeftProperty, void* LeftValuePtr, const UProperty* RightProperty, void* RightValuePtr);
 
 	/**
