@@ -5729,6 +5729,43 @@ static void TESTINGInternalDrawDebugCircle(const UWorld* InWorld, const FMatrix&
 	
 }
 
+// To be reviewed by Rama - Submitted by Michael Gaskin aka / teak421
+void UVictoryBPFunctionLibrary::CameraZoomIn(USpringArmComponent* SpringArm, float MinTargetLength, float MaxTargetLength, float ZoomIntensity)
+{
+	float AdjustedTargetArmLength = SpringArm->TargetArmLength;
+
+	if (AdjustedTargetArmLength > MinTargetLength)
+	{
+		AdjustedTargetArmLength -= ZoomIntensity;
+		if (AdjustedTargetArmLength < MinTargetLength)
+		{
+			AdjustedTargetArmLength = MinTargetLength;
+		}
+		SpringArm->TargetArmLength = AdjustedTargetArmLength;
+
+	}
+
+}
+
+void UVictoryBPFunctionLibrary::CameraZoomOut(USpringArmComponent* SpringArm, float MinTargetLength, float MaxTargetLength, float ZoomIntensity)
+{
+	float AdjustedTargetArmLength = SpringArm->TargetArmLength;
+
+	if (AdjustedTargetArmLength < MaxTargetLength)
+	{
+		AdjustedTargetArmLength += ZoomIntensity;
+		if (AdjustedTargetArmLength > MaxTargetLength)
+		{
+			AdjustedTargetArmLength = MaxTargetLength;
+		}
+		SpringArm->TargetArmLength = AdjustedTargetArmLength;
+
+	}
+}
+
+
+
+
 
 
 #undef LOCTEXT_NAMESPACE
