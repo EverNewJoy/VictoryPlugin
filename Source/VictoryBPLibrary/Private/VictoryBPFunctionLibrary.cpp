@@ -34,9 +34,11 @@
 	#include "Runtime/Core/Public/Internationalization/Regex.h"
 #endif
 
-
+//~~~ Image Wrapper ~~~
+#include "ImageUtils.h"
 #include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapper.h"
 #include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapperModule.h"
+//~~~ Image Wrapper ~~~
 
 //Body Setup
 #include "PhysicsEngine/BodySetup.h"

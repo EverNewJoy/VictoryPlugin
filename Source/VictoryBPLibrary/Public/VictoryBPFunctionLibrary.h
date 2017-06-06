@@ -34,10 +34,6 @@
 //#include "Engine/Texture2D.h"
 #include "DDSLoader.h"
 
-//Kris Nodes
-#include "ImageUtils.h"
-#include "ImageWrapper.h"	//requires "ImageWrapper" in public dependencies in build CS
-   
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #include "VictoryBPFunctionLibrary.generated.h"
@@ -868,7 +864,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library")	
 	static void GetBoxContainingWorldPoints(const TArray<FVector>& Points, FVector& Center, FVector& Extent)
 	{ 
-		FBox Box(0);
+		FBox Box(ForceInit);
 		
 		for(const FVector& Each : Points)
 		{
