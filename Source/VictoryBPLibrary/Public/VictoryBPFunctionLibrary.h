@@ -364,24 +364,22 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	* Create a new Texture Render Target 2D, ideal for use with Scene Capture Components created during runtime that need their own unique Render Targets
 	* @param 	Width Texture Width
 	* @param 	Height Texture Height
-	* @param	bHDR Whether to support storing HDR values, which requires more memory.
 	* @param	ClearColor The color the texture is cleared to
 	* @param 	Gamma Will override FTextureRenderTarget2DResource::GetDisplayGamma if > 0.
 	* @return	A new Texture Render Target 2D!
 	*
 	*/ 
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library")
-	static UTextureRenderTarget2D* CreateTextureRenderTarget2D(int32 Width=256, int32 Height=256, bool bHDR=false, FLinearColor ClearColor = FLinearColor::White, float Gamma = 1)
+	static UTextureRenderTarget2D* CreateTextureRenderTarget2D(int32 Width=256, int32 Height=256, FLinearColor ClearColor = FLinearColor::White, float Gamma = 1)
 	{   
 		UTextureRenderTarget2D* NewRenderTarget2D = NewObject<UTextureRenderTarget2D>();
 		if(!NewRenderTarget2D)
 		{
 			return nullptr;
 		} 
-		NewRenderTarget2D->bHDR = bHDR;
 		NewRenderTarget2D->ClearColor = FLinearColor::White;
 		NewRenderTarget2D->TargetGamma = Gamma; 
-		NewRenderTarget2D->InitAutoFormat(Width, Height); //auto init from value bHDR
+		NewRenderTarget2D->InitAutoFormat(Width, Height);
 		return NewRenderTarget2D; 
 	}
 	
