@@ -294,7 +294,7 @@ ULevelStreaming* UVictoryBPFunctionLibrary::VictoryLoadLevelInstance(
 	Success = false; 
     if(!WorldContextObject) return nullptr;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return nullptr;
 	//~~~~~~~~~~~
  
@@ -799,7 +799,7 @@ void UVictoryBPFunctionLibrary::VictoryISM_GetAllVictoryISMActors(UObject* World
 {
 	if(!WorldContextObject) return;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	
@@ -824,7 +824,7 @@ void UVictoryBPFunctionLibrary::VictoryISM_ConvertToVictoryISMActors(
 	
 	if(!WorldContextObject) return;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	
@@ -1214,7 +1214,7 @@ void UVictoryBPFunctionLibrary::GetAllWidgetsOfClass(UObject* WorldContextObject
 	if(!WidgetClass) return;
 	if(!WorldContextObject) return;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	
@@ -1247,7 +1247,7 @@ void UVictoryBPFunctionLibrary::RemoveAllWidgetsOfClass(UObject* WorldContextObj
 	if(!WidgetClass) return;
 	if(!WorldContextObject) return;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	 
@@ -1272,7 +1272,7 @@ bool UVictoryBPFunctionLibrary::IsWidgetOfClassInViewport(UObject* WorldContextO
 	if(!WidgetClass) return false;
 	if(!WorldContextObject) return false;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return false;
 	//~~~~~~~~~~~
 	  
@@ -1297,7 +1297,7 @@ void UVictoryBPFunctionLibrary::ServerTravel(UObject* WorldContextObject, FStrin
 { 
 	if(!WorldContextObject) return;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	 
@@ -1307,7 +1307,7 @@ APlayerStart* UVictoryBPFunctionLibrary::GetPlayerStart(UObject* WorldContextObj
 {
 	if(!WorldContextObject) return nullptr;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return nullptr;
 	//~~~~~~~~~~~
 	
@@ -1758,7 +1758,7 @@ UObject* UVictoryBPFunctionLibrary::CreateObject(UObject* WorldContextObject,UCl
 	//~~~~~~~~~~~~~~~~~
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return NULL;
 	//~~~~~~~~~~~
 	    
@@ -1777,7 +1777,7 @@ UPrimitiveComponent* UVictoryBPFunctionLibrary::CreatePrimitiveComponent(
 	//~~~~~~~~~~~~~~~~~
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return NULL;
 	//~~~~~~~~~~~
 	 
@@ -1798,7 +1798,7 @@ AActor* UVictoryBPFunctionLibrary::SpawnActorIntoLevel(UObject* WorldContextObje
 	//~~~~~~~~~~~~~~~~~
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return NULL;
 	//~~~~~~~~~~~
 	
@@ -1844,7 +1844,7 @@ void UVictoryBPFunctionLibrary::GetNamesOfLoadedLevels(UObject* WorldContextObje
 {
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	
@@ -2017,7 +2017,7 @@ void UVictoryBPFunctionLibrary::DrawCircle(
 	if(!WorldContextObject) return ;
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	 
@@ -2125,7 +2125,7 @@ AActor* UVictoryBPFunctionLibrary::GetClosestActorOfClassInRadiusOfLocation(
 	IsValid = false;
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return NULL;
 	//~~~~~~~~~~~
 	
@@ -2165,7 +2165,7 @@ AActor* UVictoryBPFunctionLibrary::GetClosestActorOfClassInRadiusOfActor(
 	const FVector Center = ActorCenter->GetActorLocation();
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return NULL;
 	//~~~~~~~~~~~
 	
@@ -2198,7 +2198,7 @@ void UVictoryBPFunctionLibrary::Selection_SelectionBox(UObject* WorldContextObje
 	
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	
@@ -2546,7 +2546,7 @@ AStaticMeshActor* UVictoryBPFunctionLibrary::Clone__StaticMeshActor(UObject* Wor
 	if(!WorldContextObject) return NULL;
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return NULL;
 	//~~~~~~~~~~~
 	
@@ -2631,7 +2631,7 @@ bool UVictoryBPFunctionLibrary::WorldType__InEditorWorld(UObject* WorldContextOb
 	if(!WorldContextObject) return false;
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return false;
 	//~~~~~~~~~~~
 	
@@ -2643,7 +2643,7 @@ bool UVictoryBPFunctionLibrary::WorldType__InPIEWorld(UObject* WorldContextObjec
 	if(!WorldContextObject) return false;
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return false;
 	//~~~~~~~~~~~
 	
@@ -2654,7 +2654,7 @@ bool UVictoryBPFunctionLibrary::WorldType__InGameInstanceWorld(UObject* WorldCon
 	if(!WorldContextObject) return false;
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return false;
 	//~~~~~~~~~~~
 	
@@ -2859,7 +2859,7 @@ void UVictoryBPFunctionLibrary::Visibility__GetRenderedActors(UObject* WorldCont
 {
 	if(!WorldContextObject) return;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	
@@ -2879,7 +2879,7 @@ void UVictoryBPFunctionLibrary::Visibility__GetNotRenderedActors(UObject* WorldC
 {
 	if(!WorldContextObject) return;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	
@@ -3264,7 +3264,7 @@ AActor* UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestSocket(
 	
 	if(!WorldContextObject) return nullptr;
 	 
-	UWorld* const TheWorld = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const TheWorld = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!TheWorld) return nullptr;
 	//~~~~~~~~~~~
 	 
@@ -3832,7 +3832,7 @@ bool UVictoryBPFunctionLibrary::AnimatedVertex__DrawAnimatedVertexLocations(
 	bool DrawNormals
 )
 {
-	UWorld* const TheWorld = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const TheWorld = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	
 	if(!TheWorld) return false;
 	if(!Mesh) return false;
@@ -5121,7 +5121,7 @@ UUserWidget* UVictoryBPFunctionLibrary::GetFirstWidgetOfClass(UObject* WorldCont
 		return nullptr;
 	}
 
-	const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if (!World)
 	{
 		return nullptr;
@@ -5310,7 +5310,7 @@ void UVictoryBPFunctionLibrary::AddToStreamingLevels(UObject* WorldContextObject
 {
 	bool bResult = true;
 
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 
 	if (World != nullptr)
 	{
@@ -5367,7 +5367,7 @@ void UVictoryBPFunctionLibrary::AddToStreamingLevels(UObject* WorldContextObject
 void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextObject, const FLevelStreamInstanceInfo& LevelInstanceInfo)
 {
 
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 
 	// Check if the world exists and we have a level to unload
 	if (World != nullptr && !LevelInstanceInfo.PackageName.IsNone())
@@ -5555,7 +5555,7 @@ bool UVictoryBPFunctionLibrary::GetViewportPosition(UObject* WorldContextObject,
 {
 	OutViewportPosition = FVector2D::ZeroVector;
 
-	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject))
+	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull))
 	{
 		FVector2D ViewportSize;
 		World->GetGameViewport()->GetViewportSize(ViewportSize);
@@ -5569,7 +5569,7 @@ bool UVictoryBPFunctionLibrary::GetViewportPositionHitResultByChannel(UObject* W
 {
 	bool bResult = false;
 
-	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject))
+	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull))
 	{
 		bResult = World->GetFirstPlayerController()->GetHitResultAtScreenPosition(ViewportPosition, TraceChannel, bTraceComplex, OutHitResult);
 	}
@@ -5586,7 +5586,7 @@ bool UVictoryBPFunctionLibrary::ViewportPositionDeproject(UObject* WorldContextO
 {
 	bool bResult = false;
 
-	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject))
+	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull))
 	{
 		bResult = UGameplayStatics::DeprojectScreenToWorld(World->GetFirstPlayerController(), ViewportPosition, OutWorldOrigin, OutWorldDirection);
 	}
