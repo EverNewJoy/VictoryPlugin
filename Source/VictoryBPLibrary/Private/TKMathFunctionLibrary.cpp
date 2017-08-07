@@ -296,7 +296,7 @@ void UTKMathFunctionLibrary::ConvertAnchorToAnchor(UObject* WorldContextObject, 
 	}
 
 	FVector2D View = FVector2D(1, 1);
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* World = GEngine->GetWorldFromContextObjectChecked(WorldContextObject);
 	if (World && World->IsGameWorld())
 	{
 		if (UGameViewportClient* ViewportClient = World->GetGameViewport())

@@ -889,7 +889,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintPure, Category="Victory BP Library|Networking", meta=(Keywords="SinglePlayer multiplayer", WorldContext="WorldContextObject"))
 	static bool IsStandAlone(UObject* WorldContextObject)
 	{
-		UWorld* World = GEngine->GetWorldFromContextObject( WorldContextObject );
+		UWorld* World = GEngine->GetWorldFromContextObjectChecked( WorldContextObject );
 		return World ? (World->GetNetMode() == NM_Standalone) : false;
 	}
 	 
