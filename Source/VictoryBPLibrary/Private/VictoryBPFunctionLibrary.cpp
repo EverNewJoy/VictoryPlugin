@@ -5174,6 +5174,15 @@ UUserWidget* UVictoryBPFunctionLibrary::WidgetGetParentOfClass(UWidget* ChildWid
 		UWidget* NextPossibleParent = nullptr;
 		int32 count = 0;
 
+		if (PossibleParent == nullptr)
+		{
+			UWidgetTree* WidgetTree = Cast<UWidgetTree>(ChildWidget->GetOuter());
+			if (WidgetTree)
+			{
+				PossibleParent = Cast<UWidget>(WidgetTree->GetOuter());
+			}
+		}
+
 		while (PossibleParent != nullptr)
 		{
 			// Return once we find a parent of the desired class.
