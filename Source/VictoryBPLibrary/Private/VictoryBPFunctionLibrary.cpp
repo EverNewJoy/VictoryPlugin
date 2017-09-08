@@ -2149,8 +2149,12 @@ AActor* UVictoryBPFunctionLibrary::GetClosestActorOfClassInRadiusOfLocation(
 		}
 	}
 
-   IsValid = true;
-   return ClosestActor;
+	if (ClosestActor)
+	{
+		IsValid = true;
+	}
+
+	return ClosestActor;
 } 
 
 AActor* UVictoryBPFunctionLibrary::GetClosestActorOfClassInRadiusOfActor(
@@ -2193,8 +2197,12 @@ AActor* UVictoryBPFunctionLibrary::GetClosestActorOfClassInRadiusOfActor(
 		}
 	}
 
-   IsValid = true;
-   return ClosestActor;
+	if (ClosestActor)
+	{
+		IsValid = true;
+	}
+
+	return ClosestActor;
 }
 
 void UVictoryBPFunctionLibrary::Selection_SelectionBox(UObject* WorldContextObject,TArray<AActor*>& SelectedActors, FVector2D AnchorPoint,FVector2D DraggedPoint,TSubclassOf<AActor> ClassFilter)
