@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Runtime/Engine/Classes/Components/InstancedStaticMeshComponent.h"
 #include "VictoryISM.generated.h"
  
 UCLASS()

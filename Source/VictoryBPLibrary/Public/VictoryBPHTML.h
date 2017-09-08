@@ -4,6 +4,8 @@
 
 */
 #pragma once
+
+#include "Runtime/Engine/Classes/Kismet/BlueprintFunctionLibrary.h"
 #include "VictoryBPHTML.generated.h"
 
 // BP Library for You
