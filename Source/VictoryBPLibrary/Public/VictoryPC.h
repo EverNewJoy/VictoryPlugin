@@ -8,7 +8,7 @@
 //HTTP
 #include "Http.h"
 
-#include "Runtime/Engine/Classes/Gameframework/PlayerController.h"
+#include "Runtime/Engine/Classes/GameFramework/PlayerController.h"
 #include "VictoryPC.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(VictoryPCLog, Log, All);
