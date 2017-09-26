@@ -102,7 +102,7 @@ struct FVictoryInput
 	FVictoryInput(){}
 	FVictoryInput(const FString InActionName, const FKey InKey, const bool bInShift, const bool bInCtrl, const bool bInAlt, const bool bInCmd)
 		: Key(InKey)
-		, KeyAsString(Key.GetDisplayName().ToString())
+		, KeyAsString(InKey.GetDisplayName().ToString())
 		, bShift(bInShift)
 		, bCtrl(bInCtrl)
 		, bAlt(bInAlt)
