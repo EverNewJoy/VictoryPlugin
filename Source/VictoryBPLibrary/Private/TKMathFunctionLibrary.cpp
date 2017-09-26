@@ -11,7 +11,7 @@
  
 float UTKMathFunctionLibrary::GetConsoleVariableFloat(FString VariableName)
 {
-	static const auto CVar = IConsoleManager::Get().FindTConsoleVariableDataFloat(*VariableName);
+	const auto CVar = IConsoleManager::Get().FindTConsoleVariableDataFloat(*VariableName);
 
 	if (CVar)
 	{
@@ -24,7 +24,7 @@ float UTKMathFunctionLibrary::GetConsoleVariableFloat(FString VariableName)
 
 int32 UTKMathFunctionLibrary::GetConsoleVariableInt(FString VariableName)
 {
-	static const auto CVar = IConsoleManager::Get().FindTConsoleVariableDataInt(*VariableName);
+	const auto CVar = IConsoleManager::Get().FindTConsoleVariableDataInt(*VariableName);
 
 	if (CVar)
 	{
