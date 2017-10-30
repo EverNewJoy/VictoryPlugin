@@ -6,6 +6,10 @@
  
 #include "VictoryBPFunctionLibrary.h"
 
+//Foreground Window check, clipboard copy/paste
+#include "Runtime/ApplicationCore/Public/HAL/PlatformApplicationMisc.h"
+
+
 //FGPUDriverInfo GPU 
 #include "Runtime/Core/Public/GenericPlatform/GenericPlatformDriver.h"
 #include "HAL/PlatformApplicationMisc.h"

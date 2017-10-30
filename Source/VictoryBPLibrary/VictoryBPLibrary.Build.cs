@@ -56,7 +56,10 @@ public class VictoryBPLibrary : ModuleRules
 				
 				"HeadMountedDisplay",
   
-                "AIModule"	
+                "AIModule",
+				
+				//FPlatformApplicationMisc
+				"ApplicationCore"
 			}
 			);
 		
