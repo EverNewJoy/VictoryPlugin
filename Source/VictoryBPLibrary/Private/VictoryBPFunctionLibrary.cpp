@@ -6,6 +6,9 @@
  
 #include "VictoryBPFunctionLibrary.h"
 
+//FGPUDriverInfo GPU 
+#include "Runtime/Core/Public/GenericPlatform/GenericPlatformDriver.h"
+ 
 //MD5 Hash
 #include "Runtime/Core/Public/Misc/SecureHash.h"
 
@@ -19,9 +22,23 @@
 #include "MessageLog.h"
 #define LOCTEXT_NAMESPACE "Fun BP Lib"
 
+//Use MessasgeLog like this: (see GameplayStatics.cpp
+/*
+#if WITH_EDITOR
+		FMessageLog("PIE").Error(FText::Format(LOCTEXT("SpawnObjectWrongClass", "SpawnObject wrong class: {0}'"), FText::FromString(GetNameSafe(*ObjectClass))));
+#endif // WITH_EDITOR
+*/
 
+// To be able to perform regex operatins on level stream info package name
+#if WITH_EDITOR
+	#include "Runtime/Core/Public/Internationalization/Regex.h"
+#endif
+
+//~~~ Image Wrapper ~~~
+#include "ImageUtils.h"
 #include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapper.h"
 #include "Runtime/ImageWrapper/Public/Interfaces/IImageWrapperModule.h"
+//~~~ Image Wrapper ~~~
 
 //Body Setup
 #include "PhysicsEngine/BodySetup.h"
@@ -277,7 +294,7 @@ ULevelStreaming* UVictoryBPFunctionLibrary::VictoryLoadLevelInstance(
 	Success = false; 
     if(!WorldContextObject) return nullptr;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return nullptr;
 	//~~~~~~~~~~~
  
@@ -287,8 +304,8 @@ ULevelStreaming* UVictoryBPFunctionLibrary::VictoryLoadLevelInstance(
 	FName LevelFName = FName(*FullName);
     FString PackageFileName = FullName;   
 	
-    ULevelStreamingKismet* StreamingLevel = NewObject<ULevelStreamingKismet>((UObject*)GetTransientPackage(), ULevelStreamingKismet::StaticClass());
- 
+    ULevelStreamingKismet* StreamingLevel = NewObject<ULevelStreamingKismet>(World, ULevelStreamingKismet::StaticClass(), NAME_None, RF_Transient, NULL);
+	
 	if(!StreamingLevel)
 	{
 		return nullptr;
@@ -381,6 +398,19 @@ EPathFollowingRequestResult::Type UVictoryBPFunctionLibrary::Victory_AI_MoveToWi
 	);
 }
 	
+//~~~~~~
+//GPU
+//~~~~~~ 
+void UVictoryBPFunctionLibrary::Victory_GetGPUInfo(FString& DeviceDescription, FString& Provider, FString& DriverVersion, FString& DriverDate )
+{   
+	FGPUDriverInfo GPUDriverInfo = FPlatformMisc::GetGPUDriverInfo(GRHIAdapterName);
+	 
+	DeviceDescription 	= GPUDriverInfo.DeviceDescription;
+	Provider 			= GPUDriverInfo.ProviderName;
+	DriverVersion 		= GPUDriverInfo.UserDriverVersion;
+	DriverDate 			= GPUDriverInfo.DriverDate;
+}
+
 //~~~~~~
 //Core
 //~~~~~~ 
@@ -646,6 +676,7 @@ bool UVictoryBPFunctionLibrary::JoyFileIO_GetFiles(TArray<FString>& Files, FStri
 	}
 	
 	FString FinalPath = RootFolderFullPath + "/" + Ext;
+	
 	FileManager.FindFiles(Files, *FinalPath, true, false);
 	return true;				  
 }
@@ -769,7 +800,7 @@ void UVictoryBPFunctionLibrary::VictoryISM_GetAllVictoryISMActors(UObject* World
 {
 	if(!WorldContextObject) return;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	
@@ -794,7 +825,7 @@ void UVictoryBPFunctionLibrary::VictoryISM_ConvertToVictoryISMActors(
 	
 	if(!WorldContextObject) return;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	
@@ -811,14 +842,14 @@ void UVictoryBPFunctionLibrary::VictoryISM_ConvertToVictoryISMActors(
 		//~~~~~~~~~
 		
 		//Add Key if not present!
-		if(!VictoryISMMap.Contains(Comp->StaticMesh))
+		if(!VictoryISMMap.Contains(Comp->GetStaticMesh()))
 		{
-			VictoryISMMap.Add(Comp->StaticMesh);
-			VictoryISMMap[Comp->StaticMesh].Empty(); //ensure array is properly initialized
+			VictoryISMMap.Add(Comp->GetStaticMesh());
+			VictoryISMMap[Comp->GetStaticMesh()].Empty(); //ensure array is properly initialized
 		}
 		
 		//Add the actor!
-		VictoryISMMap[Comp->StaticMesh].Add(*Itr);
+		VictoryISMMap[Comp->GetStaticMesh()].Add(*Itr);
 	}
 	  
 	//For each Static Mesh Asset in the Victory ISM Map
@@ -866,7 +897,7 @@ void UVictoryBPFunctionLibrary::VictoryISM_ConvertToVictoryISMActors(
 		//~~~~~~~~~~
 		
 		//Mesh
-		NewISM->Mesh->SetStaticMesh(RootSMC->StaticMesh);
+		NewISM->Mesh->SetStaticMesh(RootSMC->GetStaticMesh());
 	
 		//Materials
 		const int32 MatTotal = RootSMC->GetNumMaterials();
@@ -918,6 +949,10 @@ FString UVictoryBPFunctionLibrary::VictoryPaths__GameRootDirectory()
 FString UVictoryBPFunctionLibrary::VictoryPaths__SavedDir()
 {
 	return FPaths::ConvertRelativePathToFull(FPaths::GameSavedDir());
+}
+FString UVictoryBPFunctionLibrary::VictoryPaths__ConfigDir()
+{
+	return FPaths::ConvertRelativePathToFull(FPaths::GameConfigDir());
 }
 
 FString UVictoryBPFunctionLibrary::VictoryPaths__ScreenShotsDir()
@@ -1180,7 +1215,7 @@ void UVictoryBPFunctionLibrary::GetAllWidgetsOfClass(UObject* WorldContextObject
 	if(!WidgetClass) return;
 	if(!WorldContextObject) return;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	
@@ -1213,7 +1248,7 @@ void UVictoryBPFunctionLibrary::RemoveAllWidgetsOfClass(UObject* WorldContextObj
 	if(!WidgetClass) return;
 	if(!WorldContextObject) return;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	 
@@ -1238,7 +1273,7 @@ bool UVictoryBPFunctionLibrary::IsWidgetOfClassInViewport(UObject* WorldContextO
 	if(!WidgetClass) return false;
 	if(!WorldContextObject) return false;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return false;
 	//~~~~~~~~~~~
 	  
@@ -1263,7 +1298,7 @@ void UVictoryBPFunctionLibrary::ServerTravel(UObject* WorldContextObject, FStrin
 { 
 	if(!WorldContextObject) return;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	 
@@ -1273,7 +1308,7 @@ APlayerStart* UVictoryBPFunctionLibrary::GetPlayerStart(UObject* WorldContextObj
 {
 	if(!WorldContextObject) return nullptr;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return nullptr;
 	//~~~~~~~~~~~
 	
@@ -1724,7 +1759,7 @@ UObject* UVictoryBPFunctionLibrary::CreateObject(UObject* WorldContextObject,UCl
 	//~~~~~~~~~~~~~~~~~
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return NULL;
 	//~~~~~~~~~~~
 	    
@@ -1743,7 +1778,7 @@ UPrimitiveComponent* UVictoryBPFunctionLibrary::CreatePrimitiveComponent(
 	//~~~~~~~~~~~~~~~~~
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return NULL;
 	//~~~~~~~~~~~
 	 
@@ -1764,7 +1799,7 @@ AActor* UVictoryBPFunctionLibrary::SpawnActorIntoLevel(UObject* WorldContextObje
 	//~~~~~~~~~~~~~~~~~
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return NULL;
 	//~~~~~~~~~~~
 	
@@ -1810,7 +1845,7 @@ void UVictoryBPFunctionLibrary::GetNamesOfLoadedLevels(UObject* WorldContextObje
 {
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	
@@ -1983,7 +2018,7 @@ void UVictoryBPFunctionLibrary::DrawCircle(
 	if(!WorldContextObject) return ;
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	 
@@ -2091,7 +2126,7 @@ AActor* UVictoryBPFunctionLibrary::GetClosestActorOfClassInRadiusOfLocation(
 	IsValid = false;
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return NULL;
 	//~~~~~~~~~~~
 	
@@ -2110,8 +2145,12 @@ AActor* UVictoryBPFunctionLibrary::GetClosestActorOfClassInRadiusOfLocation(
 		}
 	}
 
-   IsValid = true;
-   return ClosestActor;
+	if (ClosestActor)
+	{
+		IsValid = true;
+	}
+
+	return ClosestActor;
 } 
 
 AActor* UVictoryBPFunctionLibrary::GetClosestActorOfClassInRadiusOfActor(
@@ -2131,7 +2170,7 @@ AActor* UVictoryBPFunctionLibrary::GetClosestActorOfClassInRadiusOfActor(
 	const FVector Center = ActorCenter->GetActorLocation();
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return NULL;
 	//~~~~~~~~~~~
 	
@@ -2154,8 +2193,12 @@ AActor* UVictoryBPFunctionLibrary::GetClosestActorOfClassInRadiusOfActor(
 		}
 	}
 
-   IsValid = true;
-   return ClosestActor;
+	if (ClosestActor)
+	{
+		IsValid = true;
+	}
+
+	return ClosestActor;
 }
 
 void UVictoryBPFunctionLibrary::Selection_SelectionBox(UObject* WorldContextObject,TArray<AActor*>& SelectedActors, FVector2D AnchorPoint,FVector2D DraggedPoint,TSubclassOf<AActor> ClassFilter)
@@ -2164,7 +2207,7 @@ void UVictoryBPFunctionLibrary::Selection_SelectionBox(UObject* WorldContextObje
 	
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	
@@ -2366,7 +2409,30 @@ int32 UVictoryBPFunctionLibrary::Conversion__FloatToRoundedInteger(float IN_Floa
 {
 	return FGenericPlatformMath::RoundToInt(IN_Float);
 }
-
+ 
+FString UVictoryBPFunctionLibrary::Victory_SecondsToHoursMinutesSeconds(float Seconds, bool TrimZeroes)
+{
+	FString Str = FTimespan(0, 0, Seconds).ToString();
+	
+	if(TrimZeroes)
+	{
+		FString Left,Right;
+		Str.Split(TEXT("."),&Left,&Right);
+		Str = Left;
+		Str.ReplaceInline(TEXT("00:00"), TEXT("00"));
+		
+		//Str Count!  
+		int32 Count = CountOccurrancesOfSubString(Str,":");
+		   
+		//Remove Empty Hours
+		if(Count >= 2)
+		{
+			Str.ReplaceInline(TEXT("00:"), TEXT(""));
+		} 
+	}
+ 
+	return Str;
+}
 
 bool UVictoryBPFunctionLibrary::IsAlphaNumeric(const FString& String)
 {
@@ -2489,7 +2555,7 @@ AStaticMeshActor* UVictoryBPFunctionLibrary::Clone__StaticMeshActor(UObject* Wor
 	if(!WorldContextObject) return NULL;
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return NULL;
 	//~~~~~~~~~~~
 	
@@ -2513,7 +2579,7 @@ AStaticMeshActor* UVictoryBPFunctionLibrary::Clone__StaticMeshActor(UObject* Wor
 	NewSMA->GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable	);
 	
 	//copy static mesh
-	NewSMA->GetStaticMeshComponent()->SetStaticMesh(ToClone->GetStaticMeshComponent()->StaticMesh);
+	NewSMA->GetStaticMeshComponent()->SetStaticMesh(ToClone->GetStaticMeshComponent()->GetStaticMesh());
 	
 	//~~~
 	
@@ -2574,7 +2640,7 @@ bool UVictoryBPFunctionLibrary::WorldType__InEditorWorld(UObject* WorldContextOb
 	if(!WorldContextObject) return false;
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return false;
 	//~~~~~~~~~~~
 	
@@ -2586,7 +2652,7 @@ bool UVictoryBPFunctionLibrary::WorldType__InPIEWorld(UObject* WorldContextObjec
 	if(!WorldContextObject) return false;
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return false;
 	//~~~~~~~~~~~
 	
@@ -2597,7 +2663,7 @@ bool UVictoryBPFunctionLibrary::WorldType__InGameInstanceWorld(UObject* WorldCon
 	if(!WorldContextObject) return false;
 	
 	//using a context object to get the world!
-    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+    UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return false;
 	//~~~~~~~~~~~
 	
@@ -2802,7 +2868,7 @@ void UVictoryBPFunctionLibrary::Visibility__GetRenderedActors(UObject* WorldCont
 {
 	if(!WorldContextObject) return;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	
@@ -2822,7 +2888,7 @@ void UVictoryBPFunctionLibrary::Visibility__GetNotRenderedActors(UObject* WorldC
 {
 	if(!WorldContextObject) return;
 	 
-	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!World) return;
 	//~~~~~~~~~~~
 	
@@ -2888,19 +2954,11 @@ bool UVictoryBPFunctionLibrary::FileIO__SaveStringTextToFile(
 	FString SaveText,
 	bool AllowOverWriting
 ){
-	//Dir Exists?
-	if ( !FPlatformFileManager::Get().GetPlatformFile().DirectoryExists( *SaveDirectory))
+	if(!FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*SaveDirectory))
 	{
-		//create directory if it not exist
-		FPlatformFileManager::Get().GetPlatformFile().CreateDirectory( *SaveDirectory);
-		
-		//still could not make directory?
-		if (!FPlatformFileManager::Get().GetPlatformFile().DirectoryExists( *SaveDirectory))
-		{
-			//Could not make the specified directory
-			return false;
-			//~~~~~~~~~~~~~~~~~~~~~~
-		}
+		//Could not make the specified directory
+		return false;
+		//~~~~~~~~~~~~~~~~~~~~~~
 	}
 	
 	//get complete file path
@@ -2923,18 +2981,11 @@ bool UVictoryBPFunctionLibrary::FileIO__SaveStringTextToFile(
 bool UVictoryBPFunctionLibrary::FileIO__SaveStringArrayToFile(FString SaveDirectory, FString JoyfulFileName, TArray<FString> SaveText, bool AllowOverWriting)  
 {
 	//Dir Exists?
-	if ( !FPlatformFileManager::Get().GetPlatformFile().DirectoryExists( *SaveDirectory))
+	if ( !VCreateDirectory(SaveDirectory))
 	{
-		//create directory if it not exist
-		FPlatformFileManager::Get().GetPlatformFile().CreateDirectory( *SaveDirectory);
-		
-		//still could not make directory?
-		if (!FPlatformFileManager::Get().GetPlatformFile().DirectoryExists( *SaveDirectory))
-		{
-			//Could not make the specified directory
-			return false;
-			//~~~~~~~~~~~~~~~~~~~~~~
-		}
+		//Could not make the specified directory
+		return false;
+		//~~~~~~~~~~~~~~~~~~~~~~
 	}
 	
 	//get complete file path
@@ -3186,6 +3237,7 @@ AActor*  UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestBone(
 	if (!AsCharacter->GetMesh()) return HitActor;
 	
 	//Component Trace
+	FHitResult Hit;
 	IsValid = AsCharacter->GetMesh()->K2_LineTraceComponent(
 		TraceStart, 
 		TraceEnd, 
@@ -3193,7 +3245,8 @@ AActor*  UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestBone(
 		false, 
 		OutImpactPoint, 
 		OutImpactNormal,
-		ClosestBoneName
+		ClosestBoneName,
+		Hit
 	); 
 	
 	//Location
@@ -3220,7 +3273,7 @@ AActor* UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestSocket(
 	
 	if(!WorldContextObject) return nullptr;
 	 
-	UWorld* const TheWorld = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const TheWorld = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if(!TheWorld) return nullptr;
 	//~~~~~~~~~~~
 	 
@@ -3255,6 +3308,7 @@ AActor* UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestSocket(
 	if (!AsCharacter->GetMesh()) return HitActor;
 	
 	//Component Trace
+	FHitResult Hit;
 	FName BoneName;
 	if (! AsCharacter->GetMesh()->K2_LineTraceComponent(
 		TraceStart, 
@@ -3263,7 +3317,8 @@ AActor* UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestSocket(
 		false, 
 		OutImpactPoint, 
 		OutImpactNormal,
-		BoneName
+		BoneName,
+		Hit
 	)) return HitActor;
 	
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3786,7 +3841,7 @@ bool UVictoryBPFunctionLibrary::AnimatedVertex__DrawAnimatedVertexLocations(
 	bool DrawNormals
 )
 {
-	UWorld* const TheWorld = GEngine->GetWorldFromContextObject(WorldContextObject);
+	UWorld* const TheWorld = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	
 	if(!TheWorld) return false;
 	if(!Mesh) return false;
@@ -4607,6 +4662,65 @@ bool UVictoryBPFunctionLibrary::Victory_GetPixelFromT2D(UTexture2D* T2D, int32 X
 	RawImageData->Unlock();
 	return true;
 }
+bool UVictoryBPFunctionLibrary::Victory_GetPixelsArrayFromT2DDynamic(UTexture2DDynamic* T2D, int32& TextureWidth, int32& TextureHeight,TArray<FLinearColor>& PixelArray)
+{
+	if(!T2D) 
+	{
+		return false;
+	}
+	
+	//To prevent overflow in BP if used in a loop
+	PixelArray.Empty();
+	
+	//~~~~~~~~~~~~~~~~~~~~~~
+	// Modifying original here
+	T2D->SRGB = false;
+	T2D->CompressionSettings = TC_VectorDisplacementmap;
+	
+	//Update settings
+	T2D->UpdateResource();
+	//~~~~~~~~~~~~~~~~~~~~~~
+	
+	//Confused, DDC / platform data is invalid for dynamic, how to get its byte data?
+	//FTextureResource from UTexture base class?
+	return false;
+	
+	/*
+	FTexturePlatformData** PtrPtr = T2D->GetRunningPlatformData();
+	if(!PtrPtr) return false;
+	FTexturePlatformData* Ptr = *PtrPtr;
+	if(!Ptr) return false;
+	 
+	FTexture2DMipMap& MyMipMap 	= Ptr->Mips[0];
+	TextureWidth = MyMipMap.SizeX;
+	TextureHeight = MyMipMap.SizeY;
+	 
+	FByteBulkData* RawImageData 	= &MyMipMap.BulkData;
+	
+	if(!RawImageData) 
+	{
+		return false;
+	}
+	
+	FColor* RawColorArray = static_cast<FColor*>(RawImageData->Lock(LOCK_READ_ONLY));
+	
+	UE_LOG(LogTemp,Warning,TEXT("Victory Plugin, Get Pixels, tex width for mip %d"), TextureWidth);
+	UE_LOG(LogTemp,Warning,TEXT("Victory Plugin, Get Pixels, tex width from T2D ptr %d"), T2D->GetSurfaceWidth());
+	 
+	for(int32 x = 0; x < TextureWidth; x++)
+	{
+		for(int32 y = 0; y < TextureHeight; y++)   
+		{
+			PixelArray.Add(RawColorArray[x * TextureWidth + y]); 
+		}
+	}
+	  
+	RawImageData->Unlock();
+	*/
+	
+	return true;
+}
+
 bool UVictoryBPFunctionLibrary::Victory_GetPixelsArrayFromT2D(UTexture2D* T2D, int32& TextureWidth, int32& TextureHeight,TArray<FLinearColor>& PixelArray)
 {
 	if(!T2D) 
@@ -5016,7 +5130,7 @@ UUserWidget* UVictoryBPFunctionLibrary::GetFirstWidgetOfClass(UObject* WorldCont
 		return nullptr;
 	}
 
-	const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject);
+	const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if (!World)
 	{
 		return nullptr;
@@ -5092,7 +5206,7 @@ UUserWidget* UVictoryBPFunctionLibrary::WidgetGetParentOfClass(UWidget* ChildWid
 	return ResultParent;
 }
  
-void UVictoryBPFunctionLibrary::WidgetGetChildrenOfClass(UWidget* ParentWidget, TArray<UUserWidget*>& ChildWidgets, TSubclassOf<UUserWidget> WidgetClass)
+void UVictoryBPFunctionLibrary::WidgetGetChildrenOfClass(UWidget* ParentWidget, TArray<UUserWidget*>& ChildWidgets, TSubclassOf<UUserWidget> WidgetClass, bool bImmediateOnly)
 {
 	ChildWidgets.Empty();
 
@@ -5118,39 +5232,32 @@ void UVictoryBPFunctionLibrary::WidgetGetChildrenOfClass(UWidget* ParentWidget, 
 			{
 				CheckedWidgets.Add(PossibleParent);
 
-				// Add any widget that is a child of the class specified.
-				if (PossibleParent->GetClass()->IsChildOf(WidgetClass))
+				TArray<UWidget*> Widgets;
+
+				UWidgetTree::GetChildWidgets(PossibleParent, Widgets);
+
+				for (UWidget* Widget : Widgets)
 				{
-					ChildWidgets.Add(Cast<UUserWidget>(PossibleParent));
-				}
-
-				UUserWidget* PossibleParentUserWidget = Cast<UUserWidget>(PossibleParent);
-
-				// If this is a UUserWidget, add its root widget to the check next.
-				if (PossibleParentUserWidget)
-				{
-					WidgetsToCheck.Push(PossibleParentUserWidget->GetRootWidget());
-				}
-				else
-				{
-					TArray<UWidget*> Widgets;
-
-					UWidgetTree::GetChildWidgets(PossibleParent, Widgets);
-
-					for (UWidget* Widget : Widgets)
+					if (!CheckedWidgets.Contains(Widget))
 					{
-						if (!CheckedWidgets.Contains(Widget))
+						// Add any widget that is a child of the class specified.
+						if (Widget->GetClass()->IsChildOf(WidgetClass))
 						{
-							// Add the widget to the check next.
-							WidgetsToCheck.Push(Widget);
+							ChildWidgets.Add(Cast<UUserWidget>(Widget));
+						}
 
-							// Add any widget that is a child of the class specified.
-							if (Widget->GetClass()->IsChildOf(WidgetClass))
-							{
-								ChildWidgets.Add(Cast<UUserWidget>(Widget));
-							}
+						// If we're not just looking for our immediate children,
+						// add this widget to list of widgets to check next.
+						if (!bImmediateOnly)
+						{
+							WidgetsToCheck.Push(Widget);
 						}
 					}
+				}
+
+				if (bImmediateOnly)
+				{
+					break;
 				}
 			}
 		}
@@ -5189,6 +5296,401 @@ void UVictoryBPFunctionLibrary::SetGenericTeamId(AActor* Target, uint8 NewTeamId
 			TeamAgentInterface->SetGenericTeamId(NewTeamId);
 		}
 	}
+}
+
+FLevelStreamInstanceInfo::FLevelStreamInstanceInfo(ULevelStreamingKismet* LevelInstance)
+{
+	PackageName = LevelInstance->GetWorldAssetPackageFName();
+	PackageNameToLoad = LevelInstance->PackageNameToLoad;
+	Location = LevelInstance->LevelTransform.GetLocation();
+	Rotation = LevelInstance->LevelTransform.GetRotation().Rotator();
+	bShouldBeLoaded = LevelInstance->bShouldBeLoaded;
+	bShouldBeVisible = LevelInstance->bShouldBeVisible;
+	bShouldBlockOnLoad = LevelInstance->bShouldBlockOnLoad;
+	LODIndex = LevelInstance->LevelLODIndex;
+};
+
+FLevelStreamInstanceInfo UVictoryBPFunctionLibrary::GetLevelInstanceInfo(ULevelStreamingKismet* LevelInstance)
+{
+	return FLevelStreamInstanceInfo(LevelInstance);
+}
+
+void UVictoryBPFunctionLibrary::AddToStreamingLevels(UObject* WorldContextObject, const FLevelStreamInstanceInfo& LevelInstanceInfo)
+{
+	bool bResult = true;
+
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
+
+	if (World != nullptr)
+	{
+		bool bAlreadyExists = false;
+
+		for (auto StreamingLevel : World->StreamingLevels)
+		{
+			if (StreamingLevel->GetWorldAssetPackageFName() == LevelInstanceInfo.PackageName)
+			{
+				bAlreadyExists = true;
+				// KRIS : Would normally log a warning here! Is there a LogVictory?
+				break;
+			}
+		}
+		
+		if (!bAlreadyExists)
+		{
+			FName PackageName = LevelInstanceInfo.PackageName;
+
+			// For PIE Networking: remap the packagename to our local PIE packagename
+			FString PackageNameStr = PackageName.ToString();
+			if (GEngine->NetworkRemapPath(World->GetNetDriver(), PackageNameStr, true))
+			{
+				PackageName = FName(*PackageNameStr);
+			}
+
+			World->DelayGarbageCollection();
+
+			// Setup streaming level object that will load specified map
+			ULevelStreamingKismet* StreamingLevel = NewObject<ULevelStreamingKismet>(World, ULevelStreamingKismet::StaticClass(), NAME_None, RF_Transient, nullptr);
+			StreamingLevel->SetWorldAssetByPackageName(PackageName);
+			StreamingLevel->LevelColor = FColor::MakeRandomColor();
+			StreamingLevel->bShouldBeLoaded = LevelInstanceInfo.bShouldBeLoaded;
+			StreamingLevel->bShouldBeVisible = LevelInstanceInfo.bShouldBeVisible;
+			StreamingLevel->bShouldBlockOnLoad = LevelInstanceInfo.bShouldBlockOnLoad;
+			StreamingLevel->bInitiallyLoaded = true;
+			StreamingLevel->bInitiallyVisible = true;
+
+			// Transform
+			StreamingLevel->LevelTransform = FTransform(LevelInstanceInfo.Rotation, LevelInstanceInfo.Location);
+
+			// Map to Load
+			StreamingLevel->PackageNameToLoad = LevelInstanceInfo.PackageNameToLoad;
+
+			// Add the new level to world.
+			World->StreamingLevels.Add(StreamingLevel);
+
+			World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+		}
+	}
+}
+
+
+void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextObject, const FLevelStreamInstanceInfo& LevelInstanceInfo)
+{
+
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
+
+	// Check if the world exists and we have a level to unload
+	if (World != nullptr && !LevelInstanceInfo.PackageName.IsNone())
+	{
+
+#if WITH_EDITOR
+		// If we are using the editor we will use this lambda to remove the play in editor string
+		auto GetCorrectPackageName = [&]( FName PackageName) {
+			FString PackageNameStr = PackageName.ToString();
+			if (GEngine->NetworkRemapPath(World->GetNetDriver(), PackageNameStr, true))
+			{
+				PackageName = FName(*PackageNameStr);
+			}
+
+			return PackageName;
+		};
+#endif
+
+		// Get the package name that we want to check
+		FName PackageNameToCheck = LevelInstanceInfo.PackageName;
+
+#if WITH_EDITOR
+		// Remove the play in editor string and client id to be able to use it with replication
+		PackageNameToCheck = GetCorrectPackageName(PackageNameToCheck);
+#endif
+
+		// Find the level to unload
+		for (auto StreamingLevel : World->StreamingLevels)
+		{
+
+			FName LoadedPackageName = StreamingLevel->GetWorldAssetPackageFName();
+
+#if WITH_EDITOR
+			// Remove the play in editor string and client id to be able to use it with replication
+			LoadedPackageName = GetCorrectPackageName(LoadedPackageName);
+#endif
+
+			// If we find the level unload it and break
+			if(PackageNameToCheck == LoadedPackageName)
+			{
+				// This unload the level
+				StreamingLevel->bShouldBeLoaded = false;
+				StreamingLevel->bShouldBeVisible = false;
+				// This removes the level from the streaming level list
+				StreamingLevel->bIsRequestingUnloadAndRemoval = true;
+				// Force a refresh of the world
+				World->FlushLevelStreaming(EFlushLevelStreamingType::Full);
+				break;
+			}
+		}
+	}
+}
+
+bool UVictoryBPFunctionLibrary::GenericArray_SortCompare(const UProperty* LeftProperty, void* LeftValuePtr, const UProperty* RightProperty, void* RightValuePtr)
+{
+	bool bResult = false;
+
+	if (const UNumericProperty *LeftNumericProperty = Cast<const UNumericProperty>(LeftProperty))
+	{
+		if (LeftNumericProperty->IsFloatingPoint())
+		{
+			bResult = (LeftNumericProperty->GetFloatingPointPropertyValue(LeftValuePtr) < Cast<const UNumericProperty>(RightProperty)->GetFloatingPointPropertyValue(RightValuePtr));
+		}
+		else if (LeftNumericProperty->IsInteger())
+		{
+			bResult = (LeftNumericProperty->GetSignedIntPropertyValue(LeftValuePtr) < Cast<const UNumericProperty>(RightProperty)->GetSignedIntPropertyValue(RightValuePtr));
+		}
+	}
+	else if (const UBoolProperty* LeftBoolProperty = Cast<const UBoolProperty>(LeftProperty))
+	{
+		bResult = (!LeftBoolProperty->GetPropertyValue(LeftValuePtr) && Cast<const UBoolProperty>(RightProperty)->GetPropertyValue(RightValuePtr));
+	}
+	else if (const UNameProperty* LeftNameProperty = Cast<const UNameProperty>(LeftProperty))
+	{
+		bResult = (LeftNameProperty->GetPropertyValue(LeftValuePtr).ToString() < Cast<const UNameProperty>(RightProperty)->GetPropertyValue(RightValuePtr).ToString());
+	}
+	else if (const UStrProperty* LeftStringProperty = Cast<const UStrProperty>(LeftProperty))
+	{
+		bResult = (LeftStringProperty->GetPropertyValue(LeftValuePtr) < Cast<const UStrProperty>(RightProperty)->GetPropertyValue(RightValuePtr));
+	}
+	else if (const UTextProperty* LeftTextProperty = Cast<const UTextProperty>(LeftProperty))
+	{
+		bResult = (LeftTextProperty->GetPropertyValue(LeftValuePtr).ToString() < Cast<const UTextProperty>(RightProperty)->GetPropertyValue(RightValuePtr).ToString());
+	}
+
+	return bResult;
+}
+
+void UVictoryBPFunctionLibrary::GenericArray_Sort(void* TargetArray, const UArrayProperty* ArrayProp, bool bAscendingOrder /* = true */, FName VariableName /* = NAME_None */)
+{
+	if (TargetArray)
+	{
+		FScriptArrayHelper ArrayHelper(ArrayProp, TargetArray);
+		const int32 LastIndex = ArrayHelper.Num();
+
+		if (const UObjectProperty* ObjectProperty = Cast<const UObjectProperty>(ArrayProp->Inner))
+		{
+			for (int32 i = 0; i < LastIndex; ++i)
+			{
+				for (int32 j = 0; j < LastIndex - 1 - i; ++j)
+				{
+					UObject* LeftObject = ObjectProperty->GetObjectPropertyValue(ArrayHelper.GetRawPtr(j));
+					UObject* RightObject = ObjectProperty->GetObjectPropertyValue(ArrayHelper.GetRawPtr(j + 1));
+
+					UProperty* LeftProperty = FindField<UProperty>(LeftObject->GetClass(), VariableName);
+					UProperty* RightProperty = FindField<UProperty>(RightObject->GetClass(), VariableName);
+						
+					if (LeftProperty && RightProperty)
+					{
+						void* LeftValuePtr = LeftProperty->ContainerPtrToValuePtr<void>(LeftObject);
+						void* RightValuePtr = RightProperty->ContainerPtrToValuePtr<void>(RightObject);
+
+						if (GenericArray_SortCompare(LeftProperty, LeftValuePtr, RightProperty, RightValuePtr) != bAscendingOrder)
+						{
+							ArrayHelper.SwapValues(j, j + 1);
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			UProperty* Property = nullptr;
+
+			if (const UStructProperty* StructProperty = Cast<const UStructProperty>(ArrayProp->Inner))
+			{
+				Property = FindField<UProperty>(StructProperty->Struct, VariableName);
+			}
+			else
+			{
+				Property = ArrayProp->Inner;
+			}
+
+			if (Property)
+			{
+				for (int32 i = 0; i < LastIndex; ++i)
+				{
+					for (int32 j = 0; j < LastIndex - 1 - i; ++j)
+					{
+						void* LeftValuePtr = Property->ContainerPtrToValuePtr<void>(ArrayHelper.GetRawPtr(j));
+						void* RightValuePtr = Property->ContainerPtrToValuePtr<void>(ArrayHelper.GetRawPtr(j + 1));
+
+						if (GenericArray_SortCompare(Property, LeftValuePtr, Property, RightValuePtr) != bAscendingOrder)
+						{
+							ArrayHelper.SwapValues(j, j + 1);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void UVictoryBPFunctionLibrary::Array_Sort(const TArray<int32>& TargetArray, bool bAscendingOrder /* = true */, FName VariableName /* = NAME_None */)
+{
+	// We should never hit these!  They're stubs to avoid NoExport on the class.  Call the Generic* equivalent instead
+	check(0);
+}
+
+void UVictoryBPFunctionLibrary::Actor_PrestreamTextures(AActor* Target, float Seconds, bool bEnableStreaming /*= true*/, int32 CinematicTextureGroups /*= 0*/)
+{
+	if (Target != nullptr)
+	{
+		Target->PrestreamTextures(Seconds, bEnableStreaming, CinematicTextureGroups);
+	}
+}
+
+void UVictoryBPFunctionLibrary::Component_PrestreamTextures(UMeshComponent* Target, float Seconds, bool bEnableStreaming /*= true*/, int32 CinematicTextureGroups /*= 0*/)
+{
+	if ((Target != nullptr) && (Target->IsRegistered()))
+	{
+		float Duration = Seconds;
+
+		if (bEnableStreaming)
+		{
+			// A Seconds==0.0f, it means infinite (e.g. 30 days)
+			Duration = FMath::IsNearlyZero(Seconds) ? (60.0f*60.0f*24.0f*30.0f) : Seconds;
+		}
+
+		Target->PrestreamTextures(Duration, false, CinematicTextureGroups);
+	}
+}
+
+bool UVictoryBPFunctionLibrary::GetViewportPosition(UObject* WorldContextObject, const FVector2D& ScreenPosition, FVector2D& OutViewportPosition)
+{
+	OutViewportPosition = FVector2D::ZeroVector;
+
+	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull))
+	{
+		FVector2D ViewportSize;
+		World->GetGameViewport()->GetViewportSize(ViewportSize);
+		OutViewportPosition = World->GetGameViewport()->Viewport->VirtualDesktopPixelToViewport(FIntPoint(ScreenPosition.X, ScreenPosition.Y)) * ViewportSize;
+	}
+
+	return !OutViewportPosition.IsZero();
+}
+
+bool UVictoryBPFunctionLibrary::GetViewportPositionHitResultByChannel(UObject* WorldContextObject, const FVector2D& ViewportPosition, ECollisionChannel TraceChannel, bool bTraceComplex, FHitResult& OutHitResult)
+{
+	bool bResult = false;
+
+	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull))
+	{
+		bResult = World->GetFirstPlayerController()->GetHitResultAtScreenPosition(ViewportPosition, TraceChannel, bTraceComplex, OutHitResult);
+	}
+
+	if (!bResult)	// For Blueprint users
+	{
+		OutHitResult = FHitResult();
+	}
+
+	return bResult;
+}
+
+bool UVictoryBPFunctionLibrary::ViewportPositionDeproject(UObject* WorldContextObject, const FVector2D& ViewportPosition, FVector& OutWorldOrigin, FVector& OutWorldDirection)
+{
+	bool bResult = false;
+
+	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull))
+	{
+		bResult = UGameplayStatics::DeprojectScreenToWorld(World->GetFirstPlayerController(), ViewportPosition, OutWorldOrigin, OutWorldDirection);
+	}
+
+	return bResult;
+}
+
+UPanelSlot* UVictoryBPFunctionLibrary::InsertChildAt(UWidget* Parent, int32 Index, UWidget* Content)
+{
+	UPanelSlot* ResultSlot = nullptr;
+
+	if (Parent && Content)
+	{
+		if (UPanelWidget* PanelWidget = Cast<UPanelWidget>(Parent))
+		{
+			Index = FMath::Clamp(Index, 0, FMath::Max(0, PanelWidget->GetChildrenCount() - 1));
+
+			if (PanelWidget->GetChildIndex(Content) != Index)
+			{
+				ResultSlot = PanelWidget->AddChild(Content);
+
+				UWidget* SlotContent = nullptr;
+
+				for (int32 i = Index; i < PanelWidget->GetChildrenCount(); ++i)
+				{
+					SlotContent = PanelWidget->GetChildAt(Index);
+					if (SlotContent == Content)
+					{
+						break;
+					}
+					PanelWidget->RemoveChild(SlotContent);
+					PanelWidget->AddChild(SlotContent);
+				}
+			}
+		}
+	}
+
+	return ResultSlot;
+}
+
+void UVictoryBPFunctionLibrary::FlushPressedKeys(class APlayerController* PlayerController)
+{
+	if (PlayerController)
+	{
+		PlayerController->FlushPressedKeys();
+	}
+}
+
+FVector UVictoryBPFunctionLibrary::GetVectorRelativeLocation(FVector ParentLocation, FRotator ParentRotation, FVector ChildLocation)
+{
+	return ParentRotation.UnrotateVector(ChildLocation - ParentLocation);
+}
+
+FVector UVictoryBPFunctionLibrary::GetComponentRelativeLocation(class USceneComponent* ParentComponent, class USceneComponent* ChildComponent)
+{
+	return (ParentComponent && ChildComponent) ? GetVectorRelativeLocation(ParentComponent->GetComponentLocation(), ParentComponent->GetComponentRotation(), ChildComponent->GetComponentLocation()) : FVector::ZeroVector;
+}
+
+FVector UVictoryBPFunctionLibrary::GetActorRelativeLocation(class AActor* ParentActor, class AActor* ChildActor)
+{
+	return (ParentActor && ChildActor) ? GetVectorRelativeLocation(ParentActor->GetActorLocation(), ParentActor->GetActorRotation(), ChildActor->GetActorLocation()) : FVector::ZeroVector;
+}
+
+FRotator UVictoryBPFunctionLibrary::GetRotatorRelativeRotation(FRotator ParentRotation, FRotator ChildRotation)
+{
+	const FRotator RelativeRotation = (FQuatRotationMatrix(ChildRotation.Quaternion()) * FQuatRotationMatrix(ParentRotation.Quaternion()).GetTransposed()).Rotator();
+
+	return RelativeRotation;
+}
+
+FRotator UVictoryBPFunctionLibrary::GetComponentRelativeRotation(class USceneComponent* ParentComponent, class USceneComponent* ChildComponent)
+{
+	return (ParentComponent && ChildComponent) ? GetRotatorRelativeRotation(ParentComponent->GetComponentRotation(), ChildComponent->GetComponentRotation())  : FRotator::ZeroRotator;
+}
+
+FRotator UVictoryBPFunctionLibrary::GetActorRelativeRotation(class AActor* ParentActor, class AActor* ChildActor)
+{
+	return (ParentActor && ChildActor) ? GetRotatorRelativeRotation(ParentActor->GetActorRotation(), ChildActor->GetActorRotation()) : FRotator::ZeroRotator;
+}
+
+float UVictoryBPFunctionLibrary::HorizontalFOV(float VerticalFOV, float AspectRatio)
+{
+	VerticalFOV = FMath::DegreesToRadians(VerticalFOV);
+	return FMath::RadiansToDegrees(2 * FMath::Atan2(FMath::Tan(VerticalFOV * 0.5f) * AspectRatio, 1));
+}
+
+float UVictoryBPFunctionLibrary::VerticalFOV(float HorizontalFOV, float AspectRatio)
+{
+	HorizontalFOV = FMath::DegreesToRadians(HorizontalFOV);
+	return FMath::RadiansToDegrees(2 * FMath::Atan2(FMath::Tan(HorizontalFOV * 0.5f) * (1 / AspectRatio), 1));
+}
+
+bool UVictoryBPFunctionLibrary::StringIsEmpty(const FString& Target)
+{
+	return Target.IsEmpty();
 }
 
 //~~~~~~~~~ END OF CONTRIBUTED BY KRIS ~~~~~~~~~~~
