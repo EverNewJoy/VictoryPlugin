@@ -28,5 +28,12 @@
 				"HTML5"
 			]
 		}
-	]
+	],
+	"Plugins" :
+	[
+		{
+			"Name": "ApexDestruction",
+			"Enabled": true
+		} 
+	]	
 }

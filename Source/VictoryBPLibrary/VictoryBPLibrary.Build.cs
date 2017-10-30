@@ -30,7 +30,7 @@ public class VictoryBPLibrary : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core",
+				"Core"
 				
 				// ... add other public dependencies that you statically link with here ...
 			}
@@ -69,6 +69,14 @@ public class VictoryBPLibrary : ModuleRules
 				"APEX"
 			}
 			);
+			
+			PublicDependencyModuleNames.AddRange(
+			new string[]
+			{
+				"ApexDestruction"
+			}
+			);
+		
 		}
 	
 		 
