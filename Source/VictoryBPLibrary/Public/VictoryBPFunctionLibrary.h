@@ -1,5 +1,5 @@
 /*
-	
+
 	By Rama
 
 */
@@ -7,9 +7,9 @@
 
 //to prevent nodes from getting called in constructors:
 //meta=(UnsafeDuringActorConstruction = "true")
-	 
+
 #include "VictoryISM.h"
- 
+
 //~~~~~~~~~~~~ UMG ~~~~~~~~~~~~~~~
 #include "Runtime/UMG/Public/UMG.h"
 #include "Runtime/UMG/Public/UMGStyle.h"
@@ -17,10 +17,10 @@
 #include "Runtime/UMG/Public/IUMGModule.h"
 #include "Runtime/UMG/Public/Blueprint/UserWidget.h"
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 
+
 //AI
 #include "AIController.h"		//MoveToWithFilter
- 
+
 //Audio
 #include "Components/AudioComponent.h"
 #include "AudioDecompress.h"
@@ -29,7 +29,7 @@
 #include "Audio.h"
 #include "Developer/TargetPlatform/Public/Interfaces/IAudioFormat.h"
 #include "VorbisAudioInfo.h"
-     
+
 //Texture2D
 //#include "Engine/Texture2D.h"
 #include "DDSLoader.h"
@@ -79,13 +79,13 @@ struct FVictoryInput
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Input Song")
 	FString ActionName;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Input Song")
 	FKey Key;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Input Song")
 	FString KeyAsString;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Input Song")
 	uint32 bShift:1;
 
@@ -97,8 +97,8 @@ struct FVictoryInput
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Input Song")
 	uint32 bCmd:1;
-	
-	   
+
+
 	FVictoryInput(){}
 	FVictoryInput(const FString InActionName, const FKey InKey, const bool bInShift, const bool bInCtrl, const bool bInAlt, const bool bInCmd)
 		: Key(InKey)
@@ -107,10 +107,10 @@ struct FVictoryInput
 		, bCtrl(bInCtrl)
 		, bAlt(bInAlt)
 		, bCmd(bInCmd)
-	{ 
+	{
 		ActionName = InActionName;
 	}
-	
+
 	FVictoryInput(const FInputActionKeyMapping& Action)
 		: Key(Action.Key)
 		, KeyAsString(Action.Key.GetDisplayName().ToString())
@@ -118,44 +118,44 @@ struct FVictoryInput
 		, bCtrl(Action.bCtrl)
 		, bAlt(Action.bAlt)
 		, bCmd(Action.bCmd)
-	{  
+	{
 		ActionName = Action.ActionName.ToString();
 	}
-}; 
+};
 
 USTRUCT(BlueprintType)
 struct FVictoryInputAxis
-{ 
+{
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Input Song")
 	FString AxisName = "";
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Input Song")
 	FString KeyAsString = "";
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Input Song")
 	FKey Key;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Input Song")
 	float Scale = 1;
-	
+
 	FVictoryInputAxis(){}
 	FVictoryInputAxis(const FString InAxisName, FKey InKey, float InScale)
 		: AxisName(InAxisName)
 		, KeyAsString(InKey.GetDisplayName().ToString())
-		, Key(InKey) 
+		, Key(InKey)
 		, Scale(InScale)
 	{ }
-	
+
 	FVictoryInputAxis(const FInputAxisKeyMapping& Axis)
-		: Key(Axis.Key)
-		, KeyAsString(Axis.Key.GetDisplayName().ToString())
+		: KeyAsString(Axis.Key.GetDisplayName().ToString())
+		, Key(Axis.Key)
 		, Scale(Axis.Scale)
-	{  
+	{
 		AxisName = Axis.AxisName.ToString();
 	}
-}; 
+};
 
 UENUM(BlueprintType)
 namespace EJoyGraphicsFullScreen
@@ -167,7 +167,7 @@ namespace EJoyGraphicsFullScreen
 		WindowedFullScreen					UMETA(DisplayName="Windowed Full Screen High Quality"),
 		WindowedFullScreenPerformance		UMETA(DisplayName="Windowed Full Screen (Default)"),
 		//~~~
-		
+
 		//256th entry
 		EJoyGraphicsFullScreen_Max		UMETA(Hidden),
 	};
@@ -180,7 +180,7 @@ struct FLevelStreamInstanceInfo
 
 	UPROPERTY(Category = "LevelStreaming", BlueprintReadWrite)
 	FName PackageName;
-		
+
 	UPROPERTY(Category = "LevelStreaming", BlueprintReadWrite)
 	FName PackageNameToLoad;
 
@@ -225,11 +225,11 @@ UCLASS()
 class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_UCLASS_BODY()
-	
+
 	//~~~~~~~~~~~~~~~~~~
 	// 	Level Generation
-	//~~~~~~~~~~~~~~~~~~ 
-	/**  Load a level to a specific location and rotation, can create multiple of the same level! 
+	//~~~~~~~~~~~~~~~~~~
+	/**  Load a level to a specific location and rotation, can create multiple of the same level!
 	*
 	* Ensure that each InstanceNumber is unique to spawn multiple instances of the same level!
 	*
@@ -240,23 +240,23 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	* @param InstanceNumber - Ensure this is unique by keeping count to spawn as many instances of same level as you want!
 	* @param Location - Worldspace location where the level should be spawned
 	* @param Rotation - Worldspace rotation for rotating the entire level
-	* @return false if the level name was not found 
-	*/ 
+	* @return false if the level name was not found
+	*/
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Dynamic Level Generation",meta=(DeprecatedFunction, DeprecationMessage="My LoadLevelInstance BP node is in the main UE4 Engine as of 4.13! This version is deprecated and will be removed in the near future. <3 -Rama",WorldContext="WorldContextObject"))
 	static ULevelStreaming* VictoryLoadLevelInstance(UObject* WorldContextObject, FString MapFolderOffOfContent, FString LevelName, int32 InstanceNumber, FVector Location, FRotator Rotation,bool& Success);
-	 
+
 	//~~~~~~~~~~
 	// 	AI
 	//~~~~~~~~~~
-	/** Move to Location with optional Query Filter! 
+	/** Move to Location with optional Query Filter!
 	*
-	* 1. Create Custon Nav Area Classes. 
+	* 1. Create Custon Nav Area Classes.
 	*
 	* 2. Use Nav Modifier Volumes to apply custom area class data within the level, then
 	*
-	* 3. Create Query Filters which alter/exclude those custom nav areas. 
+	* 3. Create Query Filters which alter/exclude those custom nav areas.
 	*
-	* 4. Can then choose to use the filters per character or even per Move To using this node. 
+	* 4. Can then choose to use the filters per character or even per Move To using this node.
 	*
 	*  <3 Rama
 	*
@@ -265,52 +265,52 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	* @param bStopOnOverlap - Add pawn's radius to AcceptanceRadius
 	* @param bCanStrafe - Set focus related flag: bAllowStrafe
 	* @return Whether the Pawn's AI Controller is valid and goal can be pathed to
-	*/ 
+	*/
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|AI")
 	static EPathFollowingRequestResult::Type Victory_AI_MoveToWithFilter(
-		APawn* Pawn, 
-		const FVector& Dest, 
+		APawn* Pawn,
+		const FVector& Dest,
 		TSubclassOf<UNavigationQueryFilter> FilterClass = NULL,
-		float AcceptanceRadius = 0,  
+		float AcceptanceRadius = 0,
 		bool bProjectDestinationToNavigation = false,
 		bool bStopOnOverlap = false,
 		bool bCanStrafe = false
 	);
-	 
+
 	//~~~~~~~~~~~~~~~~
 	// 	GPU  <3 Rama
 	//~~~~~~~~~~~~~~~~
 
 	UFUNCTION(BlueprintPure,Category="Victory BP Library|GPU")
 	static FString Victory_GetGPUBrand()
-	{  
+	{
 		return FPlatformMisc::GetPrimaryGPUBrand();
 	}
 	UFUNCTION(BlueprintPure,Category="Victory BP Library|GPU", meta=(Keywords="GPU"))
 	static FString Victory_GetGRHIAdapterName()
-	{  
+	{
 		return GRHIAdapterName;
 	}
- 
+
 	UFUNCTION(BlueprintPure,Category="Victory BP Library|GPU")
 	static void Victory_GetGPUInfo(FString& DeviceDescription, FString& Provider, FString& DriverVersion, FString& DriverDate);
-	
+
 	//~~~~~~~~~~
 	// 	Core
 	//~~~~~~~~~~
 
-	/** 
-		Launch a new process, if it is not set to be detached, UE4 will not fully close until the other process completes. 
-		
+	/**
+		Launch a new process, if it is not set to be detached, UE4 will not fully close until the other process completes.
+
 		The new process id is returned!
-		
+
 		Priority options: -2 idle, -1 low, 0 normal, 1 high, 2 higher
-		
+
 		♥ Rama
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|System")
 	static void VictoryCreateProc(int32& ProcessId, FString FullPathOfProgramToRun,TArray<FString> CommandlineArgs,bool Detach,bool Hidden, int32 Priority=0, FString OptionalWorkingDirectory="");
-	
+
 	/** You can obtain ProcessID from processes you initiate via VictoryCreateProc */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|System")
 	static FString VictoryGetApplicationName(int32 ProcessId)
@@ -318,7 +318,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		//Please note it should really be uint32 but that is not supported by BP yet
 		return FPlatformProcess::GetApplicationName(ProcessId);
 	}
-	
+
 	/** You can obtain ProcessID from processes you initiate via VictoryCreateProc */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|System")
 	static bool VictoryIsApplicationRunning( int32 ProcessId )
@@ -343,26 +343,26 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 	UFUNCTION(BlueprintPure, Category = "Rama Save System|File IO")
 	static void UTCToLocal(const FDateTime& UTCTime, FDateTime& LocalTime)
-	{    
+	{
 		//Turn UTC into local ♥ Rama
 		FTimespan UTCOffset = FDateTime::Now() - FDateTime::UtcNow();
 		LocalTime = UTCTime;
 		LocalTime += UTCOffset;
 		//♥ Rama
 	}
-	
+
 	/** Game thread may pause while hashing is ocurring. Please note that hashing multi-gb size files is very very slow, smaller files will process much faster :) <3 Rama*/
 	UFUNCTION(BlueprintCallable,Category="Victory BP Library|MD5")
 	static bool CreateMD5Hash(FString FileToHash, FString FileToStoreHashTo );
-	 
+
 	/** Game thread may pause while hashing is ocurring. Please note that hashing multi-gb size files is very very slow, smaller files will process much faster :) <3 Rama */
 	UFUNCTION(BlueprintCallable,Category="Victory BP Library|MD5")
 	static bool CompareMD5Hash(FString MD5HashFile1, FString MD5HashFile2 );
-	
+
 	/** Dynamically change how frequently in seconds a component will tick! Can be altered at any point during game-time! ♥ Rama */
 	UFUNCTION(BlueprintCallable,Category="Victory BP Library|System")
 	static void SetComponentTickRate(UActorComponent* Component, float Seconds)
-	{   
+	{
 		if(!Component) return;
 		Component->PrimaryComponentTick.TickInterval = Seconds;
 	}
@@ -373,7 +373,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	{
 		return FCommandLine::Get();
 	}
-	
+
 	/**
 	* Create a new Texture Render Target 2D, ideal for use with Scene Capture Components created during runtime that need their own unique Render Targets
 	* @param 	Width Texture Width
@@ -382,101 +382,101 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	* @param 	Gamma Will override FTextureRenderTarget2DResource::GetDisplayGamma if > 0.
 	* @return	A new Texture Render Target 2D!
 	*
-	*/ 
+	*/
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Misc")
 	static UTextureRenderTarget2D* CreateTextureRenderTarget2D(int32 Width=256, int32 Height=256, FLinearColor ClearColor = FLinearColor::White, float Gamma = 1)
-	{   
+	{
 		UTextureRenderTarget2D* NewRenderTarget2D = NewObject<UTextureRenderTarget2D>();
 		if(!NewRenderTarget2D)
 		{
 			return nullptr;
-		} 
+		}
 		NewRenderTarget2D->ClearColor = FLinearColor::White;
-		NewRenderTarget2D->TargetGamma = Gamma; 
+		NewRenderTarget2D->TargetGamma = Gamma;
 		NewRenderTarget2D->InitAutoFormat(Width, Height);
-		return NewRenderTarget2D; 
+		return NewRenderTarget2D;
 	}
-	
+
 	//~~~~~~~~~~
 	// 	Physics
 	//~~~~~~~~~~
-	
+
 	/** Update the Angular Damping during runtime! Make sure the component is simulating physics before calling this! Returns false if the new value could not be set. */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Physics")
 	static bool VictoryPhysics_UpdateAngularDamping(UPrimitiveComponent* CompToUpdate, float NewAngularDamping);
-	
+
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Physics", meta=(Keywords="Closest Surface"))
 	static float GetDistanceToCollision(UPrimitiveComponent* CollisionComponent, const FVector& Point, FVector& ClosestPointOnCollision);
-	
+
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Physics", meta=(Keywords="Closest Surface"))
 	static float GetDistanceBetweenComponentSurfaces(UPrimitiveComponent* CollisionComponent1, UPrimitiveComponent* CollisionComponent2, FVector& PointOnSurface1, FVector& PointOnSurface2);
-	
+
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Physics", meta=(Keywords="APEX Piece fracture damage PhysX Physics"))
 	static bool VictoryDestructible_DestroyChunk(UDestructibleComponent* DestructibleComp, int32 HitItem);
-	 
-	
+
+
 	//~~~~~~~~~~
 	// 	Joy ISM
 	//~~~~~~~~~~
-	
+
 	/** Retrieve an array of all of the Victory Instanced Static Mesh Actors that have been created during runtime! */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Instanced Static Mesh",meta=(WorldContext="WorldContextObject"))
 	static void VictoryISM_GetAllVictoryISMActors(UObject* WorldContextObject, TArray<AVictoryISM*>& Out);
-	 
-	/** Finds all instances of a specified Blueprint or class, and all subclasses of this class, and converts them into a single Instanced Static Mesh Actor! Returns the created Victory ISM actors. Please note all actors of subclasses are found as well, so use a very specific blueprint / class if you only want to generate Victory ISM actors for specific classes! Ignores actor classes that dont have a static mesh component. Please note that instanced static mesh actors can only be created for actors sharing the same static mesh asset. Different Instanced Static Mesh Actors are created for each unique static mesh asset found in the whole group of actors! */ 
+
+	/** Finds all instances of a specified Blueprint or class, and all subclasses of this class, and converts them into a single Instanced Static Mesh Actor! Returns the created Victory ISM actors. Please note all actors of subclasses are found as well, so use a very specific blueprint / class if you only want to generate Victory ISM actors for specific classes! Ignores actor classes that dont have a static mesh component. Please note that instanced static mesh actors can only be created for actors sharing the same static mesh asset. Different Instanced Static Mesh Actors are created for each unique static mesh asset found in the whole group of actors! */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Instanced Static Mesh",meta=(WorldContext="WorldContextObject"))
 	static void VictoryISM_ConvertToVictoryISMActors(UObject* WorldContextObject, TSubclassOf<AActor> ActorClass, TArray<AVictoryISM*>& CreatedISMActors, bool DestroyOriginalActors=true, int32 MinCountToCreateISM=2);
-	 
+
 	//~~~~~~~~~~
 	// 	File I/O
 	//~~~~~~~~~~
-	
+
 	/** Obtain all files in a provided directory, with optional extension filter. All files are returned if Ext is left blank. Returns false if operation could not occur. */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|File IO")
 	static bool JoyFileIO_GetFiles(TArray<FString>& Files, FString RootFolderFullPath, FString Ext);
-	
+
 	/** Obtain all files in a provided root directory, including all subdirectories, with optional extension filter. All files are returned if Ext is left blank. The full file path is returned because the file could be in any subdirectory. Returns false if operation could not occur. */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|File IO")
 	static bool JoyFileIO_GetFilesInRootAndAllSubFolders(TArray<FString>& Files, FString RootFolderFullPath, FString Ext);
-	
+
 	/** Obtain a listing of all SaveGame file names that were saved using the Blueprint Save Game system. */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|File IO")
 	static void SaveGameObject_GetAllSaveSlotFileNames(TArray<FString>& FileNames);
-	
+
 	/** Returns false if the new file could not be created. The folder path must be absolute, such as C:\Users\Self\Documents\YourProject\MyPics. You can use my other Paths nodes to easily get absolute paths related to your project! <3 Rama */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Screenshots", meta=(Keywords="High resolution"))
 	static bool ScreenShots_Rename_Move_Most_Recent(FString& OriginalFileName, FString NewName, FString NewAbsoluteFolderPath, bool HighResolution=true);
-	
+
 	//~~~~ Key Re Binding ! ~~~~
 
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Key Rebinding")
 	static void VictoryGetAllAxisAndActionMappingsForKey(FKey Key, TArray<FVictoryInput>& ActionBindings, TArray<FVictoryInputAxis>& AxisBindings);
-	
+
 	//	Axis Mapping
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Key Rebinding")
 	static FVictoryInputAxis VictoryGetVictoryInputAxis(const FKeyEvent& KeyEvent);
-	
+
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Key Rebinding")
 	static void VictoryGetAllAxisKeyBindings(TArray<FVictoryInputAxis>& Bindings);
-		
+
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
 	static void VictoryRemoveAxisKeyBind(FVictoryInputAxis ToRemove);
-	
+
 	/** You can leave the AsString field blank :) Returns false if the key could not be found as an existing mapping!  Enjoy! <3  Rama */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
 	static bool VictoryReBindAxisKey(FVictoryInputAxis Original, FVictoryInputAxis NewBinding);
-		
+
 	static FORCEINLINE void UpdateAxisMapping(FInputAxisKeyMapping& Destination, const FVictoryInputAxis& VictoryInputBind)
-	{ 
+	{
 		Destination.Key = VictoryInputBind.Key;
 		Destination.Scale = VictoryInputBind.Scale;
 	}
-	
-	
+
+
 	//	Action Mapping
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Key Rebinding")
 	static FVictoryInput VictoryGetVictoryInput(const FKeyEvent& KeyEvent);
- 
+
 	static FORCEINLINE void UpdateActionMapping(FInputActionKeyMapping& Destination, const FVictoryInput& VictoryInputBind)
 	{
 		Destination.Key = VictoryInputBind.Key;
@@ -495,7 +495,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Key Rebinding")
 	static void VictoryRemoveActionKeyBind(FVictoryInput ToRemove);
-	
+
 	//~~~~~~~~~~~~~~~~~~~~
 
 	/** Change volume of Sound class of your choosing, sets the volume instantly! Returns false if the sound class was not found and volume was not set. */
@@ -507,72 +507,72 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	static float VictoryGetSoundVolume(USoundClass* SoundClassObject);
 
 	//~~~~~~~~~~~~~~~~~~~~
- 
+
 	/** The number of seconds that this actor has been in play, relative to Get Game Time In Seconds. */
 	UFUNCTION(BlueprintPure,  Category = "Victory BP Library|Actor")
-	static float GetTimeInPlay(AActor* Actor) 
+	static float GetTimeInPlay(AActor* Actor)
 	{
 		if(!Actor) return -1;
-		
+
 		UWorld* World = Actor->GetWorld();
-		 
+
 		//Use FApp Current Time as a back up
 		float CurrentTime = (World) ? World->GetTimeSeconds() : FApp::GetCurrentTime();
 		return CurrentTime - Actor->CreationTime;
 	}
-	
-	/** 
-	* Creates a plane centered on a world space point with a facing direction of Normal. 
-	* 
+
+	/**
+	* Creates a plane centered on a world space point with a facing direction of Normal.
+	*
 	* @param Center  The world space point the plane should be centered on (easy to observe with DrawDebugPlane)
 	* @param Normal  The facing direction of the plane (can receive a Rotator)
 	* @return Plane coordinates
 	*/
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Math|Plane", meta=(Keywords="make base plane"))
 	static FPlane CreatePlane(FVector Center, FVector Normal)
-	{ 
+	{
 		return FPlane(Center,Normal);
 	}
-	 
-	/** >0: point is in front of the plane, <0: behind, =0: on the plane **/ 
+
+	/** >0: point is in front of the plane, <0: behind, =0: on the plane **/
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Math|Plane")
 	static void PointDistanceToPlane(const FPlane& Plane, FVector Point,float& Distance)
-	{ 
+	{
 		Distance = Plane.PlaneDot(Point);
 	}
-	 
+
 	/** Use a larger tolerance to allow inaccuracy of measurement in certain situations */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Math|Plane")
 	static bool IsPointOnPlane(const FPlane& Plane, FVector Point, float Tolerance= 0.01)
-	{  
+	{
 		return FMath::Abs(Plane.PlaneDot(Point)) < Tolerance;
 	}
-	
+
 	/** Easily add to an integer! <3 Rama*/
 	UFUNCTION(BlueprintCallable, meta = (CompactNodeTitle = "+=",Keywords = "increment integer"), Category = "Victory BP Library|Math|Integer")
 	static void VictoryIntPlusEquals(UPARAM(ref) int32& Int, int32 Add, int32& IntOut);
-	
+
 	/** Easily subtract from an integer! <3 Rama*/
 	UFUNCTION(BlueprintCallable, meta = (CompactNodeTitle = "-=",Keywords = "decrement integer"), Category = "Victory BP Library|Math|Integer")
 	static void VictoryIntMinusEquals(UPARAM(ref) int32& Int, int32 Sub, int32& IntOut);
-	
+
 	/** Easily add to a float! <3 Rama*/
 	UFUNCTION(BlueprintCallable, meta = (CompactNodeTitle = "+=",Keywords = "increment float"), Category = "Victory BP Library|Math|Float")
 	static void VictoryFloatPlusEquals(UPARAM(ref) float& Float, float Add, float& FloatOut);
-	
+
 	/** Easily subtract from a float! <3 Rama*/
 	UFUNCTION(BlueprintCallable, meta = (CompactNodeTitle = "-=",Keywords = "decrement float"), Category = "Victory BP Library|Math|Float")
 	static void VictoryFloatMinusEquals(UPARAM(ref) float& Float, float Sub, float& FloatOut);
-	
+
 	/** Sort an integer array, smallest value will be at index 0 after sorting. Modifies the input array, no new data created. <3 Rama */
 	UFUNCTION(BlueprintCallable, meta = (Keywords = "sort integer array"), Category = "Victory BP Library|Array")
 	static void VictorySortIntArray(UPARAM(ref) TArray<int32>& IntArray, TArray<int32>& IntArrayRef);
-	
+
 	/** Sort a float array, smallest value will be at index 0 after sorting. Modifies the input array, no new data created. */
 	UFUNCTION(BlueprintCallable, meta = (Keywords = "sort float array"), Category = "Victory BP Library|Array")
 	static void VictorySortFloatArray(UPARAM(ref) TArray<float>& FloatArray, TArray<float>& FloatArrayRef);
-	
-	
+
+
 	/* Returns true if vector2D A is equal to vector2D B (A == B) within a specified error tolerance */
 	UFUNCTION(BlueprintPure, meta=(DisplayName = "Equal (vector2D)", CompactNodeTitle = "==", Keywords = "== equal"), Category="Victory BP Library|Math|Vector2D")
 	static bool EqualEqual_Vector2DVector2D(FVector2D A, FVector2D B, float ErrorTolerance = 1.e-4f)
@@ -588,7 +588,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	}
 
 	//~~~
-	
+
 	/**
 	 * Tries to reach Target based on distance from Current position, giving a nice smooth feeling when tracking a position.
 	 *
@@ -601,7 +601,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	//UFUNCTION(BlueprintPure, Category="Math|Interpolation", meta=(Keywords="position"))
 	UFUNCTION(BlueprintPure, Category="Victory BP Library|Math", meta=(Keywords="position"))
 	static FVector2D Vector2DInterpTo(FVector2D Current, FVector2D Target, float DeltaTime, float InterpSpeed);
-	
+
 	/**
 	 * Tries to reach Target at a constant rate.
 	 *
@@ -614,33 +614,33 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	//UFUNCTION(BlueprintPure, Category="Math|Interpolation", meta=(Keywords="position"))
 	UFUNCTION(BlueprintPure, Category="Victory BP Library|Math", meta=(Keywords="position"))
 	static FVector2D Vector2DInterpTo_Constant(FVector2D Current, FVector2D Target, float DeltaTime, float InterpSpeed);
-	
+
 	//~~~ Text To Number ~~~
-	
+
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Conversion")
 	static bool Text_IsNumeric(const FText& Text)
 	{
 		return Text.IsNumeric();
 	}
-	  
+
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Conversion", meta=(AdvancedDisplay = "1"))
 	static float Text_ToFloat(const FText& Text, bool UseDotForThousands=false)
-	{  
+	{
 		//because commas lead to string number being truncated, FText 10,000 becomes 10 for FString
 		FString StrFloat = Text.ToString();
 		TextNumFormat(StrFloat,UseDotForThousands);
-		return FCString::Atof(*StrFloat); 
-	}  
-	
+		return FCString::Atof(*StrFloat);
+	}
+
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Conversion", meta=(AdvancedDisplay = "1"))
 	static int32 Text_ToInt(const FText& Text, bool UseDotForThousands=false)
-	{   
+	{
 		//because commas lead to string number being truncated, FText 10,000 becomes 10 for FString
 		FString StrInt = Text.ToString();
 		TextNumFormat(StrInt,UseDotForThousands);
 		return FCString::Atoi(*StrInt);
 	}
-	  
+
 	static void TextNumFormat(FString& StrNum, bool UseDotForThousands)
 	{
 		//10.000.000,997
@@ -649,16 +649,16 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 			StrNum.ReplaceInline(TEXT("."),TEXT(""));	//no dots as they truncate
 			StrNum.ReplaceInline(TEXT(","),TEXT("."));	//commas become decimal
 		}
-		
+
 		//10,000,000.997
 		else
 		{
 			StrNum.ReplaceInline(TEXT(","),TEXT(""));  //decimal can stay, commas would truncate so remove
 		}
 	}
-	 
+
 	//~~~ End of Text To Number ~~~
-	
+
 	/** Returns Value mapped from one range into another where the value is clamped to the output range.  (e.g. 0.5 normalized from the range 0->1 to 0->50 would result in 25) */
 	UFUNCTION(BlueprintPure, Category="Victory BP Library|Math", meta=(Keywords = "get mapped value clamped"))
 	static float MapRangeClamped(float Value, float InRangeA, float InRangeB, float OutRangeA, float OutRangeB);
@@ -666,27 +666,27 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	/** Server Travel! This is an async load level process which allows you to put up a UMG widget while the level loading occurs! */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|System",meta=(WorldContext="WorldContextObject"))
 	static void ServerTravel(UObject* WorldContextObject,FString MapName, bool bNotifyPlayers=true);
-	
+
 	/** Get a Player Start by Name! */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|System",meta=(WorldContext="WorldContextObject"))
 	static APlayerStart* GetPlayerStart(UObject* WorldContextObject,FString PlayerStartName);
-	
+
 	/** Convert String Back To Vector. IsValid indicates whether or not the string could be successfully converted. */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Conversion",meta=(DisplayName = "String to Vector", CompactNodeTitle = "->"))
 	static void Conversions__StringToVector(const FString& String, FVector& ConvertedVector, bool& IsValid);
-	
+
 	/** Convert String Back To Rotator. IsValid indicates whether or not the string could be successfully converted. */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Conversion",meta=(DisplayName = "String to Rotator", CompactNodeTitle = "->"))
 	static void Conversions__StringToRotator(const FString& String, FRotator& ConvertedRotator, bool& IsValid);
-	
+
 	/** Convert String Back To Color. IsValid indicates whether or not the string could be successfully converted. */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Conversion",meta=(DisplayName = "String to Color", CompactNodeTitle = "->"))
 	static void Conversions__StringToColor(const FString& String, FLinearColor& ConvertedColor, bool& IsValid);
-	
+
 	/** Convert Color to String! */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Conversion",meta=(DisplayName = "Color to String ", CompactNodeTitle = "~>"))
 	static void Conversions__ColorToString(const FLinearColor& Color, FString& ColorAsString);
-	
+
 	/** Get Custom Config Var! These are stored in Saved/Config/Windows/Game.ini */
 	//UFUNCTION(BlueprintPure, Category = "Victory BP Library|Custom Config Vars!")
 	//static uint8 Victory_ConvertStringToByte(UEnum* Enum,FString String);
@@ -722,13 +722,13 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Custom Config Vars")
 	static FVector2D VictoryGetCustomConfigVar_Vector2D(FString SectionName, FString VariableName, bool& IsValid);
- 
+
 	//~~~~~~~~~~~~~~~~~~~~
 
 	/** Set Custom Config Var! These are stored in Saved/Config/Windows/Game.ini */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Custom Config Vars")
 	static void VictorySetCustomConfigVar_Vector2D(FString SectionName, FString VariableName, FVector2D Value);
-		
+
 	/** Set Custom Config Var! These are stored in Saved/Config/Windows/Game.ini */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Custom Config Vars")
 	static void VictorySetCustomConfigVar_Bool(FString SectionName, FString VariableName, bool Value);
@@ -758,10 +758,10 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Custom Config Vars")
 	static void VictorySetCustomConfigVar_String(FString SectionName, FString VariableName, FString Value);
 
- 
+
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Transform")
 	FRotator TransformVectorToActorSpaceAngle(AActor* Actor, const FVector& InVector);
-	
+
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Transform")
 	FVector TransformVectorToActorSpace(AActor* Actor, const FVector& InVector);
 
@@ -782,7 +782,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	/** Find all widgets of a certain class! Top level only means only widgets that are directly added to the viewport will be found */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|UMG", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject", DeterminesOutputType = "WidgetClass", DynamicOutputParam = "FoundWidgets"))
 	static void GetAllWidgetsOfClass(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass, TArray<UUserWidget*>& FoundWidgets, bool TopLevelOnly = true);
-  
+
 	/** Remove all widgets of a certain class from viewport! */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|UMG", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
 	static void RemoveAllWidgetsOfClass(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass);
@@ -793,7 +793,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	/** Handy helper to check if a Key Event was for specified Key ♥ Rama*/
 	UFUNCTION(BlueprintPure,Category="Victory BP Library|UMG", meta = (Keywords = "== match same equal"))
 	static void JoyIsKey(const FKeyEvent& KeyEvent, FKey Key, bool& Ctrl, bool& Shift, bool& Alt, bool& Cmd, bool& Match)
-	{     
+	{
 		Ctrl = KeyEvent.IsControlDown();
 		Alt =  KeyEvent.IsAltDown();
 		Shift = KeyEvent.IsShiftDown();
@@ -864,28 +864,28 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|AI",meta=(WorldContext="WorldContextObject"))
 		static AActor* GetClosestActorOfClassInRadiusOfLocation(UObject* WorldContextObject, TSubclassOf<AActor> ActorClass, FVector Center, float Radius, bool& IsValid);
-	 
+
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|AI",meta=(WorldContext="WorldContextObject"))
 		static AActor* GetClosestActorOfClassInRadiusOfActor(UObject* WorldContextObject, TSubclassOf<AActor> ActorClass, AActor* ActorCenter, float Radius, bool& IsValid);
-	  
+
 	/**
 	* Generates a box that is guaranteed to contain all of the supplied points.
 	*
 	* @param Points  The world space points that the box will encompass.
 	*/
-	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Misc")	
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Misc")
 	static void GetBoxContainingWorldPoints(const TArray<FVector>& Points, FVector& Center, FVector& Extent)
-	{ 
+	{
 		FBox Box(ForceInit);
-		
+
 		for(const FVector& Each : Points)
 		{
 			Box += Each;
-		} 
+		}
 		Center = Box.GetCenter();
 		Extent = Box.GetExtent();
 	}
-	 
+
 	/** Implementation of a Selection Marquee / Selection Box as a BP Node. AnchorPoint is the first clicked point, which user then drags from to make the box. Class filter is optional way to narrow the scope of actors that can be selected by the selection box! -Rama*/
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Misc", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
 		static void Selection_SelectionBox(UObject* WorldContextObject, TArray<AActor*>& SelectedActors, FVector2D AnchorPoint, FVector2D DraggedPoint, TSubclassOf<AActor> ClassFilter);
@@ -906,7 +906,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		UWorld* World = GEngine->GetWorldFromContextObjectChecked( WorldContextObject );
 		return World ? (World->GetNetMode() == NM_Standalone) : false;
 	}
-	 
+
 
 	/** Launches the specified URL in the OS default web browser :) <3 Rama */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|System")
@@ -978,7 +978,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	{
 		return FFileHelper::LoadFileToString( Result, *FullFilePath);
 	}
-		
+
 	//~~~
 
 	/** Max of all array entries. Returns -1 if the supplied array is empty. Returns the index of the max value as well as the value itself. */
@@ -1015,31 +1015,31 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		return Source.ReplaceInline(*SubString,TEXT(""),SearchCase);
 	}
 
-	
-	
+
+
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|String", meta=( Keywords = "concatenate append"))
 	static void VictoryAppendInline(UPARAM(ref) FString& String, const FString& ToAppend, FString& Result, bool AppendNewline=false)
-	{     
+	{
 		String += ToAppend;
 		if(AppendNewline) String += LINE_TERMINATOR;
-		Result = String;  
+		Result = String;
 	}
-	
+
 	/** Handy option to trim any extra 00: 's while keeping a base set of 00:ss as per user expectation. 00:05:30 will become 05:30. ♥ Rama */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|System")
 	static FString Victory_SecondsToHoursMinutesSeconds(float Seconds, bool TrimZeroes=true);
-	
+
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|String")
 	static bool IsAlphaNumeric(const FString& String);
-	
+
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|String")
 	static void Victory_GetStringFromOSClipboard(FString& FromClipboard);
-	
+
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|String")
 	static void Victory_SaveStringToOSClipboard(const FString& ToClipboard);
-	
+
 	/**
-	 * Returns whether or not the SearchIn string contains the supplied Substring.  
+	 * Returns whether or not the SearchIn string contains the supplied Substring.
 	 * 	Ex: "cat" is a contained within "concatenation" as a substring.
 	 * @param SearchIn The string to search within
 	 * @param Substring The string to look for in the SearchIn string
@@ -1052,18 +1052,18 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	/** Combines two strings together! The Separator and the Labels are optional*/
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|String")
 	static FString String__CombineStrings(FString StringFirst, FString StringSecond, FString Separator = "", FString StringFirstLabel = "", FString StringSecondLabel = "");
-  
+
 	/** Separator is always a space */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|String", meta=( Keywords = "concatenate append", CommutativeAssociativeBinaryOperator = "true"))
 	static FString String__CombineStrings_Multi(FString A, FString B);
-	  
+
 	/** Returns three arrays containing all of the resolutions and refresh rates for the current computer's current display adapter. You can loop over just 1 of the arrays and use the current index for the other two arrays, as all 3 arrays will always have the same length. Returns false if operation could not occur. */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|System", meta = (Keywords = "screen resolutions display adapter"))
 	static bool OptionsMenu__GetDisplayAdapterScreenResolutions(TArray<int32>& Widths, TArray<int32>& Heights, TArray<int32>& RefreshRates, bool IncludeRefreshRates = false);
 
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|GPU", meta=(Keyword="amd nvidia graphics card brand make model"))
 	static void GetUserDisplayAdapterBrand(bool& IsAMD, bool& IsNvidia, bool& IsIntel, bool& IsUnknown, int32& UnknownId);
-	
+
 	/** Clones an actor by obtaining its class and creating a copy. Returns the created Actor. The cloned actor is set to have the rotation and location of the initial actor. You can optionally specify location / rotation offsets for the new clone from original actor. Use IsValid to know if the actor was able to be cloned. */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Actor", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
 		static AStaticMeshActor* Clone__StaticMeshActor(UObject* WorldContextObject, bool&IsValid, AStaticMeshActor* ToClone, FVector LocationOffset = FVector(0, 0, 0), FRotator RotationOffset = FRotator(0, 0, 0));
@@ -1109,12 +1109,12 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Physics")
 		static bool Physics__UpdateCharacterCameraToRagdollLocation(AActor* TheCharacter, float HeightOffset = 128, float InterpSpeed = 3);
 
-		
+
 	/** This node checks all Scalar, Vector, and Texture parameters of a material to see if the supplied parameter name is an actual parameter in the material! ♥ Rama*/
 	UFUNCTION(BlueprintPure,Category="Victory BP Library|Material")
-	static bool DoesMaterialHaveParameter(UMaterialInterface* Mat, FName Parameter);	
-		
-		
+	static bool DoesMaterialHaveParameter(UMaterialInterface* Mat, FName Parameter);
+
+
 	/** Get Name as String*/
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|String")
 		static FString Accessor__GetNameAsString(const UObject* TheObject);
@@ -1126,17 +1126,17 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	/** Get Player Character's Player Controller. Requires: The Passed in Actor must be a character and it must be a player controlled character. IsValid will tell you if the return value is valid, make sure to do a Branch to confirm this! */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Character")
 		static APlayerController* Accessor__GetPlayerController(AActor* TheCharacter, bool&IsValid);
-	
+
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Input")
 	static void VictorySimulateMouseWheel(const float& Delta);
-	
+
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Input")
 	static void VictorySimulateKeyPress(APlayerController* ThePC, FKey Key, EInputEvent EventType);
-	 
+
 	/** This handy node lets you turn the rendering of the entire world on or off! Does not affect UMG or HUD, which allows you to use loading screens effectively! <3 Rama. Returns false if player controller could not be used to get the viewport. */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|System", meta=(keywords="disable show hide loading screen"))
 	static bool Viewport__EnableWorldRendering(const APlayerController* ThePC, bool RenderTheWorld);
-		
+
 	/** SET the Mouse Position! Returns false if the operation could not occur */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Input")
 		static bool Viewport__SetMousePosition(const APlayerController* ThePC, const float& PosX, const float& PosY);
@@ -1145,16 +1145,16 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Game Window")
 		static bool Viewport__GetMousePosition(const APlayerController* ThePC, float& PosX, float& PosY);
 
-		 
+
 	/** Get the coordinates of the center of the player's screen / viewport. Returns false if the operation could not occur */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Game Window")
 		static bool Viewport__GetCenterOfViewport(const APlayerController* ThePC, float& PosX, float& PosY);
 
-	
+
 	/** Convert Vector to Rotator*/
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Conversion")
 		static FRotator Conversions__VectorToRotator(const FVector& TheVector);
- 
+
 	/** Convert Rotator to Vector */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Conversion")
 		static FVector Conversions__RotatorToVector(const FRotator& TheRotator);
@@ -1163,8 +1163,8 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Conversion")
 		static FRotator Character__GetControllerRotation(AActor * TheCharacter);
 
-		
-		
+
+
 	/** Draw 3D Line of Chosen Thickness From Socket on Character's Mesh to Destination, conversion of AActor to ACharacter done internally for your convenience. Duration is in Seconds */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|3d Lines")
 		static void Draw__Thick3DLineFromCharacterSocket(AActor* TheCharacter, const FVector& EndPoint, FName Socket = FName("SocketName"), FLinearColor LineColor = FLinearColor(1, 0, 0, 1), float Thickness = 7, float Duration = -1.f);
@@ -1191,7 +1191,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|File IO")
 	static bool FileIO__SaveStringArrayToFile(FString SaveDirectory, FString JoyfulFileName, TArray<FString> SaveText, bool AllowOverWriting = false);
 
-	
+
 	/** Obtain an Array of Actors Rendered Recently. You can specifiy what qualifies as "Recent" in seconds. */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Actor", meta=(WorldContext="WorldContextObject"))
 		static void Visibility__GetRenderedActors(UObject* WorldContextObject, TArray<AActor*>& CurrentlyRenderedActors, float MinRecentTime = 0.01);
@@ -1207,7 +1207,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	/** Flashes the game on the windows OS task bar! Please note this won't look the best in PIE, flashing is smoother in Standalone or packaged game. You can use GameWindowIsForeGroundInOS to see if there is a need to get the user's attention! <3 Rama */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Game Window")
 	static void FlashGameOnTaskBar(APlayerController* PC, bool FlashContinuous=false, int32 MaxFlashCount = 3, int32 FlashFrequencyMilliseconds=500);
-	
+
 	/** Freeze Game Render, Does Not Stop Game Logic, Just Rendering. This is not like Pausing. Mainly useful for freezing render when window is not in the foreground */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Game Window")
 		static void Rendering__FreezeGameRendering();
@@ -1228,8 +1228,8 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Character")
 	static USkeletalMeshComponent* Accessor__GetCharacterSkeletalMesh(AActor* TheCharacter, bool& IsValid);
 
-	 
-	/** 
+
+	/**
 	 * Get All Bone Names Below Bone, requires a physics asset, by Rama
 	 *
 	 * @param StartingBoneName The name of the bone to find all bones below.
@@ -1240,7 +1240,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	 */
 	UFUNCTION(BlueprintCallable, Category="Victory BP Library|Components|SkinnedMesh")
 	static int32 GetAllBoneNamesBelowBone(USkeletalMeshComponent* SkeletalMeshComp, FName StartingBoneName,  TArray<FName>& BoneNames );
- 
+
 	/** Does Not Do A Trace, But Obtains the Start and End for doing a Trace:\n\nTakes in an actor (for convenience) and tries to cast it to Character. Takes in a socket name to find on the Character's Mesh component, the socket location will be the start of the trace.\n\nAlso takes in the Angle / Rotator and the length of the trace you want to do. Option to draw the trace with variable thickness as it occurs.\n\nReturns what the Trace Start and End should be so you can plug these into any existing trace node you want.\n\nRequires: Character Mesh Component must be valid. Returns False if trace could not be done */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Traces")
 	static bool TraceData__GetTraceDataFromCharacterSocket(FVector& TraceStart, FVector& TraceEnd, AActor * TheCharacter, const FRotator& TraceRotation, float TraceLength = 10240, FName Socket = "SocketName", bool DrawTraceData = true, FLinearColor TraceDataColor = FLinearColor(1, 0, 0, 1), float TraceDataThickness = 7);
@@ -1252,7 +1252,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	/** Does a simple line trace given Trace Start and End, and if a Character is hit by the trace, then a component trace is performed on that character's mesh. Trace Owner is ignored when doing the trace.\n\nReturns the Character that was hit, as an Actor, as well as the name of the bone that was closest to the impact point of the trace. Also returns the impact point itself as well as the impact normal.\n\nUsing component trace ensures accuracy for testing against bones and sockets.\n\nIsValid: Will be true only if the component trace also hit someting. But the Returned Actor will contain an actor if any actor at all was hit by the simple trace. */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Traces")
 		static AActor* Traces__CharacterMeshTrace___ClosestBone(AActor* TraceOwner, const FVector& TraceStart, const FVector& TraceEnd, FVector& OutImpactPoint, FVector& OutImpactNormal, FName& ClosestBoneName, FVector & ClosestBoneLocation, bool&IsValid);
- 
+
 	/** Does a simple line trace given Trace Start and End, and if a Character is hit by the trace, then a component trace is performed on that character's mesh. Returns the name of the socket that was closest to the impact point of the trace. Also returns the impact point itself as well as the impact normal. Also returns the Socket Location. Using component trace ensures accuracy for testing against bones and sockets.*/
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Traces",meta=(WorldContext="WorldContextObject"))
 		static AActor* Traces__CharacterMeshTrace___ClosestSocket(UObject* WorldContextObject, const AActor * TraceOwner, const FVector& TraceStart, const FVector& TraceEnd, FVector& OutImpactPoint, FVector& OutImpactNormal, FName& ClosestSocketName, FVector & SocketLocation, bool&IsValid);
@@ -1260,7 +1260,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	/** Returns the float as a String with Precision, Precision 0 = no decimal value. Precison 1 = 1 decimal place. The re-precisioned result is rounded appropriately. */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Conversion")
 	static void StringConversion__GetFloatAsStringWithPrecision(float TheFloat, FString & TheString, int32 Precision = 2, bool IncludeLeadingZero=true);
-  
+
 	/** Rotator out value is the degrees of difference between the player camera and the direction of player to light source. Returns false if the operation could not occur. */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Misc")
 		static bool LensFlare__GetLensFlareOffsets(APlayerController* PlayerController, AActor* LightSource, float& PitchOffset, float& YawOffset, float& RollOffset);
@@ -1313,27 +1313,27 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	/** InstallDir/WindowsNoEditor/ */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Paths")
 	static FString VictoryPaths__WindowsNoEditorDir();
-	
+
 	/** InstallDir/GameName */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Paths")
 	static FString VictoryPaths__GameRootDirectory();
-	
+
 	/** InstallDir/GameName/Saved */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Paths")
 	static FString VictoryPaths__SavedDir();
-	
+
 	/** InstallDir/GameName/Saved/Config/ */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Paths")
 	static FString VictoryPaths__ConfigDir();
-	
+
 	/** InstallDir/GameName/Saved/Screenshots/Windows */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Paths")
 	static FString VictoryPaths__ScreenShotsDir();
-	
+
 	/** InstallDir/GameName/Saved/Logs */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Paths")
 	static FString VictoryPaths__LogsDir();
-	
+
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1495,13 +1495,13 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		return CurMax;
 	}
 
-	
-	
+
+
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	//			  Contributed by Others
-	
+
 	/**
 	*
 	* Contributed by: Mindfane
@@ -1516,41 +1516,41 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	*/
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Victory BP Library|String", Keywords = "split explode string"), Category = String)
 	static void String__ExplodeString(TArray<FString>& OutputStrings, FString InputString, FString Separator = ",", int32 limit = 0, bool bTrimElements = false);
-	
+
 
 	//NOT QUITE WORKING, REQUIRES INVESTIGATION
 	/** Load a Texture 2D from a DDS file! Contributed by UE4 forum member n00854180t! */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Load Texture From File",meta=(Keywords="image DDS"))
 	static UTexture2D* LoadTexture2D_FromDDSFile(const FString& FullFilePath);
-	
+
 	/** Load a Texture2D from a JPG,PNG,BMP,ICO,EXR,ICNS file! IsValid tells you if file path was valid or not. Enjoy! -Rama */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Load Texture From File",meta=(Keywords="image png jpg jpeg bmp bitmap ico icon exr icns"))
 	static UTexture2D* Victory_LoadTexture2D_FromFile(const FString& FullFilePath,EJoyImageFormats ImageFormat,bool& IsValid, int32& Width, int32& Height);
-	
+
 	/** Load a Texture2D from a JPG,PNG,BMP,ICO,EXR,ICNS file! IsValid tells you if file path was valid or not. Enjoy! -Rama */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Load Texture From File",meta=(Keywords="image png jpg jpeg bmp bitmap ico icon exr icns"))
 	static UTexture2D* Victory_LoadTexture2D_FromFile_Pixels(const FString& FullFilePath,EJoyImageFormats ImageFormat,bool& IsValid, int32& Width, int32& Height, TArray<FLinearColor>& OutPixels);
-	 
+
 	/** Retrieve a pixel color value given the pixel array, the image height, and the coordinates. Returns false if the coordinates were not valid. Pixel coordinates start from upper left corner as 0,0. X= horizontal, Y = vertical */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Load Texture From File",meta=(Keywords="image coordinate index map value"))
 	static bool Victory_Get_Pixel(const TArray<FLinearColor>& Pixels, int32 ImageHeight, int32 x, int32 y, FLinearColor& FoundColor);
-	
+
 	/** Save an array of pixels to disk as a PNG! It is very important that you supply the curret width and height of the image! Returns false if Width * Height != Array length or file could not be saved to the location specified. I return an ErrorString to clarify what the exact issue was. -Rama */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Load Texture From File",meta=(Keywords="create image png jpg jpeg bmp bitmap ico icon exr icns"))
 	static bool Victory_SavePixels(const FString& FullFilePath,int32 Width, int32 Height, const TArray<FLinearColor>& ImagePixels, bool SaveAsBMP, bool sRGB, FString& ErrorString);
-	 
+
 	/** This will modify the original T2D to remove sRGB and change compression to VectorDisplacementMap to ensure accurate pixel reading. -Rama*/
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Load Texture From File",meta=(Keywords="create image png jpg jpeg bmp bitmap ico icon exr icns"))
 	static bool Victory_GetPixelFromT2D(UTexture2D* T2D, int32 X, int32 Y, FLinearColor& PixelColor);
-	
+
 	/** This will modify the original T2D to remove sRGB and change compression to VectorDisplacementMap to ensure accurate pixel reading. -Rama*/
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Load Texture From File",meta=(Keywords="create image png jpg jpeg bmp bitmap ico icon exr icns"))
 	static bool Victory_GetPixelsArrayFromT2D(UTexture2D* T2D, int32& TextureWidth, int32& TextureHeight,TArray<FLinearColor>& PixelArray);
-	
+
 	/** This will modify the original T2D to remove sRGB and change compression to VectorDisplacementMap to ensure accurate pixel reading. -Rama*/
 	//UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Load Texture From File",meta=(Keywords="create image png jpg jpeg bmp bitmap ico icon exr icns"))
 	static bool Victory_GetPixelsArrayFromT2DDynamic(UTexture2DDynamic* T2D, int32& TextureWidth, int32& TextureHeight,TArray<FLinearColor>& PixelArray);
-	  
+
 	/** Contributed by UE4 forum member n00854180t! Plays a .ogg sound from file, attached to and following the specified component. This is a fire and forget sound. Replication is also not handled at this point.
 	* @param FilePath - Path to sound file to play
 	* @param AttachComponent - Component to attach to.
@@ -1561,13 +1561,13 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	* @param VolumeMultiplier - Volume multiplier
 	* @param PitchMultiplier - PitchMultiplier
 	* @param AttenuationSettings - Override attenuation settings package to play sound with
-	*/ 
+	*/
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Sound", meta = (VolumeMultiplier = "1.0", PitchMultiplier = "1.0", AdvancedDisplay = "2", UnsafeDuringActorConstruction = "true"))
 	static class UAudioComponent* PlaySoundAttachedFromFile(const FString& FilePath, class USceneComponent* AttachToComponent, FName AttachPointName = NAME_None, FVector Location = FVector(ForceInit), EAttachLocation::Type LocationType = EAttachLocation::SnapToTarget, bool bStopWhenAttachedToDestroyed = false, float VolumeMultiplier = 1.f, float PitchMultiplier = 1.f, float StartTime = 0.f, class USoundAttenuation* AttenuationSettings = NULL);
-	 
+
 	/** Contributed by UE4 forum member n00854180t! Plays a .ogg sound at the given location. This is a fire and forget sound and does not travel with any actor. Replication is also not handled at this point.
 	*
-	* NOT SUPPORTED ON PS4. 
+	* NOT SUPPORTED ON PS4.
 	*
 	* @param FilePath - Path to sound file to play
 	* @param Location - World position to play sound at
@@ -1578,11 +1578,11 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Sound", meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject", VolumeMultiplier = "1.0", PitchMultiplier = "1.0", AdvancedDisplay = "3", UnsafeDuringActorConstruction = "true"))
 	static void PlaySoundAtLocationFromFile(UObject* WorldContextObject, const FString& FilePath, FVector Location, float VolumeMultiplier = 1.f, float PitchMultiplier = 1.f, float StartTime = 0.f, class USoundAttenuation* AttenuationSettings = NULL);
-	
-	/** Contributed by UE4 forum member n00854180t! Creates a USoundWave* from file path. 
+
+	/** Contributed by UE4 forum member n00854180t! Creates a USoundWave* from file path.
 	* Read .ogg header file and refresh USoundWave metadata.
 	*
-	* NOT SUPPORTED ON PS4. 
+	* NOT SUPPORTED ON PS4.
 	*
 	* @param FilePath		path to file to create sound wave from
 	*/
@@ -1591,7 +1591,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 #if !PLATFORM_PS4
 private:
-	// Thanks to @keru for the base code for loading an Ogg into a USoundWave: 
+	// Thanks to @keru for the base code for loading an Ogg into a USoundWave:
 	// https://forums.unrealengine.com/showthread.php?7936-Custom-Music-Player&p=97659&viewfull=1#post97659
 
 	     /**
@@ -1623,7 +1623,7 @@ private:
 		* can override with seed functions;
 		*/
 //----------------------------------------------------------------------------------------------BeginRANDOM
-public: 
+public:
 		/** Construct a random device, returns either a random device or the default random engine; system dependant;
 		*/
 		UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Random")
@@ -1680,7 +1680,7 @@ public:
 		*/
 		UFUNCTION(BlueprintPure, Category = "Victory BP Library|Random")
 			static float RandFloat_MINMAX_uniDis(float iMin, float iMax);
-		
+
 		/** Random Bool - Bernoulli distribution - Mersenne Twister
 		* @param fBias - Bias of Bernoulli distribution
 		* @return uniformly distributed bool based on bias parameter
@@ -1720,28 +1720,28 @@ public:
 /** Inspired by Sahkan! */
 UFUNCTION(BlueprintPure, Category = "Victory BP Library|Actor|Get Immediate Attached Actors")
 static void Actor__GetAttachedActors(AActor* ParentActor,TArray<AActor*>& ActorsArray);
-	
+
 /** Modify the bloom intensity of a post process volume, by Community Member Sahkan */
 UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Post Process")
 static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intensity);
-  
-  
+
+
 
 
 //~~~ Kris ~~~
 
-	/* 
+	/*
 	 *See if index is a valid index for this array
-	 *    
+	 *
 	 *@param    TargetArray        The array to perform the operation on
 	 *@param    Index            The index to check.
 	 *@return    Bool if integer is valid index for this array
 	*/
 	UFUNCTION(Category="Victory BP Library|Utilities|Array", BlueprintPure, CustomThunk, meta=(DisplayName = "Valid Index", CompactNodeTitle = "VALID INDEX", ArrayParm = "TargetArray"))
 	static bool Array_IsValidIndex(const TArray<int32>& TargetArray, int32 Index);
-	 
+
 	static bool GenericArray_IsValidIndex(void* TargetArray, const UArrayProperty* ArrayProp, int32 Index);
-	  
+
 	DECLARE_FUNCTION(execArray_IsValidIndex)
 	{
 		Stack.MostRecentProperty = nullptr;
@@ -1767,11 +1767,11 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 	/** Get the time target actor has been alive. */
 	UFUNCTION(Category = "Victory BP Library|Actor", BlueprintPure, Meta = (DefaultToSelf = "Target"))
 	static float GetTimeAlive(const AActor* Target);
-		
+
 	/** Contributed by Community Member Kris! */
 	UFUNCTION(Category = "Victory BP Library|SceneCapture", BlueprintPure)
 	static bool CaptureComponent2D_Project(class USceneCaptureComponent2D* Target, FVector Location, FVector2D& OutPixelLocation);
-	  
+
 	/** Contributed by Community Member Kris! */
 	UFUNCTION(Category = "Victory BP Library|SceneCapture", BlueprintPure, Meta = (DefaultToSelf = "Target"))
 	static bool Capture2D_Project(class ASceneCapture2D* Target, FVector Location, FVector2D& OutPixelLocation);
@@ -1783,7 +1783,7 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 	/** Currently the only supported format for this function is B8G8R8A8. Make sure to include the appropriate image extension in your file path! Recommended: .bmp, .jpg, .png. Contributed by Community Member Kris! */
 	UFUNCTION(Category = "Victory BP Library|SceneCapture", BlueprintCallable, Meta = (DefaultToSelf = "Target"))
 	static bool Capture2D_SaveImage(class ASceneCapture2D* Target, const FString ImagePath, const FLinearColor ClearColour);
-          
+
 	/** Make sure your image path has a valid extension! Supported types can be seen in the BP node Victory_LoadTexture2D_FromFile. Contributed by Community Member Kris! */
 	UFUNCTION(Category = "Victory BP Library|Load Texture From File", BlueprintCallable)
 	static UTexture2D*  LoadTexture2D_FromFileByExtension(const FString& ImagePath, bool& IsValid, int32& OutWidth, int32& OutHeight);
@@ -1792,7 +1792,7 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 	 * Find first widget of a certain class and return it.
 	 * @param WidgetClass The widget class to filter by.
 	 * @param TopLevelOnly Only a widget that is a direct child of the viewport will be returned.
-	 */  
+	 */
 	UFUNCTION(Category = "Victory BP Library|UMG", BlueprintCallable, BlueprintCosmetic, Meta = (WorldContext = "WorldContextObject", DeterminesOutputType = "WidgetClass"))
 	static UUserWidget* GetFirstWidgetOfClass(UObject* WorldContextObject, TSubclassOf<UUserWidget> WidgetClass, bool TopLevelOnly);
 
@@ -1802,7 +1802,7 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 	 */
 	UFUNCTION(Category = "Victory BP Library|UMG", BlueprintCallable, BlueprintCosmetic, Meta = (DefaultToSelf = "ChildWidget"))
 	static bool WidgetIsChildOf(UWidget* ChildWidget, UWidget* PossibleParent);
- 
+
 	/**
 	 * Recurses up the list of parents until it finds a widget of WidgetClass.
 	 * @return widget that is Parent of ChildWidget that matches WidgetClass.
@@ -1815,19 +1815,19 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 
 	UFUNCTION(Category = "Victory BP Library|UMG", BlueprintCallable, BlueprintCosmetic, Meta = (DefaultToSelf = "ParentUserWidget"))
 	static UWidget* GetWidgetFromName(UUserWidget* ParentUserWidget, const FName& Name);
-	
+
 	UFUNCTION(Category = "Victory BP Library|Team", BlueprintPure)
 	static uint8 GetGenericTeamId(AActor* Target);
 
 	UFUNCTION(Category = "Victory BP Library|Team", BlueprintCallable)
 	static void SetGenericTeamId(AActor* Target, uint8 NewTeamId);
-	
+
 	UFUNCTION(Category = "Victory BP Library|LevelStreaming", BlueprintCallable)
 	static FLevelStreamInstanceInfo GetLevelInstanceInfo(ULevelStreamingKismet* LevelInstance);
 
 	UFUNCTION(Category = "Victory BP Library|LevelStreaming", BlueprintCallable, Meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
 	static void AddToStreamingLevels(UObject* WorldContextObject, const FLevelStreamInstanceInfo& LevelInstanceInfo);
-	
+
 	UFUNCTION(Category = "Victory BP Library|LevelStreaming", BlueprintCallable, Meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
 	static void RemoveFromStreamingLevels(UObject* WorldContextObject, const FLevelStreamInstanceInfo& LevelInstanceInfo);
 
@@ -1836,13 +1836,13 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 	{
 		if(LevelInstance) LevelInstance->bShouldBeVisible = false;
 	}
-	 
+
 	UFUNCTION(Category = "Victory BP Library|LevelStreaming", BlueprintCallable, Meta = (keywords="remove"))
 	static void UnloadStreamingLevel(ULevelStreamingKismet* LevelInstance)
 	{
 		if(LevelInstance) LevelInstance->bShouldBeLoaded = false;
 	}
-	
+
 	static bool GenericArray_SortCompare(const UProperty* LeftProperty, void* LeftValuePtr, const UProperty* RightProperty, void* RightValuePtr);
 
 	/**
@@ -1900,7 +1900,7 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 	static void Component_PrestreamTextures(UMeshComponent* Target, float Seconds = 1.0f, bool bEnableStreaming = true, int32 CinematicTextureGroups = 0);
 
 	/**
-	 * Converts the screen position (primary screen's top left corner) supplied by pointer events or similar 
+	 * Converts the screen position (primary screen's top left corner) supplied by pointer events or similar
 	 * to the local space of viewport related to WorldContextObject.
 	 *
 	 * @param WorldContextObject	World context.
@@ -1939,7 +1939,7 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 	 */
 	UFUNCTION(Category = "Victory BP Library|Game|Viewport", BlueprintCallable, Meta = (WorldContext="WorldContextObject"))
 	static bool ViewportPositionDeproject(UObject* WorldContextObject, const FVector2D& ViewportPosition, FVector& OutWorldOrigin, FVector& OutWorldDirection);
-	
+
 	/**
 	 *	Inserts child widget into panel widget at given location.
 	 *	NOTE: The child widgets "Construct" event will be fired again!
@@ -1951,11 +1951,11 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 	 */
 	UFUNCTION(Category = "Victory BP Library|Widget|Panel", BlueprintCallable)
 	static class UPanelSlot* InsertChildAt(class UWidget* Parent, int32 Index, UWidget* Content);
-	
+
 	/** Flushes the current key state for target player controller. */
 	UFUNCTION(Category = "Victory BP Library|Input", BlueprintCallable)
 	static void FlushPressedKeys(class APlayerController* PlayerController);
-	
+
 	UFUNCTION(Category = "Victory BP Library|Vector", BlueprintPure)
 	static FVector GetVectorRelativeLocation(FVector ParentLocation, FRotator ParentRotation, FVector ChildLocation);
 
@@ -1974,14 +1974,14 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 	UFUNCTION(Category = "Victory BP Library|Actor", BlueprintPure, Meta = (DefaultToSelf = "ChildActor"))
 	static FRotator GetActorRelativeRotation(class AActor* ParentActor, class AActor* ChildActor);
 
-	/** 
+	/**
 	 *	Helper function to calculate vertical FOV from horizontal FOV and aspect ratio.
 	 *	Useful to for determining distance from camera fit in-game objects to the width of the screen.
 	 */
 	UFUNCTION(Category = "Victory BP Library|Game|Viewport", BlueprintPure)
 	static float HorizontalFOV(float VerticalFOV, float AspectRatio);
 
-	/** 
+	/**
 	 *	Helper function to calculate vertical FOV from horizontal FOV and aspect ratio.
 	 *	Useful to for determining distance from camera fit in-game objects to the height of the screen.
 	 */
@@ -1990,17 +1990,17 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 
 	UFUNCTION(Category = "Victory BP Library|Utilities|String", BlueprintPure, Meta = (DisplayName = "IsEmpty"))
 	static bool StringIsEmpty(const FString& Target);
-	
+
 //~~~~~~~~~
 
 //~~~ KeyToTruth ~~~
 
-//.h  
+//.h
 /* Addition of strings (A + B) with pins. Contributed by KeyToTruth */
 UFUNCTION(BlueprintPure, meta = (DisplayName = "Append Multiple", Keywords = "concatenate combine append strings", CommutativeAssociativeBinaryOperator = "true"), Category = "Victory BP Library|String")
 static FString AppendMultiple(FString A, FString B);
- 
+
 //~~~ Mhousse ~~~
 
-}; 
+};
 
