@@ -5748,5 +5748,25 @@ static void TESTINGInternalDrawDebugCircle(const UWorld* InWorld, const FMatrix&
 }
 
 
+// Get UClass from asset in AssetRegistry
+TArray<UClass*> UVictoryBPFunctionLibrary::GetClassFromAssetData(TArray<FAssetData>& InAssetData)
+{
+	TArray<UClass*> ClassArrayOut;
+	ClassArrayOut.Empty();
+	// Iterate over retrieved blueprint assets
+	for (FAssetData asset : InAssetData)
+	{
+		FString ObjPath = asset.ObjectPath.ToString().Append("_C");
+		UE_LOG(LogTemp, Warning, TEXT("Object path is : %s"), *ObjPath);
+		UE_LOG(LogTemp, Warning, TEXT("Trying to return BPClass!"));
+		
+		//Get UClass
+		ClassArrayOut.Add(StaticLoadClass(UObject::StaticClass(), NULL, *ObjPath, NULL, LOAD_None, NULL));
+	}
+	
+	return ClassArrayOut;
+
+}
+
 
 #undef LOCTEXT_NAMESPACE
