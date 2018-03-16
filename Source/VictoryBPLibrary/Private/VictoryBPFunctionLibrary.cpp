@@ -1671,29 +1671,29 @@ void UVictoryBPFunctionLibrary::VictorySetCustomConfigVar_String(FString Section
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-EVictoryHMDDevice UVictoryBPFunctionLibrary::GetHeadMountedDisplayDeviceType()
+FName UVictoryBPFunctionLibrary::GetHeadMountedDisplayDeviceType()
 {
-	if(!GEngine) return EVictoryHMDDevice::None;
+	/*
+		4.19 
+		The IHeadMountedDisplay::GetHMDDeviceType() method has been removed as it was not extensible 
+		enough. Code that needs know which XR plugin is currently active should use 
+		IXRTrackingSystem::GetSystemName() instead.
+	*/
+	if(!GEngine) return "None";
 	 
 	if (GEngine->XRSystem.IsValid() && GEngine->XRSystem->GetHMDDevice())
 	{  
 		//Actively connected?
 		if(!GEngine->XRSystem->GetHMDDevice()->IsHMDConnected())
 		{  
-			return EVictoryHMDDevice::None;
+			return "None";
 		} 
 		
-		switch (GEngine->XRSystem->GetHMDDevice()->GetHMDDeviceType())
-		{       
-			case EHMDDeviceType::DT_OculusRift 				: return EVictoryHMDDevice::OculusRift;
-			case EHMDDeviceType::DT_Morpheus 				: return EVictoryHMDDevice::Morpheus;
-			case EHMDDeviceType::DT_SteamVR 				: return EVictoryHMDDevice::SteamVR;
-			case EHMDDeviceType::DT_ES2GenericStereoMesh 	: return EVictoryHMDDevice::ES2GenericStereoMesh;
-			case EHMDDeviceType::DT_GearVR 					: return EVictoryHMDDevice::GearVR;
-		}
+		//!See IIdentifiableXRDevice.h
+		return GEngine->XRSystem->GetSystemName();
 	}
 	  
-	return EVictoryHMDDevice::None;
+	return "None";
 }
 
 
@@ -3760,218 +3760,6 @@ bool UVictoryBPFunctionLibrary::LensFlare__GetLensFlareOffsets(
 	RollOffset = Offsets.Roll;
 	return true;
 }
-
-
-bool UVictoryBPFunctionLibrary::AnimatedVertex__GetAnimatedVertexLocations(
-	USkeletalMeshComponent* Mesh, 
-	TArray<FVector>& Locations
-){
-	if(!Mesh) return false;
-	if(!Mesh->SkeletalMesh) return false;
-	//~~~~~~~~~
-	 
-	//~~~~~~~~~~~~~
-	Locations.Empty(); 
-	//~~~~~~~~~~~~~
-	 
-	Mesh->ComputeSkinnedPositions(Locations);
-	
-	FTransform ToWorld = Mesh->GetComponentTransform();
-	FVector WorldLocation = ToWorld.GetLocation();
-	
-	for(FVector& Each : Locations)
-	{
-		Each = WorldLocation + ToWorld.TransformVector(Each);
-	} 
-	
-	return true;
-}
-	
-/*
-bool UVictoryBPFunctionLibrary::AnimatedVertex__GetAnimatedVertexLocationsAndNormals(
-	USkeletalMeshComponent* Mesh, 
-	TArray<FVector>& Locations, 
-	TArray<FVector>& Normals 
-)
-{
-	if(!Mesh) return false;
-	if(!Mesh->SkeletalMesh) return false;
-	//~~~~~~~~~
-	
-	Locations.Empty(); 
-	Normals.Empty();
-	//~~~~~~~~~~~~~~~~~~~
-	
-	//	Get the Verticies For Each Bone, Most Influenced by That Bone!
-	//					Vertices are in Bone space.
-	TArray<FBoneVertInfo> BoneVertexInfos;
-	FSkeletalMeshTools::CalcBoneVertInfos(Mesh->SkeletalMesh,BoneVertexInfos,true); //true = only dominant influence
-	
-	//~~~~~~~~~~~~~~~~~~~~~
-	int32 VertItr = 0;
-	FBoneVertInfo* EachBoneVertInfo;
-	FVector BoneWorldPos;
-	int32 NumOfVerticies;
-	FTransform RV_Transform;
-	FVector RV_Vect;
-	for(int32 Itr=0; Itr < BoneVertexInfos.Num() ; Itr++)
-	{
-		EachBoneVertInfo = &BoneVertexInfos[Itr];
-		//~~~~~~~~~~~~~~~~~~~~~~~~
-		
-		//Bone Transform To World Space, and Location
-		RV_Transform = Mesh->GetBoneTransform(Itr);
-		BoneWorldPos = RV_Transform.GetLocation();
-		
-		//How many verts is this bone influencing?
-		NumOfVerticies = EachBoneVertInfo->Positions.Num();
-		for(VertItr=0; VertItr < NumOfVerticies ; VertItr++)
-		{
-			//Animated Vertex Location!
-			Locations.Add(  BoneWorldPos + RV_Transform.TransformVector(EachBoneVertInfo->Positions[VertItr])  );
-		
-			//Animated Vertex Normal for rotating the emitter!!!!!
-			Normals.Add(  RV_Transform.TransformVector(EachBoneVertInfo->Normals[VertItr])  );
-		}
-	}
-	
-	//~~~ Cleanup ~~~
-	BoneVertexInfos.Empty();
-	
-	return true;
-}
-	
-bool UVictoryBPFunctionLibrary::AnimatedVertex__DrawAnimatedVertexLocations(
-	UObject* WorldContextObject,
-	USkeletalMeshComponent* Mesh, 
-	float ChanceToSkipAVertex, 
-	bool DrawNormals
-)
-{
-	UWorld* const TheWorld = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
-	
-	if(!TheWorld) return false;
-	if(!Mesh) return false;
-	if(!Mesh->SkeletalMesh) return false;
-	//~~~~~~~~~
-	
-	//	Get the Verticies For Each Bone, Most Influenced by That Bone!
-	//					Vertices are in Bone space.
-	TArray<FBoneVertInfo> BoneVertexInfos;
-	FSkeletalMeshTools::CalcBoneVertInfos(Mesh->SkeletalMesh,BoneVertexInfos,true); //true = only dominant influence
-	
-	//~~~~~~~~~~~~~~~~~~~~~
-	int32 VertItr = 0;
-	FBoneVertInfo* EachBoneVertInfo;
-	FVector BoneWorldPos;
-	int32 NumOfVerticies;
-	FTransform RV_Transform;
-	FVector RV_Vect;
-	
-	const FColor HappyRed = FColor(255,0,0);
-	const FColor HappyBlue = FColor(0,0,255);
-	for(int32 Itr=0; Itr < BoneVertexInfos.Num() ; Itr++)
-	{
-		EachBoneVertInfo = &BoneVertexInfos[Itr];
-		//~~~~~~~~~~~~~~~~~~~~~~~~
-		
-		//Bone Transform To World Space, and Location
-		RV_Transform = Mesh->GetBoneTransform(Itr);
-		BoneWorldPos = RV_Transform.GetLocation();
-		
-		//How many verts is this bone influencing?
-		NumOfVerticies = EachBoneVertInfo->Positions.Num();
-		for(VertItr=0; VertItr < NumOfVerticies ; VertItr++)
-		{
-			if(FMath::FRandRange(0, 1) < ChanceToSkipAVertex) continue;
-			//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			
-			RV_Vect = BoneWorldPos + RV_Transform.TransformVector(EachBoneVertInfo->Positions[VertItr]);
-			
-			DrawDebugPoint(
-				TheWorld, 
-				RV_Vect,
-				12, 
-				HappyRed, 
-				false, 
-				0.03
-			);
-			
-			if(DrawNormals)
-			{
-			DrawDebugLine(
-				TheWorld, 
-				RV_Vect, 
-				RV_Vect + RV_Transform.TransformVector(EachBoneVertInfo->Normals[VertItr] * 64),  
-				HappyBlue, 
-				false, 
-				0.03, 
-				0, 
-				1
-			);
-			}
-		}
-	}
-	
-	//~~~ Cleanup ~~~
-	BoneVertexInfos.Empty();
-	
-	return true;
-}
-	
-bool UVictoryBPFunctionLibrary::AnimatedVertex__GetCharacterAnimatedVertexLocations(
-	AActor* TheCharacter, 
-	TArray<FVector>& Locations
-)
-{
-	ACharacter * AsCharacter = Cast<ACharacter>(TheCharacter);
-	if (!AsCharacter) return false;
-	
-	USkeletalMeshComponent* Mesh = AsCharacter->GetMesh();
-	if (!Mesh) return false;
-	//~~~~~~~~~~~~~~~~~~~~
-	
-	AnimatedVertex__GetAnimatedVertexLocations(Mesh,Locations);
-	
-	return true;
-}
-	
-bool UVictoryBPFunctionLibrary::AnimatedVertex__GetCharacterAnimatedVertexLocationsAndNormals(
-	AActor* TheCharacter, 
-	TArray<FVector>& Locations, 
-	TArray<FVector>& Normals 
-)
-{
-	ACharacter * AsCharacter = Cast<ACharacter>(TheCharacter);
-	if (!AsCharacter) return false;
-	
-	USkeletalMeshComponent* Mesh = AsCharacter->GetMesh();
-	if (!Mesh) return false;
-	//~~~~~~~~~~~~~~~~~~~~
-	
-	AnimatedVertex__GetAnimatedVertexLocationsAndNormals(Mesh,Locations,Normals);
-	
-	return true;
-}
-	
-bool UVictoryBPFunctionLibrary::AnimatedVertex__DrawCharacterAnimatedVertexLocations(
-	AActor* TheCharacter, 
-	float ChanceToSkipAVertex, 
-	bool DrawNormals
-)
-{	
-	ACharacter * AsCharacter = Cast<ACharacter>(TheCharacter);
-	if (!AsCharacter) return false;
-	
-	USkeletalMeshComponent* Mesh = AsCharacter->GetMesh();
-	if (!Mesh) return false;
-	//~~~~~~~~~~~~~~~~~~~~
-	
-	AnimatedVertex__DrawAnimatedVertexLocations(TheCharacter,Mesh,ChanceToSkipAVertex,DrawNormals);
-	
-	return true;
-}
-*/
 
 //SMA Version
 float UVictoryBPFunctionLibrary::DistanceToSurface__DistaceOfPointToMeshSurface(AStaticMeshActor* TheSMA, const FVector& TestPoint, FVector& ClosestSurfacePoint)

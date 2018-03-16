@@ -61,6 +61,9 @@ enum class EJoyImageFormats : uint8
 	ICNS		UMETA(DisplayName="ICNS        ")
 };
 
+//! REMOVE THIS AFTER A FEW VERSIONS
+//!
+//!
 UENUM(BlueprintType)
 enum class EVictoryHMDDevice : uint8
 {
@@ -767,7 +770,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|UMG", meta=(keywords="HMD vive oculus rift gearvr morpheus"))
-	static EVictoryHMDDevice GetHeadMountedDisplayDeviceType();
+	static FName GetHeadMountedDisplayDeviceType();
 
 
 	/** The FName that is expected is the exact same format as when you right click on asset -> Copy Reference! You can directly paste copied references into this node! IsValid lets you know if the path was correct or not and I was able to load the object. MAKE SURE TO SAVE THE RETURNED OBJECT AS A VARIABLE. Otherwise your shiny new asset will get garbage collected. I recommend you cast the return value to the appropriate object and then promote it to a variable :)  -Rama */
@@ -1264,35 +1267,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	/** Rotator out value is the degrees of difference between the player camera and the direction of player to light source. Returns false if the operation could not occur. */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Misc")
 		static bool LensFlare__GetLensFlareOffsets(APlayerController* PlayerController, AActor* LightSource, float& PitchOffset, float& YawOffset, float& RollOffset);
-
-	//~~~~~~~~~~~~~
-
-	/** Returns false if the operation could not occur. PawnVelocityCorrection is deprecated as of 4.9 due to internal improvements in the Engine. */
-	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Misc")
-	static bool AnimatedVertex__GetAnimatedVertexLocations(USkeletalMeshComponent* Mesh, TArray<FVector>& Locations);
-
-	/** Returns false if the operation could not occur. */
-	//UFUNCTION(BlueprintCallable, Category = "Victory BP Library")
-	//static bool AnimatedVertex__GetAnimatedVertexLocationsAndNormals(USkeletalMeshComponent* Mesh, TArray<FVector>& Locations, TArray<FVector>& Normals );
-
-	/** 0 never skip, 0.5 = 50% chance to skip, 1 = skip all. Returns false if the operation could not occur. */
-	//UFUNCTION(BlueprintCallable, Category = "Victory BP Library", meta=(HidePin="WorldContextObject", DefaultToSelf="WorldContextObject" ))
-	//static bool AnimatedVertex__DrawAnimatedVertexLocations(UObject* WorldContextObject, USkeletalMeshComponent* Mesh, float ChanceToSkipAVertex=0.777, bool DrawNormals=false);
-
-	//~~~~~~~~~~~~~
-
-	/** Returns false if the operation could not occur. */
-	//UFUNCTION(BlueprintCallable, Category = "Victory BP Library", meta=(DefaultToSelf="TheCharacter"))
-	//static bool AnimatedVertex__GetCharacterAnimatedVertexLocations(AActor* TheCharacter, TArray<FVector>& Locations );
-
-	/** Returns false if the operation could not occur. */
-	//UFUNCTION(BlueprintCallable, Category = "Victory BP Library", meta=(DefaultToSelf="TheCharacter"))
-	//static bool AnimatedVertex__GetCharacterAnimatedVertexLocationsAndNormals(AActor* TheCharacter, TArray<FVector>& Locations, TArray<FVector>& Normals );
-
-	/** 0 never skip, 0.5 = 50% chance to skip, 1 = skip all.. Returns false if the operation could not occur. */
-	//UFUNCTION(BlueprintCallable, Category = "Victory BP Library")
-	//static bool AnimatedVertex__DrawCharacterAnimatedVertexLocations(AActor* TheCharacter, float ChanceToSkipAVertex=0.777, bool DrawNormals=false);
-
+	
 	/** Retrieve Distance of given point to any Surface point on a Static Mesh Actor. Returns the distance as well as the exact closest point on the mesh surface to the given point. Returns -1 if an error occurred*/
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Misc")
 		static float DistanceToSurface__DistaceOfPointToMeshSurface(AStaticMeshActor* TheSMA, const FVector& TestPoint, FVector& ClosestSurfacePoint);
