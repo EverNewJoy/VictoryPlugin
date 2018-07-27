@@ -1809,13 +1809,13 @@ static void SetBloomIntensity(APostProcessVolume* PostProcessVolume,float Intens
 	UFUNCTION(Category = "Victory BP Library|LevelStreaming", BlueprintCallable, Meta = (keywords="remove"))
 	static void HideStreamingLevel(ULevelStreamingKismet* LevelInstance)
 	{
-		if(LevelInstance) LevelInstance->bShouldBeVisible = false;
+		if(LevelInstance) LevelInstance->SetShouldBeVisible(false);
 	}
 
 	UFUNCTION(Category = "Victory BP Library|LevelStreaming", BlueprintCallable, Meta = (keywords="remove"))
 	static void UnloadStreamingLevel(ULevelStreamingKismet* LevelInstance)
 	{
-		if(LevelInstance) LevelInstance->bShouldBeLoaded = false;
+		if(LevelInstance) LevelInstance->SetShouldBeLoaded(false);
 	}
 
 	static bool GenericArray_SortCompare(const UProperty* LeftProperty, void* LeftValuePtr, const UProperty* RightProperty, void* RightValuePtr);

@@ -58,6 +58,8 @@ public class VictoryBPLibrary : ModuleRules
   
                 "AIModule",
 				
+				"NavigationSystem",
+				
 				//FPlatformApplicationMisc
 				"ApplicationCore"
 			}
