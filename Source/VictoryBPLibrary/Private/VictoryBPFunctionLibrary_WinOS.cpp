@@ -6,7 +6,7 @@
 #include "VictoryBPFunctionLibrary.h"
 
 #if PLATFORM_WINDOWS
-#include "AllowWindowsPlatformTypes.h"
+#include "Runtime/Core/Public/Windows/AllowWindowsPlatformTypes.h"
 //#include "AdditionalWindowsHeaders.h"
 #endif
 
@@ -61,5 +61,5 @@ void UVictoryBPFunctionLibrary::FlashGameOnTaskBar(APlayerController* PC, bool F
 
 
 #if PLATFORM_WINDOWS
-#include "HideWindowsPlatformTypes.h"
+#include "Runtime/Core/Public/Windows/HideWindowsPlatformTypes.h"
 #endif

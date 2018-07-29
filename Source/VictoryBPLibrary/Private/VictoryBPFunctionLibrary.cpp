@@ -22,7 +22,7 @@
 #include "GenericTeamAgentInterface.h"
 
 //For PIE error messages
-#include "MessageLog.h"
+#include "Runtime/Core/Public/Logging/MessageLog.h"
 #define LOCTEXT_NAMESPACE "Fun BP Lib"
 
 //Use MessasgeLog like this: (see GameplayStatics.cpp
