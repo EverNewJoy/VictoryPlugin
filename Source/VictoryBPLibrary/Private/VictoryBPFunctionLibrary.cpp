@@ -314,7 +314,7 @@ ULevelStreaming* UVictoryBPFunctionLibrary::VictoryLoadLevelInstance(
 	FName LevelFName = FName(*FullName);
     FString PackageFileName = FullName;   
 	
-    ULevelStreamingKismet* StreamingLevel = NewObject<ULevelStreamingKismet>(World, ULevelStreamingKismet::StaticClass(), NAME_None, RF_Transient, NULL);
+    ULevelStreamingDynamic* StreamingLevel = NewObject<ULevelStreamingDynamic>(World, ULevelStreamingDynamic::StaticClass(), NAME_None, RF_Transient, NULL);
 	
 	if(!StreamingLevel)
 	{
@@ -3255,6 +3255,7 @@ AActor*  UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestBone(
 		TraceEnd, 
 		true, 
 		false, 
+		false,
 		OutImpactPoint, 
 		OutImpactNormal,
 		ClosestBoneName,
@@ -3327,6 +3328,7 @@ AActor* UVictoryBPFunctionLibrary::Traces__CharacterMeshTrace___ClosestSocket(
 		TraceEnd, 
 		true, 
 		false, 
+		false,
 		OutImpactPoint, 
 		OutImpactNormal,
 		BoneName,
@@ -5098,7 +5100,7 @@ void UVictoryBPFunctionLibrary::SetGenericTeamId(AActor* Target, uint8 NewTeamId
 	}
 }
 
-FLevelStreamInstanceInfo::FLevelStreamInstanceInfo(ULevelStreamingKismet* LevelInstance)
+FLevelStreamInstanceInfo::FLevelStreamInstanceInfo(ULevelStreamingDynamic* LevelInstance)
 {
 	PackageName = LevelInstance->GetWorldAssetPackageFName();
 	PackageNameToLoad = LevelInstance->PackageNameToLoad;
@@ -5110,7 +5112,7 @@ FLevelStreamInstanceInfo::FLevelStreamInstanceInfo(ULevelStreamingKismet* LevelI
 	LODIndex = LevelInstance->GetLevelLODIndex();
 };
 
-FLevelStreamInstanceInfo UVictoryBPFunctionLibrary::GetLevelInstanceInfo(ULevelStreamingKismet* LevelInstance)
+FLevelStreamInstanceInfo UVictoryBPFunctionLibrary::GetLevelInstanceInfo(ULevelStreamingDynamic* LevelInstance)
 {
 	return FLevelStreamInstanceInfo(LevelInstance);
 }
@@ -5149,7 +5151,7 @@ void UVictoryBPFunctionLibrary::AddToStreamingLevels(UObject* WorldContextObject
 			GEngine->DelayGarbageCollection();
 
 			// Setup streaming level object that will load specified map
-			ULevelStreamingKismet* StreamingLevel = NewObject<ULevelStreamingKismet>(World, ULevelStreamingKismet::StaticClass(), NAME_None, RF_Transient, nullptr);
+			ULevelStreamingDynamic* StreamingLevel = NewObject<ULevelStreamingDynamic>(World, ULevelStreamingDynamic::StaticClass(), NAME_None, RF_Transient, nullptr);
 			StreamingLevel->SetWorldAssetByPackageName(PackageName);
 			StreamingLevel->LevelColor = FColor::MakeRandomColor();
 			StreamingLevel->SetShouldBeLoaded(LevelInstanceInfo.bShouldBeLoaded);
