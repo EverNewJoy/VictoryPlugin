@@ -2240,7 +2240,12 @@ void UVictoryBPFunctionLibrary::Selection_SelectionBox(UObject* WorldContextObje
 		}
 	}
 }
-
+//Provided by Starkium :)
+void UVictoryBPFunctionLibrary::DestroyController(AController* Target)
+{
+	//Currently does nothing, insert code here to delete the controller or call the function in the controller.
+	Target->Destroy();
+}
 bool UVictoryBPFunctionLibrary::PlayerController_GetControllerID(APlayerController* ThePC, int32& ControllerID)
 {
 	if(!ThePC) return false;

@@ -900,6 +900,11 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Controller")
 		static bool PlayerController_GetControllerID(APlayerController* ThePC, int32& ControllerID);
 
+	/** Work around for deleting a controller since it is disabled by default in blueprints. Provided by Starkium :) */
+
+	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Controller")
+		static void DestroyController(AController* Target);
+
 	/** Get the Unique PlayerID from the PlayerState for a supplied Player Controller. Returns false if operation could not occur. Epic accepted my pull request for this a while back so now you can just GetPlayerState and directly access <3 Rama*/
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Networking")
 	static bool PlayerState_GetPlayerID(APlayerController* ThePC, int32& PlayerID);
