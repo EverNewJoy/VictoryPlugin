@@ -15,6 +15,9 @@
 //MD5 Hash
 #include "Runtime/Core/Public/Misc/SecureHash.h"
 
+#include "Runtime/Engine/Public/VorbisAudioInfo.h"
+
+
 #include "StaticMeshResources.h"
 
 #include "HeadMountedDisplay.h"
