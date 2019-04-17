@@ -672,6 +672,10 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|System",meta=(WorldContext="WorldContextObject"))
 	static void ServerTravel(UObject* WorldContextObject,FString MapName, bool bNotifyPlayers=true);
 
+	/** Client Travel! This is an async Load Level process which allows you to put up a UMG widget while the Level Loading occurs! */
+		UFUNCTION(BlueprintCallable, Category = "Victory BP Library|System", meta = (WorldContext = "WorldContextObject"))
+			static void ClientTravel(UObject* WorldContextObject, APlayerController* PlayerController, FString MapName, bool bSeamless, FGuid MapPackageGuid);
+
 	/** Get a Player Start by Name! */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|System",meta=(WorldContext="WorldContextObject"))
 	static APlayerStart* GetPlayerStart(UObject* WorldContextObject,FString PlayerStartName);
@@ -1269,7 +1273,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	/** Rotator out value is the degrees of difference between the player camera and the direction of player to light source. Returns false if the operation could not occur. */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Misc")
 		static bool LensFlare__GetLensFlareOffsets(APlayerController* PlayerController, AActor* LightSource, float& PitchOffset, float& YawOffset, float& RollOffset);
-	
+
 	/** Retrieve Distance of given point to any Surface point on a Static Mesh Actor. Returns the distance as well as the exact closest point on the mesh surface to the given point. Returns -1 if an error occurred*/
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Misc")
 		static float DistanceToSurface__DistaceOfPointToMeshSurface(AStaticMeshActor* TheSMA, const FVector& TestPoint, FVector& ClosestSurfacePoint);
@@ -1980,4 +1984,3 @@ static FString AppendMultiple(FString A, FString B);
 //~~~ Mhousse ~~~
 
 };
-
