@@ -670,7 +670,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 	/** Server Travel! This is an async load level process which allows you to put up a UMG widget while the level loading occurs! */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|System",meta=(WorldContext="WorldContextObject"))
-	static void ServerTravel(UObject* WorldContextObject,FString MapName, bool bNotifyPlayers=true);
+	static void ServerTravel(UObject* WorldContextObject,FString MapName, bool bSkipNotifyPlayers=false);
 
 	/** Get a Player Start by Name! */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|System",meta=(WorldContext="WorldContextObject"))
