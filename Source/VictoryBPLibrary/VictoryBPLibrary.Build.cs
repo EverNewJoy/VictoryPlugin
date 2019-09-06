@@ -53,7 +53,8 @@ public class VictoryBPLibrary : ModuleRules
 				"UMG", "Slate", "SlateCore",
 				
 				"ImageWrapper",
-				
+
+                "PhysicsCore", 
 				"PhysX", 
 				
 				"HeadMountedDisplay",
