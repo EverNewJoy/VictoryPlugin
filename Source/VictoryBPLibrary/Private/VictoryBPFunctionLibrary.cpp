@@ -1309,7 +1309,7 @@ bool UVictoryBPFunctionLibrary::IsWidgetOfClassInViewport(UObject* WorldContextO
 	return false;
 }
  
-void UVictoryBPFunctionLibrary::ServerTravel(UObject* WorldContextObject, FString MapName,bool bNotifyPlayers)
+void UVictoryBPFunctionLibrary::ServerTravel(UObject* WorldContextObject, FString MapName,bool bSkipNotifyPlayers)
 { 
 	if(!WorldContextObject) return;
 	 
@@ -1317,7 +1317,7 @@ void UVictoryBPFunctionLibrary::ServerTravel(UObject* WorldContextObject, FStrin
 	if(!World) return;
 	//~~~~~~~~~~~
 	 
-	World->ServerTravel(MapName,false,bNotifyPlayers); //abs //notify players
+	World->ServerTravel(MapName,false,bSkipNotifyPlayers); //abs //notify players
 }
 APlayerStart* UVictoryBPFunctionLibrary::GetPlayerStart(UObject* WorldContextObject,FString PlayerStartName)
 {
