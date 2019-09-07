@@ -448,6 +448,10 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|File IO")
 	static void SaveGameObject_GetAllSaveSlotFileNames(TArray<FString>& FileNames);
 
+	/** Obtain the last SaveGame file that was saved  using the Blueprint Save Game system. */
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|File IO")
+	static void SaveGameObject_GetMostRecentSaveSlotFileName(FString& FileName, bool& bFound);
+
 	/** Returns false if the new file could not be created. The folder path must be absolute, such as C:\Users\Self\Documents\YourProject\MyPics. You can use my other Paths nodes to easily get absolute paths related to your project! <3 Rama */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Screenshots", meta=(Keywords="High resolution"))
 	static bool ScreenShots_Rename_Move_Most_Recent(FString& OriginalFileName, FString NewName, FString NewAbsoluteFolderPath, bool HighResolution=true);
