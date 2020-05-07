@@ -1762,7 +1762,7 @@ int32 UVictoryBPFunctionLibrary::GetPlayerUniqueNetID()
 	if(!ThePC->PlayerState) return -1;
 	//~~~~~~~~~~~~~~~~~~~
 	
-	return ThePC->PlayerState->PlayerId;
+	return ThePC->PlayerState->GetPlayerId();
 }
 UObject* UVictoryBPFunctionLibrary::CreateObject(UObject* WorldContextObject,UClass* TheObjectClass)
 {
@@ -2262,7 +2262,7 @@ bool UVictoryBPFunctionLibrary::PlayerState_GetPlayerID(APlayerController* ThePC
 	
 	if(!ThePC->PlayerState) return false;
 	
-	PlayerID = ThePC->PlayerState->PlayerId;
+	PlayerID = ThePC->PlayerState->GetPlayerId();
 	
 	return true;
 }
@@ -4201,7 +4201,7 @@ UTexture2D* UVictoryBPFunctionLibrary::Victory_LoadTexture2D_FromFile(const FStr
 	//Create T2D!
 	if (ImageWrapper.IsValid() && ImageWrapper->SetCompressed(RawFileData.GetData(), RawFileData.Num()))
 	{ 
-		const TArray<uint8>* UncompressedBGRA = NULL;
+		TArray<uint8> UncompressedBGRA;
 		if (ImageWrapper->GetRaw(ERGBFormat::BGRA, 8, UncompressedBGRA))
 		{
 			LoadedT2D = UTexture2D::CreateTransient(ImageWrapper->GetWidth(), ImageWrapper->GetHeight(), PF_B8G8R8A8);
@@ -4216,7 +4216,7 @@ UTexture2D* UVictoryBPFunctionLibrary::Victory_LoadTexture2D_FromFile(const FStr
 			 
 			//Copy!
 			void* TextureData = LoadedT2D->PlatformData->Mips[0].BulkData.Lock(LOCK_READ_WRITE);
-			FMemory::Memcpy(TextureData, UncompressedBGRA->GetData(), UncompressedBGRA->Num());
+			FMemory::Memcpy(TextureData, UncompressedBGRA.GetData(), UncompressedBGRA.Num());
 			LoadedT2D->PlatformData->Mips[0].BulkData.Unlock();
 
 			//Update!
@@ -4247,7 +4247,7 @@ UTexture2D* UVictoryBPFunctionLibrary::Victory_LoadTexture2D_FromFile_Pixels(con
 	//Create T2D!
 	if (ImageWrapper.IsValid() && ImageWrapper->SetCompressed(RawFileData.GetData(), RawFileData.Num()))
 	{  
-		const TArray<uint8>* UncompressedRGBA = NULL;
+		TArray<uint8> UncompressedRGBA ;
 		if (ImageWrapper->GetRaw(ERGBFormat::RGBA, 8, UncompressedRGBA))
 		{
 			LoadedT2D = UTexture2D::CreateTransient(ImageWrapper->GetWidth(), ImageWrapper->GetHeight(), PF_R8G8B8A8);
@@ -4260,7 +4260,7 @@ UTexture2D* UVictoryBPFunctionLibrary::Victory_LoadTexture2D_FromFile_Pixels(con
 			Width = ImageWrapper->GetWidth();
 			Height = ImageWrapper->GetHeight();
 			
-			const TArray<uint8>& ByteArray = *UncompressedRGBA;
+			const TArray<uint8>& ByteArray = UncompressedRGBA;
 			//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			
 			for(int32 v = 0; v < ByteArray.Num(); v+=4) 
@@ -4283,7 +4283,7 @@ UTexture2D* UVictoryBPFunctionLibrary::Victory_LoadTexture2D_FromFile_Pixels(con
 			   
 			//Copy!
 			void* TextureData = LoadedT2D->PlatformData->Mips[0].BulkData.Lock(LOCK_READ_WRITE);
-			FMemory::Memcpy(TextureData, UncompressedRGBA->GetData(), UncompressedRGBA->Num());
+			FMemory::Memcpy(TextureData, UncompressedRGBA.GetData(), UncompressedRGBA.Num());
 			LoadedT2D->PlatformData->Mips[0].BulkData.Unlock();
 
 			//Update!
@@ -4424,6 +4424,11 @@ bool UVictoryBPFunctionLibrary::Victory_SavePixels(
 
 bool UVictoryBPFunctionLibrary::Victory_GetPixelFromT2D(UTexture2D* T2D, int32 X, int32 Y, FLinearColor& PixelColor)
 {
+	//See .h deprecation msg
+	return false;
+	 
+	
+	/*
 	if(!T2D) 
 	{
 		return false;
@@ -4464,6 +4469,7 @@ bool UVictoryBPFunctionLibrary::Victory_GetPixelFromT2D(UTexture2D* T2D, int32 X
   
 	RawImageData->Unlock();
 	return true;
+	*/
 }
 bool UVictoryBPFunctionLibrary::Victory_GetPixelsArrayFromT2DDynamic(UTexture2DDynamic* T2D, int32& TextureWidth, int32& TextureHeight,TArray<FLinearColor>& PixelArray)
 {
@@ -4520,12 +4526,14 @@ bool UVictoryBPFunctionLibrary::Victory_GetPixelsArrayFromT2DDynamic(UTexture2DD
 	  
 	RawImageData->Unlock();
 	*/
-	
-	return true;
 }
 
 bool UVictoryBPFunctionLibrary::Victory_GetPixelsArrayFromT2D(UTexture2D* T2D, int32& TextureWidth, int32& TextureHeight,TArray<FLinearColor>& PixelArray)
 {
+	//See .h deprecation msg
+	return false;
+	 
+	/*
 	if(!T2D) 
 	{
 		return false;
@@ -4551,6 +4559,7 @@ bool UVictoryBPFunctionLibrary::Victory_GetPixelsArrayFromT2D(UTexture2D* T2D, i
 		return false;
 	}
 	
+	//Cast issue here, need to resolve
 	FColor* RawColorArray = static_cast<FColor*>(RawImageData->Lock(LOCK_READ_ONLY));
 	
 	for(int32 x = 0; x < TextureWidth; x++)
@@ -4563,6 +4572,7 @@ bool UVictoryBPFunctionLibrary::Victory_GetPixelsArrayFromT2D(UTexture2D* T2D, i
 	  
 	RawImageData->Unlock();
 	return true;
+	*/
 }
 
 class UAudioComponent* UVictoryBPFunctionLibrary::PlaySoundAttachedFromFile(const FString& FilePath, class USceneComponent* AttachToComponent, FName AttachPointName, FVector Location, EAttachLocation::Type LocationType, bool bStopWhenAttachedToDestroyed, float VolumeMultiplier, float PitchMultiplier, float StartTime, class USoundAttenuation* AttenuationSettings)
@@ -4646,7 +4656,7 @@ int32 UVictoryBPFunctionLibrary::fillSoundWaveInfo(class USoundWave* sw, TArray<
       
 int32 UVictoryBPFunctionLibrary::findSource(class USoundWave* sw, class FSoundSource* out_audioSource)
 {
-	FAudioDevice* device = GEngine ? GEngine->GetMainAudioDevice() : NULL; //gently ask for the audio device
+	FAudioDevice* device = GEngine ? GEngine->GetMainAudioDeviceRaw() : NULL; //gently ask for the audio device
 
 	FActiveSound* activeSound;
 	FSoundSource* audioSource;
@@ -4694,7 +4704,7 @@ bool UVictoryBPFunctionLibrary::Array_IsValidIndex(const TArray<int32>& TargetAr
     return false;
 }
  
-bool UVictoryBPFunctionLibrary::GenericArray_IsValidIndex(void* TargetArray, const UArrayProperty* ArrayProp, int32 Index)
+bool UVictoryBPFunctionLibrary::GenericArray_IsValidIndex(void* TargetArray, const FArrayProperty* ArrayProp, int32 Index)
 { 
 	bool bResult = false;
 
@@ -4902,7 +4912,7 @@ UTexture2D* UVictoryBPFunctionLibrary::LoadTexture2D_FromFileByExtension(const F
 
 	if (ImageWrapper.IsValid() && ImageWrapper->SetCompressed(CompressedData.GetData(), CompressedData.Num()))
 	{ 
-		const TArray<uint8>* UncompressedRGBA = nullptr;
+		TArray<uint8> UncompressedRGBA;
 		
 		if (ImageWrapper->GetRaw(ERGBFormat::RGBA, 8, UncompressedRGBA))
 		{
@@ -4916,7 +4926,7 @@ UTexture2D* UVictoryBPFunctionLibrary::LoadTexture2D_FromFileByExtension(const F
 				OutHeight = ImageWrapper->GetHeight();
 
 				void* TextureData = Texture->PlatformData->Mips[0].BulkData.Lock(LOCK_READ_WRITE);
-				FMemory::Memcpy(TextureData, UncompressedRGBA->GetData(), UncompressedRGBA->Num());
+				FMemory::Memcpy(TextureData, UncompressedRGBA.GetData(), UncompressedRGBA.Num());
 				Texture->PlatformData->Mips[0].BulkData.Unlock();
 				Texture->UpdateResource();
 			}
@@ -5233,49 +5243,49 @@ void UVictoryBPFunctionLibrary::RemoveFromStreamingLevels(UObject* WorldContextO
 	}
 }
 
-bool UVictoryBPFunctionLibrary::GenericArray_SortCompare(const UProperty* LeftProperty, void* LeftValuePtr, const UProperty* RightProperty, void* RightValuePtr)
+bool UVictoryBPFunctionLibrary::GenericArray_SortCompare(const FProperty* LeftProperty, void* LeftValuePtr, const FProperty* RightProperty, void* RightValuePtr)
 {
 	bool bResult = false;
 
-	if (const UNumericProperty *LeftNumericProperty = Cast<const UNumericProperty>(LeftProperty))
+	if (const FNumericProperty *LeftNumericProperty = Cast<const FNumericProperty>(LeftProperty))
 	{
 		if (LeftNumericProperty->IsFloatingPoint())
 		{
-			bResult = (LeftNumericProperty->GetFloatingPointPropertyValue(LeftValuePtr) < Cast<const UNumericProperty>(RightProperty)->GetFloatingPointPropertyValue(RightValuePtr));
+			bResult = (LeftNumericProperty->GetFloatingPointPropertyValue(LeftValuePtr) < Cast<const FNumericProperty>(RightProperty)->GetFloatingPointPropertyValue(RightValuePtr));
 		}
 		else if (LeftNumericProperty->IsInteger())
 		{
-			bResult = (LeftNumericProperty->GetSignedIntPropertyValue(LeftValuePtr) < Cast<const UNumericProperty>(RightProperty)->GetSignedIntPropertyValue(RightValuePtr));
+			bResult = (LeftNumericProperty->GetSignedIntPropertyValue(LeftValuePtr) < Cast<const FNumericProperty>(RightProperty)->GetSignedIntPropertyValue(RightValuePtr));
 		}
 	}
-	else if (const UBoolProperty* LeftBoolProperty = Cast<const UBoolProperty>(LeftProperty))
+	else if (const FBoolProperty* LeftBoolProperty = Cast<const FBoolProperty>(LeftProperty))
 	{
-		bResult = (!LeftBoolProperty->GetPropertyValue(LeftValuePtr) && Cast<const UBoolProperty>(RightProperty)->GetPropertyValue(RightValuePtr));
+		bResult = (!LeftBoolProperty->GetPropertyValue(LeftValuePtr) && Cast<const FBoolProperty>(RightProperty)->GetPropertyValue(RightValuePtr));
 	}
-	else if (const UNameProperty* LeftNameProperty = Cast<const UNameProperty>(LeftProperty))
+	else if (const FNameProperty* LeftNameProperty = Cast<const FNameProperty>(LeftProperty))
 	{
-		bResult = (LeftNameProperty->GetPropertyValue(LeftValuePtr).ToString() < Cast<const UNameProperty>(RightProperty)->GetPropertyValue(RightValuePtr).ToString());
+		bResult = (LeftNameProperty->GetPropertyValue(LeftValuePtr).ToString() < Cast<const FNameProperty>(RightProperty)->GetPropertyValue(RightValuePtr).ToString());
 	}
-	else if (const UStrProperty* LeftStringProperty = Cast<const UStrProperty>(LeftProperty))
+	else if (const FStrProperty* LeftStringProperty = Cast<const FStrProperty>(LeftProperty))
 	{
-		bResult = (LeftStringProperty->GetPropertyValue(LeftValuePtr) < Cast<const UStrProperty>(RightProperty)->GetPropertyValue(RightValuePtr));
+		bResult = (LeftStringProperty->GetPropertyValue(LeftValuePtr) < Cast<const FStrProperty>(RightProperty)->GetPropertyValue(RightValuePtr));
 	}
-	else if (const UTextProperty* LeftTextProperty = Cast<const UTextProperty>(LeftProperty))
+	else if (const FTextProperty* LeftTextProperty = Cast<const FTextProperty>(LeftProperty))
 	{
-		bResult = (LeftTextProperty->GetPropertyValue(LeftValuePtr).ToString() < Cast<const UTextProperty>(RightProperty)->GetPropertyValue(RightValuePtr).ToString());
+		bResult = (LeftTextProperty->GetPropertyValue(LeftValuePtr).ToString() < Cast<const FTextProperty>(RightProperty)->GetPropertyValue(RightValuePtr).ToString());
 	}
 
 	return bResult;
 }
 
-void UVictoryBPFunctionLibrary::GenericArray_Sort(void* TargetArray, const UArrayProperty* ArrayProp, bool bAscendingOrder /* = true */, FName VariableName /* = NAME_None */)
+void UVictoryBPFunctionLibrary::GenericArray_Sort(void* TargetArray, const FArrayProperty* ArrayProp, bool bAscendingOrder /* = true */, FName VariableName /* = NAME_None */)
 {
 	if (TargetArray)
 	{
 		FScriptArrayHelper ArrayHelper(ArrayProp, TargetArray);
 		const int32 LastIndex = ArrayHelper.Num();
 
-		if (const UObjectProperty* ObjectProperty = Cast<const UObjectProperty>(ArrayProp->Inner))
+		if (const FObjectProperty* ObjectProperty = Cast<const FObjectProperty>(ArrayProp->Inner))
 		{
 			for (int32 i = 0; i < LastIndex; ++i)
 			{
@@ -5284,8 +5294,8 @@ void UVictoryBPFunctionLibrary::GenericArray_Sort(void* TargetArray, const UArra
 					UObject* LeftObject = ObjectProperty->GetObjectPropertyValue(ArrayHelper.GetRawPtr(j));
 					UObject* RightObject = ObjectProperty->GetObjectPropertyValue(ArrayHelper.GetRawPtr(j + 1));
 
-					UProperty* LeftProperty = FindField<UProperty>(LeftObject->GetClass(), VariableName);
-					UProperty* RightProperty = FindField<UProperty>(RightObject->GetClass(), VariableName);
+					FProperty* LeftProperty = FindField<FProperty>(LeftObject->GetClass(), VariableName);
+					FProperty* RightProperty = FindField<FProperty>(RightObject->GetClass(), VariableName);
 						
 					if (LeftProperty && RightProperty)
 					{
@@ -5302,11 +5312,11 @@ void UVictoryBPFunctionLibrary::GenericArray_Sort(void* TargetArray, const UArra
 		}
 		else
 		{
-			UProperty* Property = nullptr;
+			FProperty* Property = nullptr;
 
-			if (const UStructProperty* StructProperty = Cast<const UStructProperty>(ArrayProp->Inner))
+			if (const FStructProperty* StructProperty = Cast<const FStructProperty>(ArrayProp->Inner))
 			{
-				Property = FindField<UProperty>(StructProperty->Struct, VariableName);
+				Property = FindField<FProperty>(StructProperty->Struct, VariableName);
 			}
 			else
 			{
