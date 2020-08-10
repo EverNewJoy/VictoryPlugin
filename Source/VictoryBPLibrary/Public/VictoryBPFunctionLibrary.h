@@ -396,7 +396,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		{
 			return nullptr;
 		}
-		NewRenderTarget2D->ClearColor = FLinearColor::White;
+		NewRenderTarget2D->ClearColor = ClearColor;
 		NewRenderTarget2D->TargetGamma = Gamma;
 		NewRenderTarget2D->InitAutoFormat(Width, Height);
 		return NewRenderTarget2D;
