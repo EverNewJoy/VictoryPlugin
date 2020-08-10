@@ -1989,7 +1989,6 @@ static FString AppendMultiple(FString A, FString B);
 	*/
 	UFUNCTION(Category="Victory BP Library|Utilities|JSON", BlueprintPure, CustomThunk, meta=(DisplayName = "Struct or Object", CompactNodeTitle = "STRUCT", CustomStructureParam = "AnyStruct"))
 	static FString ToJson(UProperty* AnyStruct); //4.25 Upgrade TFieldPath<FProperty> AnyStruct
-	static void PropertyAsJson(FJsonObject& JsonObject, UProperty* Property, void* ValuePtr);
 	static void StructAsJson(FJsonObject& JsonObject, UStructProperty* StructProperty, void* StructPtr);
 	DECLARE_FUNCTION(execToJson)
 	{
@@ -2017,7 +2016,6 @@ static FString AppendMultiple(FString A, FString B);
 	*/
 	UFUNCTION(Category="Victory BP Library|Utilities|JSON", BlueprintPure, CustomThunk, meta=(DisplayName = "Struct or Object", CompactNodeTitle = "STRUCT", CustomStructureParam = "AnyStruct"))
 	static bool FromJson(UProperty* AnyStruct, const FString& JsonString);
-	static void JsonAsProperty(TSharedPtr<FJsonObject> JsonObject, UProperty* Property, void* ValuePtr);
 	static void JsonAsStruct(TSharedPtr<FJsonObject> JsonObject, UStructProperty* StructProperty, void* StructPtr);
 	DECLARE_FUNCTION(execFromJson)
 	{
