@@ -5553,6 +5553,104 @@ static void TESTINGInternalDrawDebugCircle(const UWorld* InWorld, const FMatrix&
 	
 }
 
+//~~~ Downchuck ~~~
+	// JSON serialization/deserialization
+	FString UVictoryBPFunctionLibrary::ToJson(UProperty* AnyStruct) //4.25 Upgrade TFieldPath<FProperty> AnyStruct
+	{
+		check(0);
+		return FString(TEXT("undefined"));
+	}
+	bool UVictoryBPFunctionLibrary::FromJson(UProperty* AnyStruct, const FString& JsonString)
+	{
+		check(0);
+		return false;
+	}
+
+	// Convert a structure to JSON
+	static void UVictoryBPFunctionLibrary::PropertyAsJson(FJsonObject& JsonObject, UProperty* Property, void* ValuePtr) {
+		FString VariableName = Property->GetAuthoredName();
+		if(UArrayProperty *ArrayProperty = Cast<UArrayProperty>(Property))
+		{
+			FScriptArrayHelper Helper(ArrayProperty, ValuePtr);
+			int32 Len = Helper.Num();
+			TArray<TSharedPtr<FJsonValue>> ValueJsonArray;
+			FJsonObject ValueJsonObject = FJsonObject();
+			for(int32 Idx = 0; Idx < Len; ++Idx)
+			{
+				PropertyAsJson(ValueJsonObject, ArrayProperty->Inner, Helper.GetRawPtr(Idx));
+				for(auto It = ValueJsonObject.Values.CreateConstIterator(); It; ++It)
+				{
+					ValueJsonArray.Add(It.Value());
+				}
+			}
+			JsonObject.SetArrayField(VariableName, ValueJsonArray);
+		}
+		else if(UStructProperty *SubProperty = Cast<UStructProperty>(Property))
+		{
+			FJsonObject ValueJsonObject = FJsonObject();
+			StructAsJson(ValueJsonObject, SubProperty, ValuePtr);
+			JsonObject.SetObjectField(VariableName, MakeShared<FJsonObject>(ValueJsonObject));
+		}
+		else
+		{
+			TSharedPtr<FJsonValue> JsonValue = FJsonObjectConverter::UPropertyToJsonValue(Property, ValuePtr, 0, 0, nullptr);
+			if (JsonValue.IsValid())
+			{
+				JsonObject.Values.Add(VariableName, JsonValue);
+			}
+		}
+
+	}
+	static void UVictoryBPFunctionLibrary::StructAsJson(FJsonObject& JsonObject, UStructProperty* StructProperty, void* StructPtr) {
+		for (TFieldIterator<UProperty> It(StructProperty->Struct); It; ++It)
+		{
+			UProperty* Property = *It;
+			FString VariableName = Property->GetAuthoredName();
+			for(int32 Idx = 0; Idx < Property->ArrayDim; Idx++)
+			{
+				void* ValuePtr = Property->ContainerPtrToValuePtr<void>(StructPtr, Idx);
+				PropertyAsJson(JsonObject, Property, ValuePtr);
+			}
+		}
+	}
+
+	// Convert JSON string into a structure
+	static void UVictoryBPFunctionLibrary::JsonAsProperty(TSharedPtr<FJsonObject> JsonObject, UProperty* Property, void* ValuePtr) {
+		FString VariableName = Property->GetAuthoredName();
+		if(UArrayProperty *ArrayProperty = Cast<UArrayProperty>(Property))
+		{
+			TArray<TSharedPtr<FJsonValue>> ValueJsonArray = JsonObject->Values[VariableName].Get()->AsArray();
+			FScriptArrayHelper ValueArray(ArrayProperty, Property->ContainerPtrToValuePtr<void>(ValuePtr));
+			ValueArray.EmptyAndAddValues(ValueJsonArray.Num());
+			FJsonObject ValueJsonObject = FJsonObject();
+			for(int32 Idx = 0; Idx < ValueJsonArray.Num(); ++Idx)
+			{				
+				ValueJsonObject.Values.Add(VariableName, ValueJsonArray[Idx]);
+				void* SubValuePtr = ValueArray.GetRawPtr(Idx);
+				JsonAsProperty(MakeShared<FJsonObject>(ValueJsonObject), ArrayProperty->Inner, SubValuePtr);
+			}
+		}
+		else if(UStructProperty *SubProperty = Cast<UStructProperty>(Property))
+		{
+			TSharedPtr<FJsonObject> SubObject = JsonObject->Values[VariableName].Get()->AsObject();
+			JsonAsStruct( SubObject, SubProperty, ValuePtr);
+		}
+		else
+		{
+			FJsonObjectConverter::JsonValueToUProperty(JsonObject->Values[VariableName], Property, ValuePtr, 0, 0);		
+		}
+	}
+	static void JsonAsStruct(TSharedPtr<FJsonObject> JsonObject, UStructProperty* StructProperty, void* StructPtr) {
+		for (TFieldIterator<UProperty> It(StructProperty->Struct); It; ++It)
+		{
+			UProperty* Property = *It;
+			if(!JsonObject->HasField(Property->GetAuthoredName())) continue;
+			for(int32 Idx = 0; Idx < Property->ArrayDim; Idx++) {
+				void* ValuePtr = Property->ContainerPtrToValuePtr<void>(StructPtr, Idx);
+				JsonAsProperty(JsonObject, Property, ValuePtr);
+			}
+		}
+	}
 
 
 #undef LOCTEXT_NAMESPACE
