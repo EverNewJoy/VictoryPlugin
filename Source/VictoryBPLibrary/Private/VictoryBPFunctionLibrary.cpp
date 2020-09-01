@@ -944,6 +944,49 @@ void UVictoryBPFunctionLibrary::SaveGameObject_GetAllSaveSlotFileNames(TArray<FS
 	GetFiles(Path,FileNames); //see top of this file, my own file IO code - Rama
 }
 
+void UVictoryBPFunctionLibrary::SaveGameObject_GetMostRecentSaveSlotFileName(FString& FileName, bool& bFound)
+{
+	FileName.Empty();
+	bFound = false;
+
+	const FString Path = VictoryPaths__SavedDir() + "SaveGames";
+
+	IFileManager& FileManager = IFileManager::Get();
+
+	TArray<TTuple<FDateTime, FString>> FileTimeStamps;
+
+	FString Str;
+	auto FilenamesVisitor = MakeDirectoryVisitor(
+		[&](const TCHAR* FilenameOrDirectory, bool bIsDirectory)
+	{
+		//Files
+		if (!bIsDirectory)
+		{
+			FString CleanFileName = FPaths::GetCleanFilename(FilenameOrDirectory);
+
+			//Filter by Extension
+			if (FPaths::GetExtension(CleanFileName).ToLower() == "sav")
+			{
+				FDateTime LastModified = FileManager.GetTimeStamp(FilenameOrDirectory);
+				FileTimeStamps.Add(TTuple<FDateTime, FString>(LastModified, CleanFileName));
+			}
+		}
+		return true;
+	}
+	);
+
+	FPlatformFileManager::Get().GetPlatformFile().IterateDirectory(*Path, FilenamesVisitor);
+
+	if (FileTimeStamps.Num() > 0)
+	{
+		FileTimeStamps.Sort([](const TTuple<FDateTime, FString>& LeftHandSide, const TTuple<FDateTime, FString>& RightHandSide) { return LeftHandSide.Key > RightHandSide.Key; });
+
+		FileName = FileTimeStamps[0].Value;
+
+		bFound = true;
+	}
+}
+
 //~~~ Victory Paths ~~~
 
 FString UVictoryBPFunctionLibrary::VictoryPaths__Win64Dir_BinaryLocation()

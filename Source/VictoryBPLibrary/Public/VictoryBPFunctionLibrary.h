@@ -396,7 +396,7 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 		{
 			return nullptr;
 		}
-		NewRenderTarget2D->ClearColor = FLinearColor::White;
+		NewRenderTarget2D->ClearColor = ClearColor;
 		NewRenderTarget2D->TargetGamma = Gamma;
 		NewRenderTarget2D->InitAutoFormat(Width, Height);
 		return NewRenderTarget2D;
@@ -447,6 +447,10 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	/** Obtain a listing of all SaveGame file names that were saved using the Blueprint Save Game system. */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|File IO")
 	static void SaveGameObject_GetAllSaveSlotFileNames(TArray<FString>& FileNames);
+
+	/** Obtain the last SaveGame file that was saved  using the Blueprint Save Game system. */
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|File IO")
+	static void SaveGameObject_GetMostRecentSaveSlotFileName(FString& FileName, bool& bFound);
 
 	/** Returns false if the new file could not be created. The folder path must be absolute, such as C:\Users\Self\Documents\YourProject\MyPics. You can use my other Paths nodes to easily get absolute paths related to your project! <3 Rama */
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Screenshots", meta=(Keywords="High resolution"))
