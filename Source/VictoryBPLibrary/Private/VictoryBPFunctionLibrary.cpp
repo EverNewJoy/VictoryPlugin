@@ -3011,6 +3011,7 @@ bool UVictoryBPFunctionLibrary::FileIO__SaveStringTextToFile(
 	FString JoyfulFileName, 
 	FString SaveText,
 	bool AllowOverWriting
+	bool AllowAppend
 ){
 	if(!FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*SaveDirectory))
 	{
@@ -3034,9 +3035,15 @@ bool UVictoryBPFunctionLibrary::FileIO__SaveStringTextToFile(
 		}
 	}
 	
+	if (AllowAppend)
+	{
+		SaveText += "\n";
+		return FFileHelper::SaveStringToFile(SaveText, * SaveDirectory,
+				FFileHelper::EEncodingOptions::AutoDetect,&IFileManager::Get(), EFileWrite::FILEWRITE_Append);
+	}
 	return FFileHelper::SaveStringToFile(SaveText, * SaveDirectory);
 }
-bool UVictoryBPFunctionLibrary::FileIO__SaveStringArrayToFile(FString SaveDirectory, FString JoyfulFileName, TArray<FString> SaveText, bool AllowOverWriting)  
+bool UVictoryBPFunctionLibrary::FileIO__SaveStringArrayToFile(FString SaveDirectory, FString JoyfulFileName, TArray<FString> SaveText, bool AllowOverWriting, bool AllowAppend)  
 {
 	//Dir Exists?
 	if ( !VCreateDirectory(SaveDirectory))
@@ -3068,7 +3075,12 @@ bool UVictoryBPFunctionLibrary::FileIO__SaveStringArrayToFile(FString SaveDirect
 		FinalStr += LINE_TERMINATOR;
 	}
 	
-
+	if (AllowAppend)
+	{
+	    FinalStr += "\n";
+		return FFileHelper::SaveStringToFile(FinalStr, * SaveDirectory,
+				FFileHelper::EEncodingOptions::AutoDetect,&IFileManager::Get(), EFileWrite::FILEWRITE_Append);
+	}
 
 	return FFileHelper::SaveStringToFile(FinalStr, * SaveDirectory);
 	
