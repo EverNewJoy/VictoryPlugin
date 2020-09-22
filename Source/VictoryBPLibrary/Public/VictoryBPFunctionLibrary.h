@@ -1983,5 +1983,19 @@ static FString AppendMultiple(FString A, FString B);
 
 //~~~ Mhousse ~~~
 
+//~~~ Kaspi ~~~
+
+	/*
+	 * Converts String to a Class reference if found.
+	 *
+	 *@param    str        Class name
+	 * 
+	 *@return    UClass if found, null otherwise
+	*/
+	UFUNCTION(Category = "Victory BP Library|Utilities|String", BlueprintPure, meta = (DisplayName = "String to Class"))
+	static UClass* StringToClass(FString str);
+
+//~~~~~~~~~
+
 };
 
