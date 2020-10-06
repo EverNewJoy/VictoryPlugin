@@ -18,21 +18,23 @@
 #endif
 */
 
+/*
 bool UVictoryBPHTML::IsHTML()
 { 
-	/*
+	
 	#if PLATFORM_HTML5
 	return true;
 	#else
 	return false;
-	#endif //HTML
-	*/
+	#endif 
+	
 	return false;
 }
+*/
 
+/*
 void UVictoryBPHTML::VictoryHTML5_SetCursorVisible(bool MakeVisible)
 { 
-	/*
 	if(MakeVisible)
 	{
 		#if PLATFORM_HTML5
@@ -51,5 +53,6 @@ void UVictoryBPHTML::VictoryHTML5_SetCursorVisible(bool MakeVisible)
 		} 
 		#endif
 	}
-	*/
+
 }
+*/
