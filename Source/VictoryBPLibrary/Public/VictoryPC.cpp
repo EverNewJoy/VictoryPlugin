@@ -76,7 +76,7 @@ bool AVictoryPC::VictoryPC_GetMyIP_SendRequest()
 	//~~~~~~~~~~~~~~~~~~~
 	
 	FString TargetHost = "http://api.ipify.org";
-	TSharedRef < IHttpRequest > Request = Http->CreateRequest(); 
+	auto Request = Http->CreateRequest(); 
 	Request->SetVerb("GET");
 	Request->SetURL(TargetHost);
 	Request->SetHeader("User-Agent", "VictoryBPLibrary/1.0");
