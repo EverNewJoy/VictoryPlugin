@@ -7,6 +7,8 @@
 
 //HTTP
 #include "Http.h"
+#include "Interfaces/IHttpRequest.h"
+
 
 #include "Runtime/Engine/Classes/GameFramework/PlayerController.h"
 #include "VictoryPC.generated.h"
