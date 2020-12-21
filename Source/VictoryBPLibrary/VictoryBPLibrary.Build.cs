@@ -36,7 +36,8 @@ public class VictoryBPLibrary : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core"
+				"Core",
+				"AssetRegistry"
 				
 				// ... add other public dependencies that you statically link with here ...
 			}
