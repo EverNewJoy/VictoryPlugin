@@ -4150,7 +4150,9 @@ UTexture2D* UVictoryBPFunctionLibrary::LoadTexture2D_FromDDSFile(const FString& 
 				/* Add new mip */
 				else
 				{
-					FTexture2DMipMap* Mip = new( Texture->PlatformData->Mips ) FTexture2DMipMap( );
+					//FTexture2DMipMap* Mip = new( Texture->PlatformData->Mips ) FTexture2DMipMap( );
+					FTexture2DMipMap* Mip = new FTexture2DMipMap();
+					Texture->PlatformData->Mips.Add(Mip);
 					Mip->SizeX = CurrentWidth;
 					Mip->SizeY = CurrentHeight;
 
@@ -5404,8 +5406,8 @@ void UVictoryBPFunctionLibrary::GenericArray_Sort(void* TargetArray, const FArra
 					UObject* LeftObject = ObjectProperty->GetObjectPropertyValue(ArrayHelper.GetRawPtr(j));
 					UObject* RightObject = ObjectProperty->GetObjectPropertyValue(ArrayHelper.GetRawPtr(j + 1));
 
-					FProperty* LeftProperty = FindField<FProperty>(LeftObject->GetClass(), VariableName);
-					FProperty* RightProperty = FindField<FProperty>(RightObject->GetClass(), VariableName);
+					FProperty* LeftProperty = FindFProperty<FProperty>(LeftObject->GetClass(), VariableName);
+					FProperty* RightProperty = FindFProperty<FProperty>(RightObject->GetClass(), VariableName);
 						
 					if (LeftProperty && RightProperty)
 					{
@@ -5426,7 +5428,7 @@ void UVictoryBPFunctionLibrary::GenericArray_Sort(void* TargetArray, const FArra
 
 			if (const FStructProperty* StructProperty = Cast<const FStructProperty>(ArrayProp->Inner))
 			{
-				Property = FindField<FProperty>(StructProperty->Struct, VariableName);
+				Property = FindFProperty<FProperty>(StructProperty->Struct, VariableName);
 			}
 			else
 			{
