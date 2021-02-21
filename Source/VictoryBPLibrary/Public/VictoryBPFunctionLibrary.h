@@ -1995,6 +1995,16 @@ static FString AppendMultiple(FString A, FString B);
 	UFUNCTION(Category = "Victory BP Library|Utilities|String", BlueprintPure, meta = (DisplayName = "String to Class"))
 	static UClass* StringToClass(FString str);
 
+	/*
+	 * Converts RenderTarget2D to Texture2D.
+	 *
+	 *@param    str        Class name
+	 * 
+	 *@return    UClass if found, null otherwise
+	*/
+	UFUNCTION(Category = "Victory BP Library|Rendering", BlueprintPure, meta = (DisplayName = "RenderTarget to Texture"))
+	static UTexture2D* RenderTargetToTexture(UTextureRenderTarget2D* InTexture);
+
 //~~~~~~~~~
 
 };

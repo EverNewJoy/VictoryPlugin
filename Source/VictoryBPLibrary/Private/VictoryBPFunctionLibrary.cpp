@@ -5662,6 +5662,24 @@ UClass* UVictoryBPFunctionLibrary::StringToClass(FString str)
 	return FindObject<UClass>(ANY_PACKAGE, *str);
 }
 
+UTexture2D* UVictoryBPFunctionLibrary::RenderTargetToTexture(UTextureRenderTarget2D* InTexture)
+{
+	FVector2D TextureSize = FVector2D(InTexture->SizeX, InTexture->SizeY);
+	FTextureRenderTargetResource* RenderTargetRessource = InTexture->GameThread_GetRenderTargetResource();
+	TArray<FColor> Pixels;
+	RenderTargetRessource->ReadPixels(Pixels);
+
+	UTexture2D* OutTexture = UTexture2D::CreateTransient(TextureSize.X, TextureSize.Y, EPixelFormat::PF_A32B32G32R32F);
+	OutTexture->UpdateResource();
+	FTexture2DMipMap& Mip = OutTexture->PlatformData->Mips[0];
+	void* Data = Mip.BulkData.Lock(LOCK_READ_WRITE);
+	FMemory::Memcpy(Data, Pixels.GetData(), (TextureSize.X * TextureSize.Y * 4));
+	Mip.BulkData.Unlock();
+	OutTexture->UpdateResource();
+
+	return OutTexture;
+}
+
 //~~~~~~~~~
 
 
@@ -5670,14 +5688,6 @@ static void TESTINGInternalDrawDebugCircle(const UWorld* InWorld, const FMatrix&
 {
 	//this is how you can make cpp only internal functions!
 	
-}
-
-
-//~~~ Kaspi ~~~
-
-UClass* UVictoryBPFunctionLibrary::StringToClass(FString str)
-{
-	return FindObject<UClass>(ANY_PACKAGE, *str);
 }
 
 
