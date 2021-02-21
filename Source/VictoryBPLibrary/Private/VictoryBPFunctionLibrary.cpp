@@ -5655,6 +5655,15 @@ FString UVictoryBPFunctionLibrary::AppendMultiple(FString A, FString B)
 
 //~~~ Mhousse ~~~
 
+//~~~ Kaspi ~~~
+
+UClass* UVictoryBPFunctionLibrary::StringToClass(FString str)
+{
+	return FindObject<UClass>(ANY_PACKAGE, *str);
+}
+
+//~~~~~~~~~
+
 
 //TESTING
 static void TESTINGInternalDrawDebugCircle(const UWorld* InWorld, const FMatrix& TransformMatrix, float Radius, int32 Segments, const FColor& Color, bool bPersistentLines, float LifeTime, uint8 DepthPriority, float Thickness=0)
