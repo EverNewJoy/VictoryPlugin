@@ -5673,5 +5673,13 @@ static void TESTINGInternalDrawDebugCircle(const UWorld* InWorld, const FMatrix&
 }
 
 
+//~~~ Kaspi ~~~
+
+UClass* UVictoryBPFunctionLibrary::StringToClass(FString str)
+{
+	return FindObject<UClass>(ANY_PACKAGE, *str);
+}
+
+
 
 #undef LOCTEXT_NAMESPACE
