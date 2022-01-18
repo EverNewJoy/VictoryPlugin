@@ -70,7 +70,10 @@ public class VictoryBPLibrary : ModuleRules
 				"Vorbis",
 				
 				//FPlatformApplicationMisc
-				"ApplicationCore"
+				"ApplicationCore",
+				
+				//For UDeveloperSettings, FYI <3 Rama
+				"DeveloperSettings"
 			}
 			);
 		

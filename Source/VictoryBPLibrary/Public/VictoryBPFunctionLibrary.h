@@ -333,14 +333,14 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	}
 	/* Blueprints does not support int64 so at some pt in future int32 will not be enough, probably by then dolphins will rule the world, or UE4 BP will support int64, or both!  <3 Rama*/
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|System")
-	static int32 GetUnixTimeStamp(const FDateTime& UTCTime)
+	static int64 GetUnixTimeStamp(const FDateTime& UTCTime)
 	{
 		//Please note it should really be int64 but that is not supported by BP yet
 		return UTCTime.ToUnixTimestamp();
-	}
+	} 
 	/* Blueprints does not support int64 so at some pt in future int32 will not be enough, probably by then dolphins will rule the world, or UE4 BP will support int64, or both!  <3 Rama*/
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|System")
-	static void GetUTCFromUnixTimeStamp(int32 UnixTimeStamp, FDateTime& UTCTime)
+	static void GetUTCFromUnixTimeStamp(int64 UnixTimeStamp, FDateTime& UTCTime)
 	{
 		//Please note it should really be int64 but that is not supported by BP yet
 		UTCTime = FDateTime::FromUnixTimestamp( UnixTimeStamp );
