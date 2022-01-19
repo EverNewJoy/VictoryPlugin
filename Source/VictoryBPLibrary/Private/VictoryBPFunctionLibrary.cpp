@@ -81,6 +81,50 @@
  
 #include <string>
    
+
+bool URamaVictoryPluginCreateProcessPipe::CreatePipe()
+{
+	if(PipeIsValid())
+	{
+		//Ignore repeat creates without a close inbetween <3 Rama
+		return true;
+	}
+	return FPlatformProcess::CreatePipe( ReadPipe, WritePipe );
+}
+void URamaVictoryPluginCreateProcessPipe::ClosePipe()
+{
+	if(PipeIsValid())
+	{
+		FPlatformProcess::ClosePipe(ReadPipe, WritePipe);
+		ReadPipe = nullptr;
+		WritePipe = nullptr;
+	}
+}
+bool URamaVictoryPluginCreateProcessPipe::ReadFromPipe(FString& PipeContents)
+{
+	PipeContents = "";
+	
+	if(!PipeIsValid()) 
+	{
+		return false;
+	}
+	PipeContents = FPlatformProcess::ReadPipe(ReadPipe);
+	return true;
+}
+bool URamaVictoryPluginCreateProcessPipe::PipeIsValid()
+{
+	return ReadPipe != nullptr && WritePipe != nullptr;
+}
+
+void URamaVictoryPluginCreateProcessPipe::BeginDestroy()
+{
+	Super::BeginDestroy();
+	//~~~~~~~~~~~~~~~~~~~~
+	
+	//Close pipe if it was still open! ♥ Rama
+	ClosePipe();
+}
+
 /*
 	~~~ Rama File Operations CopyRight ~~~ 
 	
@@ -453,10 +497,15 @@ float UVictoryBPFunctionLibrary::GetDistanceBetweenComponentSurfaces(UPrimitiveC
 
 
 
-void UVictoryBPFunctionLibrary::VictoryCreateProc(int32& ProcessId, FString FullPathOfProgramToRun,TArray<FString> CommandlineArgs,bool Detach,bool Hidden, int32 Priority, FString OptionalWorkingDirectory)
+void UVictoryBPFunctionLibrary::VictoryCreateProc(int32& ProcessId, FString FullPathOfProgramToRun,TArray<FString> CommandlineArgs,bool Detach,bool Hidden, int32 Priority, FString OptionalWorkingDirectory, URamaVictoryPluginCreateProcessPipe* ReadPipeObject)
 {   
 	//Please note ProcessId should really be uint32 but that is not supported by BP yet
-	 
+
+	if(ReadPipeObject)
+	{
+		ReadPipeObject->CreatePipe();
+	}
+	
 	FString Args = "";
 	if(CommandlineArgs.Num() > 1)
 	{
@@ -470,7 +519,7 @@ void UVictoryBPFunctionLibrary::VictoryCreateProc(int32& ProcessId, FString Full
 	{
 		Args = CommandlineArgs[0];
 	}
-	
+	 
 	uint32 NeedBPUINT32 = 0;
 	FProcHandle ProcHandle = FPlatformProcess::CreateProc( 
 		*FullPathOfProgramToRun, 
@@ -481,7 +530,7 @@ void UVictoryBPFunctionLibrary::VictoryCreateProc(int32& ProcessId, FString Full
 		&NeedBPUINT32, 
 		Priority, 
 		(OptionalWorkingDirectory != "") ? *OptionalWorkingDirectory : nullptr,//const TCHAR* OptionalWorkingDirectory, 
-		nullptr
+		(ReadPipeObject && ReadPipeObject->PipeIsValid()) ? ReadPipeObject->WritePipe : nullptr
 	);
 	 
 	//Not sure what to do to expose UINT32 to BP

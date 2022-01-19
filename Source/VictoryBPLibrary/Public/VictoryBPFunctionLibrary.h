@@ -10,6 +10,11 @@
 
 #include "VictoryISM.h"
 
+//extending UObject class
+#include "CoreMinimal.h"
+#include "UObject/Object.h"
+
+
 //~~~~~~~~~~~~ UMG ~~~~~~~~~~~~~~~
 #include "Runtime/UMG/Public/UMG.h"
 #include "Runtime/UMG/Public/UMGStyle.h"
@@ -48,6 +53,46 @@
 // This class is a base class for any function libraries exposed to blueprints.
 // Methods in subclasses are expected to be static, and no methods should be added to the base class.
 
+
+/** 
+	Made With Love By Rama for Use with @VictoryCreateProc
+	So that you can receive feedback from your processes.
+	
+	♥
+	
+	Rama
+*/
+UCLASS(Blueprintable,BlueprintType)
+class URamaVictoryPluginCreateProcessPipe : public UObject
+{
+	GENERATED_BODY()
+public:
+	 
+	UFUNCTION(BlueprintCallable, Category = "Joy Flow")
+	bool CreatePipe();
+	
+	UFUNCTION(BlueprintCallable, Category = "Joy Flow")
+	void ClosePipe();
+	
+	/** 
+		This has exec pins because it is an expensive action and the output is saved/cached on the output pin, whereas a Pure node would repeat the action many times, each time node is accessed.
+		
+		@Return false if the pipes were not created yet
+		
+		♥ Rama 
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Joy Flow")
+	bool ReadFromPipe(FString& PipeContents);
+	
+	UFUNCTION(BlueprintPure, Category = "Joy Flow")
+	bool PipeIsValid();
+	
+public:
+	void* ReadPipe = nullptr;
+	void* WritePipe = nullptr;
+	
+	virtual void BeginDestroy() override;
+};
 
 //~~~~~~~~~~~~~~~~~~~~~~
 //			Key Modifiers
@@ -309,12 +354,16 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 
 		The new process id is returned!
 
-		Priority options: -2 idle, -1 low, 0 normal, 1 high, 2 higher
+		@param Detach Ensure completion before UE4 closes or not? Detach = UE4 can close and process will keep going / possibly never stop running as there is no one left to stop the process now ♥ Rama
+		
+		@param Priority Priority options: -2 idle, -1 low, 0 normal, 1 high, 2 higher
 
+		@param ReadPipeObject Construct a new object of class URamaVictoryPluginCreateProcessPipe if you want to capture the output (STDOUT or STDERR) of this process! ♥♥♥ Yes ♥♥♥ !!!! (call ReadFromPipe on the object over time, in a timer, after creating the procedure, remember to nullptr Your Object Reference after closing the pipe, so that UE4 will garbage-collect the object! )
+		
 		♥ Rama
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Victory BP Library|System")
-	static void VictoryCreateProc(int32& ProcessId, FString FullPathOfProgramToRun,TArray<FString> CommandlineArgs,bool Detach,bool Hidden, int32 Priority=0, FString OptionalWorkingDirectory="");
+	static void VictoryCreateProc(int32& ProcessId, FString FullPathOfProgramToRun,TArray<FString> CommandlineArgs,bool Detach,bool Hidden, int32 Priority=0, FString OptionalWorkingDirectory="", URamaVictoryPluginCreateProcessPipe* ReadPipeObject=nullptr);
 
 	/** You can obtain ProcessID from processes you initiate via VictoryCreateProc */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|System")
