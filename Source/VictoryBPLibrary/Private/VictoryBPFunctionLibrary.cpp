@@ -2679,11 +2679,11 @@ AStaticMeshActor* UVictoryBPFunctionLibrary::Clone__StaticMeshActor(UObject* Wor
 	
 	if(!NewSMA) return NULL;
 	
+	//Mobility
+	NewSMA->GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable);
+
 	//Copy Transform
 	NewSMA->SetActorTransform(ToClone->GetTransform());
-	
-	//Mobility
-	NewSMA->GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable	);
 	
 	//copy static mesh
 	NewSMA->GetStaticMeshComponent()->SetStaticMesh(ToClone->GetStaticMeshComponent()->GetStaticMesh());
