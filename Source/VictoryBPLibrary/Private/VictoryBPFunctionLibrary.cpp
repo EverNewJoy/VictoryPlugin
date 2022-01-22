@@ -5704,6 +5704,33 @@ FString UVictoryBPFunctionLibrary::AppendMultiple(FString A, FString B)
 
 //~~~ Mhousse ~~~
 
+//~~~ Kaspi ~~~
+
+UClass* UVictoryBPFunctionLibrary::StringToClass(FString str)
+{
+	return FindObject<UClass>(ANY_PACKAGE, *str);
+}
+
+UTexture2D* UVictoryBPFunctionLibrary::RenderTargetToTexture(UTextureRenderTarget2D* InTexture)
+{
+	FVector2D TextureSize = FVector2D(InTexture->SizeX, InTexture->SizeY);
+	FTextureRenderTargetResource* RenderTargetRessource = InTexture->GameThread_GetRenderTargetResource();
+	TArray<FColor> Pixels;
+	RenderTargetRessource->ReadPixels(Pixels);
+
+	UTexture2D* OutTexture = UTexture2D::CreateTransient(TextureSize.X, TextureSize.Y, EPixelFormat::PF_A32B32G32R32F);
+	OutTexture->UpdateResource();
+	FTexture2DMipMap& Mip = OutTexture->PlatformData->Mips[0];
+	void* Data = Mip.BulkData.Lock(LOCK_READ_WRITE);
+	FMemory::Memcpy(Data, Pixels.GetData(), (TextureSize.X * TextureSize.Y * 4));
+	Mip.BulkData.Unlock();
+	OutTexture->UpdateResource();
+
+	return OutTexture;
+}
+
+//~~~~~~~~~
+
 
 //TESTING
 static void TESTINGInternalDrawDebugCircle(const UWorld* InWorld, const FMatrix& TransformMatrix, float Radius, int32 Segments, const FColor& Color, bool bPersistentLines, float LifeTime, uint8 DepthPriority, float Thickness=0)
