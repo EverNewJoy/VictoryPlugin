@@ -6,7 +6,10 @@
 
 #include "VictoryBPLibraryPrivatePCH.h"
 #include "VictoryPC.h"
- 
+#include "HttpModule.h"
+#include "Components/AudioComponent.h"
+#include "Interfaces/IHttpResponse.h"
+
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY(VictoryPCLog)
