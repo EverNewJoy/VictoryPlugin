@@ -41,6 +41,9 @@
 //#include "Engine/Texture2D.h"
 #include "DDSLoader.h"
 
+//GetClassFromAssetData
+#include "Runtime/AssetRegistry/Public/AssetData.h"
+
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #include "VictoryBPFunctionLibrary.generated.h"
@@ -2031,6 +2034,18 @@ UFUNCTION(BlueprintPure, meta = (DisplayName = "Append Multiple", Keywords = "co
 static FString AppendMultiple(FString A, FString B);
 
 //~~~ Mhousse ~~~
+
+/**
+* Get UClass from assets found with AssetManager (Purple Class node)
+* Use this to get Assets by Path, Class Type ect.
+* Use GET ASSET REGISTRY node -> GET ASSETS node -> as your input to this
+* Using correct class checking and casting, this can be used for spawning actors, getting class defaults, using textures, sounds ect.
+* COOKED BUILDS: : Make sure your assets/folders are manually added to cooked build if they are not used directly in Editor.
+* On-the-fly asset list creation or add DLC content, no lookup tables!
+*/
+
+UFUNCTION(BlueprintCallable, Category = "Victory BP Library|Misc")
+static TArray<UClass*> GetClassFromAssetData(UPARAM(ref) TArray<FAssetData>& InAssetData);
 
 };
 
