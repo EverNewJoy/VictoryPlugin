@@ -2321,6 +2321,7 @@ void UVictoryBPFunctionLibrary::Selection_SelectionBox(UObject* WorldContextObje
 	SelectedActors.Empty();
 	
 	FBox2D Box;
+	Box.Init();
 	Box+=DraggedPoint;
 	Box+=AnchorPoint;
 	
