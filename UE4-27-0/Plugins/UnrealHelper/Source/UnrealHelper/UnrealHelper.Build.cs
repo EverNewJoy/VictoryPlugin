@@ -1,5 +1,3 @@
-// Copyright 2020 Disney Direct-to-Consumer and International. All Rights Reserved.
-
 using UnrealBuildTool;
 
 public class UnrealHelper : ModuleRules

@@ -1,5 +1,3 @@
-// Copyright 2020 Disney Direct-to-Consumer and International. All Rights Reserved.
-
 #include "UnrealHelperBPLibrary.h"
 #include "UnrealHelper.h"
 #include "IImageWrapper.h"
@@ -33,26 +31,6 @@ void UUnrealHelperBPLibrary::GetStringFromGameConfig(const FString Section, cons
 		String,
 		GGameIni
 	);
-}
-
-void UUnrealHelperBPLibrary::GetProjectVersion(FString& ProjectVersion)
-{
-	GConfig->GetString(
-		TEXT("/Script/EngineSettings.GeneralProjectSettings"),
-		TEXT("ProjectVersion"),
-		ProjectVersion,
-		GGameIni
-	);
-}
-
-void UUnrealHelperBPLibrary::GetFloatAsStringWithPrecision(float InFloat, FString& ReturnValue, int32 Precision, bool IncludeLeadingZero)
-{
-	FNumberFormattingOptions NumberFormat;
-	NumberFormat.MinimumIntegralDigits = (IncludeLeadingZero) ? 1 : 0;
-	NumberFormat.MaximumIntegralDigits = 10000;
-	NumberFormat.MinimumFractionalDigits = Precision;
-	NumberFormat.MaximumFractionalDigits = Precision;
-	ReturnValue = FText::AsNumber(InFloat, &NumberFormat).ToString();
 }
 
 FString UUnrealHelperBPLibrary::RunCommand(FString Cmd, FString Args, FString& StdErr)

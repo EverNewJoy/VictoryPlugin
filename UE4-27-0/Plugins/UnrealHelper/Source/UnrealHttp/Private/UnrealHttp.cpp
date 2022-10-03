@@ -1,5 +1,3 @@
-// Copyright 2020 Disney Direct-to-Consumer and International. All Rights Reserved.
-
 #include "UnrealHttp.h"
 
 #define LOCTEXT_NAMESPACE "FUnrealHttpModule"

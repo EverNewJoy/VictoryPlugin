@@ -1,5 +1,3 @@
-// Copyright 2020 Disney Direct-to-Consumer and International. All Rights Reserved.
-
 #include "UnrealMediaOutputSocket.h"
 
 #define LOCTEXT_NAMESPACE "FUnrealMediaOutputSocketModule"
