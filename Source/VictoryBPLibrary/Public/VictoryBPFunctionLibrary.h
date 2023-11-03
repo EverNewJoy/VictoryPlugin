@@ -1556,7 +1556,11 @@ class VICTORYBPLIBRARY_API UVictoryBPFunctionLibrary : public UBlueprintFunction
 	/** Load a Texture2D from a JPG,PNG,BMP,ICO,EXR,ICNS file! IsValid tells you if file path was valid or not. Enjoy! -Rama */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Load Texture From File",meta=(Keywords="image png jpg jpeg bmp bitmap ico icon exr icns"))
 	static UTexture2D* Victory_LoadTexture2D_FromFile(const FString& FullFilePath,EJoyImageFormats ImageFormat,bool& IsValid, int32& Width, int32& Height);
-
+	
+	/** Load a Texture2D as a Normal texture from a JPG,PNG,BMP,ICO,EXR,ICNS file! IsValid tells you if file path was valid or not. */
+	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Load Texture From File",meta=(Keywords="image png jpg jpeg bmp bitmap ico icon exr icns"))
+	static UTexture2D* Victory_LoadNormalTexture2D_FromFile(const FString& FullFilePath,EJoyImageFormats ImageFormat,bool& IsValid, int32& Width, int32& Height);
+	
 	/** Load a Texture2D from a JPG,PNG,BMP,ICO,EXR,ICNS file! IsValid tells you if file path was valid or not. Enjoy! -Rama */
 	UFUNCTION(BlueprintPure, Category = "Victory BP Library|Load Texture From File",meta=(Keywords="image png jpg jpeg bmp bitmap ico icon exr icns"))
 	static UTexture2D* Victory_LoadTexture2D_FromFile_Pixels(const FString& FullFilePath,EJoyImageFormats ImageFormat,bool& IsValid, int32& Width, int32& Height, TArray<FLinearColor>& OutPixels);
